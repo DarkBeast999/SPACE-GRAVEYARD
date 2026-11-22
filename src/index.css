@@ -1,0 +1,303 @@
+/* Local offline font delivery with system fallbacks */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('./assets/fonts/cormorant-garamond-regular.woff2') format('woff2'),
+       local('Cormorant Garamond'),
+       local('Georgia');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('./assets/fonts/inter-regular.woff2') format('woff2'),
+       local('Inter'),
+       local('-apple-system'),
+       local('BlinkMacSystemFont'),
+       local('Segoe UI');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('./assets/fonts/jetbrains-mono-regular.woff2') format('woff2'),
+       local('JetBrains Mono'),
+       local('Consolas'),
+       local('Menlo');
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Cinematic & Editorial Palette */
+  --near-black: #080D16;
+  --midnight-navy: #101A29;
+  --deep-slate: #26374C;
+  --warm-ivory: #F0E8D9;
+  --mist-grey: #B6C0CC;
+  --antique-gold: #C6A36B;
+  --muted-blue: #789CB8;
+  --nebula-lavender: #A896C5;
+
+  /* Restrained Neutral Surfaces */
+  --surface-overlay: rgba(16, 26, 41, 0.78);
+  --surface-border: rgba(240, 232, 217, 0.09);
+  --surface-border-gold: rgba(198, 163, 107, 0.3);
+
+  /* Harmonized aliases for backward-compatibility */
+  --void: #080D16;
+  --nebula-purple: #101A29;
+  --signal-cyan: #789CB8;
+  --ghost-amber: #C6A36B;
+  --mars-rust: #A34E36;
+  --lunar-silver: #D0D7DE;
+  --deep-gold: #C6A36B;
+  --text-primary: #F0E8D9;
+  --text-ghost: #B6C0CC;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--near-black);
+}
+
+body {
+  background-color: var(--near-black);
+  color: var(--warm-ivory);
+  font-family: 'Inter', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+  letter-spacing: -0.01em;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ──────────────────────────────────────────────────
+   TYPOGRAPHY HIERARCHY
+   ────────────────────────────────────────────────── */
+
+/* Display / Editorial Serif */
+.font-display,
+.font-serif,
+.serif,
+.orbitron {
+  font-family: 'Cormorant Garamond', 'Cinzel', Georgia, serif;
+  letter-spacing: 0.02em;
+}
+
+/* Editorial Heading Accent */
+.font-cinzel {
+  font-family: 'Cinzel', Georgia, serif;
+  letter-spacing: 0.08em;
+}
+
+/* Body Sans-Serif */
+.font-body {
+  font-family: 'Inter', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Technical Monospace */
+.mono,
+.font-mono {
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+}
+
+/* Editorial Color Utilities */
+.text-ivory {
+  color: var(--warm-ivory);
+}
+
+.text-mist {
+  color: var(--mist-grey);
+}
+
+.text-gold,
+.gold-text {
+  color: var(--antique-gold);
+}
+
+.text-muted-blue,
+.signal-text {
+  color: var(--muted-blue);
+}
+
+.amber-text {
+  color: var(--antique-gold);
+}
+
+/* ──────────────────────────────────────────────────
+   SURFACES & CONTAINERS
+   ────────────────────────────────────────────────── */
+
+/* Editorial Glass Panel */
+.glass {
+  background: rgba(16, 26, 41, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(240, 232, 217, 0.08);
+}
+
+/* Elevated Editorial Card */
+.glass-elevated,
+.editorial-card {
+  background: rgba(22, 34, 53, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(198, 163, 107, 0.22);
+}
+
+/* Subtle Gold Divider */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(198, 163, 107, 0.4), transparent);
+}
+
+/* Museum Vignette Overlay */
+.cinematic-vignette {
+  background: radial-gradient(circle at center, transparent 40%, rgba(8, 13, 22, 0.8) 90%, #080D16 100%);
+}
+
+/* Atmospheric Hero Gradient */
+.hero-gradient {
+  background: linear-gradient(180deg, rgba(8, 13, 22, 0.2) 0%, rgba(8, 13, 22, 0.8) 75%, #080D16 100%);
+}
+
+/* ──────────────────────────────────────────────────
+   RESTRAINED ACCENTS & STATUS BADGES
+   ────────────────────────────────────────────────── */
+
+.signal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--antique-gold);
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(198, 163, 107, 0.4);
+}
+
+.badge-active {
+  background: rgba(120, 156, 184, 0.16);
+  color: #92B7D3;
+  border: 1px solid rgba(120, 156, 184, 0.35);
+}
+
+.badge-silent {
+  background: rgba(198, 163, 107, 0.14);
+  color: var(--antique-gold);
+  border: 1px solid rgba(198, 163, 107, 0.35);
+}
+
+.badge-ghost {
+  background: rgba(182, 192, 204, 0.08);
+  color: var(--mist-grey);
+  border: 1px solid rgba(182, 192, 204, 0.2);
+}
+
+.badge-destroyed {
+  background: rgba(163, 78, 54, 0.12);
+  color: #C27A65;
+  border: 1px solid rgba(163, 78, 54, 0.3);
+}
+
+/* ──────────────────────────────────────────────────
+   EDITORIAL BUTTONS
+   ────────────────────────────────────────────────── */
+
+.btn-primary,
+.btn-editorial {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.75rem 2rem;
+  background: transparent;
+  border: 1px solid var(--antique-gold);
+  color: var(--warm-ivory);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before,
+.btn-editorial::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--antique-gold);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary:hover::before,
+.btn-editorial:hover::before {
+  transform: translateY(0);
+}
+
+.btn-primary:hover,
+.btn-editorial:hover {
+  color: var(--near-black);
+}
+
+.btn-primary span,
+.btn-editorial span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ──────────────────────────────────────────────────
+   SCROLLBAR & ACCESSIBILITY
+   ────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--near-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(198, 163, 107, 0.25);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(198, 163, 107, 0.5);
+}
+
+.timeline-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(198, 163, 107, 0.25) transparent;
+}
+
+/* WCAG 2.1 Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
