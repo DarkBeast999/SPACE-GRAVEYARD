@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -9,7 +9,6 @@ import {
   createEarthTexture,
   createMoonTexture,
   createMarsVikingTexture,
-  createMarsMolaTexture,
   createJupiterTexture,
   createSaturnTexture,
   createSaturnRingTexture,
@@ -26,17 +25,15 @@ import heroOpportunity from '../assets/hero-opportunity.jpg';
 import heroSurveyor3 from '../assets/hero-surveyor3.jpg';
 
 import {
-  loadMolaHeightData,
-  createMolaMarsGeometry,
-  createRegionalSurfacePatchGeometry,
-} from '../utils/marsElevation';
-import {
-  REGIONAL_MARS_LAYERS,
-  getRegionalMarsLayer,
-} from '../data/marsRegionalLayers';
+  createMonumentSymbol,
+  updateMonumentSelection,
+  getMonumentIcon,
+  getMonumentTypeLabel,
+  getMonumentType,
+} from '../utils/monumentSymbols';
 
 import { playSignalPing, playWhooshSound, playSuccessChime } from '../utils/audio';
-import { formatCoordinates, normalizeLongitude } from '../utils/coordinateUtils';
+import { normalizeLongitude } from '../utils/coordinateUtils';
 
 export type ViewMode =
   | 'SOLAR_SYSTEM'
@@ -105,10 +102,6 @@ const latLonToVector3 = (lat: number, lon: number, radius = 12.1): THREE.Vector3
   return new THREE.Vector3(x, y, z);
 };
 
-// Constant vectors for proximity calculations (prevents per-frame heap allocations)
-const JEZERO_POS = latLonToVector3(18.38, 77.58, 12.1);
-const GALE_POS = latLonToVector3(-4.59, 137.44, 12.1);
-
 export const Universe3DPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -131,9 +124,12 @@ export const Universe3DPage: React.FC = () => {
   });
 
   const [selectedLandmark, setSelectedLandmark] = useState<MarsLandmark | null>(null);
-  const [marsSurfaceMode, setMarsSurfaceMode] = useState<'VIKING_COLOR' | 'MOLA_TOPOGRAPHY'>('VIKING_COLOR');
   const [showLandmarks, setShowLandmarks] = useState(true);
-  const [showMapSourcesModal, setShowMapSourcesModal] = useState(false);
+
+  // Search & Navigation controls state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   const [hoveredObject, setHoveredObject] = useState<string | null>(null);
   const [isPanoramaOpen, setIsPanoramaOpen] = useState(false);
@@ -156,12 +152,7 @@ export const Universe3DPage: React.FC = () => {
   // Mars mesh and texture refs
   const marsGlobeMeshRef = useRef<THREE.Mesh | null>(null);
   const marsVikingTexRef = useRef<THREE.Texture | null>(null);
-  const marsMolaTexRef = useRef<THREE.Texture | null>(null);
   const marsLandmarksGroupRef = useRef<THREE.Group | null>(null);
-  const marsRegionalPatchesGroupRef = useRef<THREE.Group | null>(null);
-  const jezeroPatchMeshRef = useRef<THREE.Mesh | null>(null);
-  const galePatchMeshRef = useRef<THREE.Mesh | null>(null);
-  const molaHeightDataRef = useRef<Uint16Array | null>(null);
 
   // Globe groups
   const solarSystemGroupRef = useRef<THREE.Group | null>(null);
@@ -423,21 +414,87 @@ export const Universe3DPage: React.FC = () => {
     }
   }, [searchParams, viewMode, applyViewMode, selectedSite, focusLandingSite]);
 
-  // Handle Mars texture mode toggle (Viking Color vs MOLA Topography)
-  const handleToggleMarsSurfaceMode = useCallback(() => {
-    if (!marsGlobeMeshRef.current || !marsVikingTexRef.current || !marsMolaTexRef.current) return;
-    const nextMode = marsSurfaceMode === 'VIKING_COLOR' ? 'MOLA_TOPOGRAPHY' : 'VIKING_COLOR';
-    setMarsSurfaceMode(nextMode);
-
-    const mat = marsGlobeMeshRef.current.material as THREE.MeshStandardMaterial;
-    if (nextMode === 'MOLA_TOPOGRAPHY') {
-      mat.map = marsMolaTexRef.current;
+  // Reset View helper to return to default camera orbit
+  const handleResetView = useCallback(() => {
+    playWhooshSound();
+    setSelectedSite(null);
+    setSelectedLandmark(null);
+    const dest = DESTINATIONS.find((d) => d.mode === viewMode);
+    if (dest && dest.mode !== 'SOLAR_SYSTEM') {
+      setSearchParams({ planet: dest.param });
     } else {
-      mat.map = marsVikingTexRef.current;
+      setSearchParams({});
     }
-    mat.needsUpdate = true;
-    playSignalPing(600);
-  }, [marsSurfaceMode]);
+    if (!cameraRef.current || !controlsRef.current) return;
+    if (viewMode === 'SOLAR_SYSTEM') {
+      glideCamera(new THREE.Vector3(0, 75, 175), new THREE.Vector3(0, 0, 0), 1000);
+    } else {
+      glideCamera(new THREE.Vector3(0, 8, 38), new THREE.Vector3(0, 0, 0), 1000);
+    }
+  }, [viewMode, glideCamera, setSearchParams]);
+
+  // Real-time search query matching across all missions and landmarks
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    const siteMatches = LANDING_SITES_3D.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.designation.toLowerCase().includes(q) ||
+        s.locationName.toLowerCase().includes(q) ||
+        s.body.toLowerCase().includes(q)
+    );
+    const landmarkMatches = MARS_LANDMARKS.filter(
+      (lm) =>
+        lm.name.toLowerCase().includes(q) ||
+        lm.type.toLowerCase().includes(q) ||
+        lm.description.toLowerCase().includes(q)
+    );
+    return [
+      ...siteMatches.map((s) => ({ type: 'site' as const, data: s })),
+      ...landmarkMatches.map((lm) => ({ type: 'landmark' as const, data: lm })),
+    ].slice(0, 8);
+  }, [searchQuery]);
+
+  const handleSelectSearchResult = useCallback(
+    (result: { type: 'site'; data: LandingSite3D } | { type: 'landmark'; data: MarsLandmark }) => {
+      setSearchQuery('');
+      setIsSearchFocused(false);
+      if (result.type === 'site') {
+        const site = result.data;
+        const targetPlanet = parsePlanetParam(site.body);
+        handleSelectViewMode(targetPlanet);
+        setSelectedLandmark(null);
+        setSelectedSite(site);
+        if (site.body === 'mars' || site.body === 'moon') {
+          focusLandingSite(site.lat, site.lon, true);
+        } else if (site.body === 'deep-space') {
+          setSelectedDeepCraft(site);
+        }
+        setSearchParams({ planet: site.body, target: site.id });
+      } else {
+        const lm = result.data;
+        handleSelectViewMode('MARS');
+        setSelectedSite(null);
+        setSelectedLandmark(lm);
+        focusLandingSite(lm.lat, lm.lon, true, 30);
+      }
+    },
+    [handleSelectViewMode, focusLandingSite, setSearchParams]
+  );
+
+  // Synchronize selection highlight ring on active 3D monument
+  useEffect(() => {
+    const activeId = selectedSite?.id || selectedLandmark?.id || null;
+    updateMonumentSelection(
+      [
+        marsGlobeGroupRef.current,
+        moonGlobeGroupRef.current,
+        saturnGlobeGroupRef.current,
+      ],
+      activeId
+    );
+  }, [selectedSite, selectedLandmark]);
 
   // Main Three.js Scene Setup & Lifecycle
   useEffect(() => {
@@ -568,9 +625,7 @@ export const Universe3DPage: React.FC = () => {
 
     // Scaled planets for Solar System Overview (Authentic Viking map for Mars!)
     const marsVikingTex = createMarsVikingTexture();
-    const marsMolaTex = createMarsMolaTexture();
     marsVikingTexRef.current = marsVikingTex;
-    marsMolaTexRef.current = marsMolaTex;
 
     const planetsConfig = [
       { name: 'Mercury', radius: 1.4, dist: 18, mode: 'MERCURY' as ViewMode, tex: createMercuryTexture },
@@ -713,86 +768,11 @@ export const Universe3DPage: React.FC = () => {
     const moon = createGlobe(createMoonTexture(), 12, 0.95);
     moonGlobeGroupRef.current = moon.group;
 
-    // 7e. Mars — AUTHENTIC NASA VIKING 2048x1024 MAP + NUMERICAL MOLA DEM 3D RELIEF
-    const marsGroup = new THREE.Group();
-    marsGroup.visible = false;
-    scene.add(marsGroup);
-    marsGlobeGroupRef.current = marsGroup;
-
-    // Base standard material (displacementMap removed; height-displacement built directly into geometry vertices)
-    const marsMat = new THREE.MeshStandardMaterial({
-      map: marsVikingTex,
-      roughness: 0.85,
-      metalness: 0.05,
-    });
-    const marsInitialGeo = new THREE.SphereGeometry(12, 128, 128);
-    const marsGlobeMesh = new THREE.Mesh(marsInitialGeo, marsMat);
-    marsGroup.add(marsGlobeMesh);
-    marsGlobeMeshRef.current = marsGlobeMesh;
-
-    // Regional Surface LOD Patches Group (Jezero Crater & Gale Crater)
-    const marsRegionalPatchesGroup = new THREE.Group();
-    marsGroup.add(marsRegionalPatchesGroup);
-    marsRegionalPatchesGroupRef.current = marsRegionalPatchesGroup;
-
-    // Asynchronously construct Mars geometry from genuine numerical MOLA DEM array
-    loadMolaHeightData().then((heightData) => {
-      if (!marsGlobeMeshRef.current) return;
-      molaHeightDataRef.current = heightData;
-      const isMobile = window.innerWidth < 768;
-      const molaGeometry = createMolaMarsGeometry(
-        heightData,
-        12,
-        isMobile ? 256 : 512,
-        isMobile ? 128 : 256,
-        1.5
-      );
-      const prevGeo = marsGlobeMeshRef.current.geometry;
-      marsGlobeMeshRef.current.geometry = molaGeometry;
-      prevGeo.dispose();
-
-      // Construct geographically registered regional surface patches for Jezero & Gale
-      const texLoader = new THREE.TextureLoader();
-      const jezeroLayer = REGIONAL_MARS_LAYERS['jezero-ctx'];
-      const galeLayer = REGIONAL_MARS_LAYERS['gale-ctx'];
-
-      const jezeroTex = texLoader.load(jezeroLayer.imageAsset);
-      const galeTex = texLoader.load(galeLayer.imageAsset);
-
-      const jezeroGeo = createRegionalSurfacePatchGeometry(jezeroLayer, heightData, 12, 32, 1.5);
-      const galeGeo = createRegionalSurfacePatchGeometry(galeLayer, heightData, 12, 32, 1.5);
-
-      const jezeroMat = new THREE.MeshStandardMaterial({
-        map: jezeroTex,
-        transparent: true,
-        opacity: 0.0,
-        roughness: 0.85,
-        metalness: 0.05,
-        polygonOffset: true,
-        polygonOffsetFactor: -1,
-        polygonOffsetUnits: -2,
-      });
-
-      const galeMat = new THREE.MeshStandardMaterial({
-        map: galeTex,
-        transparent: true,
-        opacity: 0.0,
-        roughness: 0.85,
-        metalness: 0.05,
-        polygonOffset: true,
-        polygonOffsetFactor: -1,
-        polygonOffsetUnits: -2,
-      });
-
-      const jezeroMesh = new THREE.Mesh(jezeroGeo, jezeroMat);
-      const galeMesh = new THREE.Mesh(galeGeo, galeMat);
-
-      marsRegionalPatchesGroup.add(jezeroMesh);
-      marsRegionalPatchesGroup.add(galeMesh);
-
-      jezeroPatchMeshRef.current = jezeroMesh;
-      galePatchMeshRef.current = galeMesh;
-    });
+    // 7e. Mars — Standard Smooth Planetary Globe with Viking Map (Matches Mercury, Venus, Earth)
+    const mars = createGlobe(marsVikingTex, 12, 0.85);
+    marsGlobeGroupRef.current = mars.group;
+    marsGlobeMeshRef.current = mars.mesh;
+    const marsGroup = mars.group;
 
     // Thin Martian carbon-dioxide atmosphere halo
     const marsAtmo = new THREE.Mesh(
@@ -818,19 +798,12 @@ export const Universe3DPage: React.FC = () => {
     marsGroup.add(marsLandmarksGroup);
 
     MARS_LANDMARKS.forEach((lm) => {
-      const pos = latLonToVector3(lm.lat, lm.lon, 12.25);
-
-      // Landmark diamond beacon
-      const dGeo = new THREE.OctahedronGeometry(0.35, 0);
-      const dMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-      const beacon = new THREE.Mesh(dGeo, dMat);
-      beacon.position.copy(pos);
-      beacon.userData = {
-        isLandmark: true,
-        landmarkData: lm,
-      };
-      marsLandmarksGroup.add(beacon);
-      marsInteractiveTargets.push(beacon);
+      const pos = latLonToVector3(lm.lat, lm.lon, 12.0);
+      const symbol = createMonumentSymbol(lm);
+      symbol.position.copy(pos);
+      symbol.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
+      marsLandmarksGroup.add(symbol);
+      marsInteractiveTargets.push(symbol);
     });
 
     // 7f. Jupiter
@@ -851,28 +824,14 @@ export const Universe3DPage: React.FC = () => {
     const saturnRing = new THREE.Mesh(saturnRingGeo, saturnRingMat);
     saturn.group.add(saturnRing);
 
-    // Cassini Grand Finale Historical Mission Event Marker (Atmospheric entry Sept 15, 2017)
-    const cassiniEventGroup = new THREE.Group();
-    cassiniEventGroup.position.set(11.2, 2.4, 3.8);
-    const cassiniEventCore = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.55, 0),
-      new THREE.MeshBasicMaterial({ color: 0xa855f7 })
-    );
-    const cassiniEventRing = new THREE.Mesh(
-      new THREE.RingGeometry(0.85, 1.15, 24),
-      new THREE.MeshBasicMaterial({ color: 0xa855f7, side: THREE.DoubleSide, transparent: true, opacity: 0.6 })
-    );
-    cassiniEventRing.rotation.x = Math.PI / 2;
-    cassiniEventGroup.add(cassiniEventCore);
-    cassiniEventGroup.add(cassiniEventRing);
-
+    // Cassini Grand Finale Historical Mission Event Marker (Sept 15, 2017)
     const cassiniData = LANDING_SITES_3D.find((s) => s.id === 'cassini');
-    cassiniEventGroup.userData = {
-      isLandingSite: true,
-      siteData: cassiniData,
-    };
-    saturn.group.add(cassiniEventGroup);
-    saturnInteractiveTargets.push(cassiniEventGroup);
+    if (cassiniData) {
+      const cassiniSymbol = createMonumentSymbol(cassiniData);
+      cassiniSymbol.position.set(11.2, 2.4, 3.8);
+      saturn.group.add(cassiniSymbol);
+      saturnInteractiveTargets.push(cassiniSymbol);
+    }
 
     // 7h. Deep Space Group
     const deepSpaceGroup = new THREE.Group();
@@ -897,76 +856,49 @@ export const Universe3DPage: React.FC = () => {
       venus.mesh,
       earth.mesh,
       moon.mesh,
-      marsGlobeMesh,
+      mars.mesh,
       jupiter.mesh,
       saturn.mesh,
     ];
 
-    // 8. POPULATE LANDING PINS & MULTI-LOCATION REFLECTORS
+    // 8. POPULATE RECOGNISABLE 3D MONUMENT SYMBOLS (Rovers, Landers, Helicopters)
     LANDING_SITES_3D.forEach((site) => {
       if (site.body !== 'mars' && site.body !== 'moon') return;
 
       const isMars = site.body === 'mars';
       const targetGroup = isMars ? marsGroup : moon.group;
 
-      // Handle multi-location artifacts (e.g. Lunar Laser Retroreflectors)
       if (site.isMultiLocation && site.subLocations) {
         site.subLocations.forEach((subLoc) => {
-          const pos = latLonToVector3(subLoc.lat, subLoc.lon, 12.2);
-          const prismGeo = new THREE.OctahedronGeometry(0.3, 0);
-          const prismMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9 });
-          const prism = new THREE.Mesh(prismGeo, prismMat);
-          prism.position.copy(pos);
-          prism.userData = {
-            isLandingSite: true,
-            siteData: site,
+          const pos = latLonToVector3(subLoc.lat, subLoc.lon, 12.0);
+          const symbol = createMonumentSymbol(site, {
             subLocation: subLoc,
-          };
-          targetGroup.add(prism);
+            name: `${site.name} — ${subLoc.name}`,
+          });
+          symbol.position.copy(pos);
+          symbol.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
+          targetGroup.add(symbol);
           if (isMars) {
-            marsLandingTargets.push(prism);
-            marsInteractiveTargets.push(prism);
+            marsLandingTargets.push(symbol);
+            marsInteractiveTargets.push(symbol);
           } else {
-            moonInteractiveTargets.push(prism);
+            moonInteractiveTargets.push(symbol);
           }
         });
         return;
       }
 
-      const pos = latLonToVector3(site.lat, site.lon, 12.2);
+      const pos = latLonToVector3(site.lat, site.lon, 12.0);
+      const symbol = createMonumentSymbol(site);
+      symbol.position.copy(pos);
+      symbol.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
+      targetGroup.add(symbol);
 
-      // Pin stem
-      const stemGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8);
-      stemGeo.translate(0, 0.6, 0);
-      const pinMat = new THREE.MeshBasicMaterial({
-        color: isMars ? (site.id === 'ingenuity' ? 0xffea00 : 0xffb703) : 0x00f0ff,
-      });
-      const stem = new THREE.Mesh(stemGeo, pinMat);
-
-      // Pin head sphere
-      const headGeo = new THREE.SphereGeometry(0.35, 12, 12);
-      const headMat = new THREE.MeshBasicMaterial({
-        color: isMars ? (site.id === 'ingenuity' ? 0xffea00 : 0xffffff) : 0xffffff,
-      });
-      const head = new THREE.Mesh(headGeo, headMat);
-      head.position.set(0, 1.2, 0);
-      stem.add(head);
-
-      // Align pin perpendicular to globe surface
-      stem.position.copy(pos);
-      stem.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pos.clone().normalize());
-
-      stem.userData = {
-        isLandingSite: true,
-        siteData: site,
-      };
-
-      targetGroup.add(stem);
       if (isMars) {
-        marsLandingTargets.push(stem);
-        marsInteractiveTargets.push(stem);
+        marsLandingTargets.push(symbol);
+        marsInteractiveTargets.push(symbol);
       } else {
-        moonInteractiveTargets.push(stem);
+        moonInteractiveTargets.push(symbol);
       }
     });
 
@@ -1022,7 +954,8 @@ export const Universe3DPage: React.FC = () => {
               root = root.parent;
             }
             if (root.userData?.siteData) {
-              newHovered = root.userData.siteData.name;
+              const icon = getMonumentIcon(root.userData.monumentType || getMonumentType(root.userData.siteData));
+              newHovered = `${icon} ${root.userData.siteData.name}`;
             } else if (root.userData?.landmarkData) {
               newHovered = `🏔️ ${root.userData.landmarkData.name}`;
             }
@@ -1162,31 +1095,6 @@ export const Universe3DPage: React.FC = () => {
         }
       } else {
         controls.update();
-      }
-
-      // Update regional LOD patch opacity based on camera proximity
-      if (marsGlobeGroupRef.current?.visible && camera) {
-        const camPos = camera.position;
-
-        if (jezeroPatchMeshRef.current) {
-          const distToJezero = camPos.distanceTo(JEZERO_POS);
-          const targetOpacity = distToJezero < 36 ? Math.min(1.0, Math.max(0, (36 - distToJezero) / 12)) : 0.0;
-          const mat = jezeroPatchMeshRef.current.material as THREE.MeshStandardMaterial;
-          if (Math.abs(mat.opacity - targetOpacity) > 0.005) {
-            mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.1);
-            mat.visible = mat.opacity > 0.01;
-          }
-        }
-
-        if (galePatchMeshRef.current) {
-          const distToGale = camPos.distanceTo(GALE_POS);
-          const targetOpacity = distToGale < 36 ? Math.min(1.0, Math.max(0, (36 - distToGale) / 12)) : 0.0;
-          const mat = galePatchMeshRef.current.material as THREE.MeshStandardMaterial;
-          if (Math.abs(mat.opacity - targetOpacity) > 0.005) {
-            mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.1);
-            mat.visible = mat.opacity > 0.01;
-          }
-        }
       }
 
       renderer.render(scene, camera);
@@ -1340,32 +1248,195 @@ export const Universe3DPage: React.FC = () => {
         </div>
       )}
 
-      {/* Top Left Navigation Bar & Back Button */}
-      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 max-w-[280px]">
-        {viewMode !== 'SOLAR_SYSTEM' ? (
-          <button
-            onClick={() => handleSelectViewMode('SOLAR_SYSTEM')}
-            aria-label="Back to Solar System Overview"
-            className="px-4 py-2 rounded-full bg-[#101A29]/95 hover:bg-[#C6A36B] text-[#F0E8D9] hover:text-[#080D16] border border-[#C6A36B]/60 hover:border-transparent transition-all shadow-xl font-mono text-xs font-semibold tracking-wider flex items-center gap-2 group backdrop-blur-md"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            <span>BACK TO SOLAR SYSTEM</span>
-          </button>
-        ) : (
-          <div className="px-3.5 py-1.5 rounded-full bg-[#101A29]/80 border border-white/10 text-[11px] font-mono text-[#B6C0CC] backdrop-blur-md">
-            <span>EXPLORATION MODE:</span>{' '}
-            <span className="text-[#C6A36B] font-semibold">SOLAR SYSTEM OVERVIEW</span>
+      {/* Top Controls: Search, Back & Quick Actions */}
+      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 max-w-[320px] sm:max-w-[360px]">
+        {/* Navigation & Search Bar */}
+        <div className="flex items-center gap-2">
+          {viewMode !== 'SOLAR_SYSTEM' ? (
+            <button
+              onClick={() => handleSelectViewMode('SOLAR_SYSTEM')}
+              aria-label="Back to Solar System Overview"
+              className="px-3.5 py-2 rounded-full bg-[#101A29]/95 hover:bg-[#C6A36B] text-[#F0E8D9] hover:text-[#080D16] border border-[#C6A36B]/60 hover:border-transparent transition-all shadow-xl font-mono text-xs font-semibold tracking-wider flex items-center gap-1.5 group backdrop-blur-md shrink-0"
+            >
+              <span className="group-hover:-translate-x-1 transition-transform">←</span>
+              <span className="hidden sm:inline">SOLAR SYSTEM</span>
+            </button>
+          ) : (
+            <div className="px-3 py-1.5 rounded-full bg-[#101A29]/80 border border-white/10 text-[11px] font-mono text-[#B6C0CC] backdrop-blur-md hidden sm:block shrink-0">
+              <span className="text-[#C6A36B] font-semibold">SOLAR SYSTEM</span>
+            </div>
+          )}
+
+          {/* Real-time Mission and Place Search Bar */}
+          <div className="relative flex-1">
+            <div className="flex items-center rounded-full bg-[#101A29]/95 border border-[#C6A36B]/40 focus-within:border-[#C6A36B] px-3 py-1.5 backdrop-blur-md shadow-xl transition-all">
+              <span className="text-[#C6A36B] mr-2 text-xs">🔍</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                placeholder="Find mission or place..."
+                className="bg-transparent border-none outline-none text-xs text-[#F0E8D9] placeholder-[#B6C0CC]/60 w-full font-sans"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-[#B6C0CC] hover:text-white text-xs ml-1"
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Real-time Search Dropdown */}
+            {isSearchFocused && searchQuery.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 max-h-64 overflow-y-auto rounded-2xl bg-[#080D16]/98 border border-[#C6A36B]/60 shadow-2xl backdrop-blur-xl p-1.5 z-40">
+                {searchResults.length === 0 ? (
+                  <div className="p-3 text-center text-xs font-mono text-[#B6C0CC]/70">
+                    No matching missions or landmarks found
+                  </div>
+                ) : (
+                  searchResults.map((res, idx) => {
+                    const isSite = res.type === 'site';
+                    const icon = isSite ? getMonumentIcon(getMonumentType(res.data)) : '🏔️';
+                    const name = res.data.name;
+                    const sub = isSite
+                      ? `${res.data.body.toUpperCase()} • ${res.data.locationName}`
+                      : `MARS • ${res.data.type.toUpperCase()}`;
+                    return (
+                      <button
+                        key={idx}
+                        onMouseDown={() => handleSelectSearchResult(res)}
+                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#C6A36B]/20 transition-all flex items-center gap-2.5 group"
+                      >
+                        <span className="text-base group-hover:scale-110 transition-transform">{icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-display text-[#F0E8D9] truncate group-hover:text-[#C6A36B]">
+                            {name}
+                          </div>
+                          <div className="text-[10px] font-mono text-[#B6C0CC]/70 truncate">{sub}</div>
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Quick Exploration Utility Bar: Reset View, Visual Legend & Landmarks */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Reset View Button */}
+          <button
+            onClick={handleResetView}
+            title="Smoothly reset camera to default orbit view"
+            className="px-3 py-1.5 rounded-full bg-[#101A29]/90 hover:bg-white/10 border border-white/15 text-[11px] font-mono text-[#B6C0CC] hover:text-[#F0E8D9] backdrop-blur-md shadow-md transition-all flex items-center gap-1.5"
+          >
+            <span>↺</span>
+            <span>RESET VIEW</span>
+          </button>
+
+          {/* Visual Legend Toggle */}
+          <button
+            onClick={() => setIsLegendOpen(!isLegendOpen)}
+            title="Visual guide to spacecraft symbols"
+            className={`px-3 py-1.5 rounded-full border text-[11px] font-mono backdrop-blur-md shadow-md transition-all flex items-center gap-1.5 ${
+              isLegendOpen
+                ? 'bg-[#C6A36B] text-[#080D16] font-semibold border-[#C6A36B]'
+                : 'bg-[#101A29]/90 border-white/15 text-[#B6C0CC] hover:text-[#F0E8D9]'
+            }`}
+          >
+            <span>🧭</span>
+            <span>LEGEND</span>
+          </button>
+
+          {/* Mars Landmarks Toggle (visible only on Mars) */}
+          {viewMode === 'MARS' && (
+            <button
+              onClick={() => setShowLandmarks(!showLandmarks)}
+              title="Toggle visibility of Martian mountains and craters"
+              className={`px-3 py-1.5 rounded-full border text-[11px] font-mono backdrop-blur-md shadow-md transition-all flex items-center gap-1.5 ${
+                showLandmarks
+                  ? 'bg-[#38bdf8]/20 border-[#38bdf8]/60 text-[#38bdf8]'
+                  : 'bg-[#101A29]/90 border-white/15 text-[#B6C0CC]'
+              }`}
+            >
+              <span>🏔️</span>
+              <span>LANDMARKS: {showLandmarks ? 'ON' : 'OFF'}</span>
+            </button>
+          )}
+        </div>
 
         {/* Hover Target Badge */}
         {hoveredObject && (
-          <div className="px-3.5 py-1.5 rounded-lg bg-[#080D16]/90 border border-[#C6A36B] text-xs font-display text-[#F0E8D9] tracking-wider shadow-xl animate-fadeIn">
+          <div className="px-3.5 py-1.5 rounded-lg bg-[#080D16]/95 border border-[#C6A36B] text-xs font-display text-[#F0E8D9] tracking-wider shadow-xl animate-fadeIn">
             TARGET: <span className="text-[#C6A36B] font-semibold">{hoveredObject}</span>
-            <span className="block text-[10px] font-mono text-[#B6C0CC]/70">CLICK TO EXAMINE</span>
+            <span className="block text-[10px] font-mono text-[#B6C0CC]/70">CLICK TO EXAMINE EXHIBIT</span>
           </div>
         )}
       </div>
+
+      {/* Visual Legend Dialog */}
+      {isLegendOpen && (
+        <div className="absolute top-28 left-4 z-40 w-72 sm:w-80 p-4 rounded-2xl bg-[#080D16]/98 border border-[#C6A36B]/60 shadow-2xl backdrop-blur-xl animate-fadeIn">
+          <div className="flex items-center justify-between pb-2 mb-3 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🧭</span>
+              <h4 className="font-display text-sm text-[#F0E8D9]">Spacecraft & Landmark Symbols</h4>
+            </div>
+            <button
+              onClick={() => setIsLegendOpen(false)}
+              className="text-xs p-1 rounded-full text-[#B6C0CC] hover:text-white"
+              aria-label="Close Legend"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="space-y-2.5 text-xs">
+            <div className="flex items-start gap-2.5">
+              <span className="text-lg">🚙</span>
+              <div>
+                <div className="font-semibold text-[#F0E8D9]">Rover</div>
+                <div className="text-[11px] text-[#B6C0CC] font-light">Wheeled robotic explorer (e.g. Curiosity, Perseverance, Opportunity)</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="text-lg">🛸</span>
+              <div>
+                <div className="font-semibold text-[#F0E8D9]">Lander</div>
+                <div className="text-[11px] text-[#B6C0CC] font-light">Stationary surface scientific station (e.g. Viking, InSight, Phoenix)</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="text-lg">🛰️</span>
+              <div>
+                <div className="font-semibold text-[#F0E8D9]">Probe / Orbiter</div>
+                <div className="text-[11px] text-[#B6C0CC] font-light">Atmospheric entry, impactor, or orbital probe (e.g. Cassini, Galileo)</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="text-lg">🚁</span>
+              <div>
+                <div className="font-semibold text-[#F0E8D9]">Helicopter</div>
+                <div className="text-[11px] text-[#B6C0CC] font-light">Aerial rotorcraft scout (e.g. Ingenuity)</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="text-lg">🏔️</span>
+              <div>
+                <div className="font-semibold text-[#38bdf8]">Geological Landmark</div>
+                <div className="text-[11px] text-[#B6C0CC] font-light">Major volcanic peak, canyon, or crater (e.g. Olympus Mons)</div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-white/10 text-[10px] font-mono text-[#C6A36B] text-center">
+            Click or tap any 3D monument to inspect its museum exhibit
+          </div>
+        </div>
+      )}
 
       {/* Top Center Responsive Destination Bar */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 max-w-[92vw] overflow-x-auto no-scrollbar p-1 rounded-full bg-[#080D16]/90 border border-white/10 backdrop-blur-md shadow-2xl flex items-center gap-1">
@@ -1385,44 +1456,6 @@ export const Universe3DPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Mars-Specific Explorer Toolbar */}
-      {viewMode === 'MARS' && (
-        <div className="absolute top-16 left-4 z-20 flex flex-wrap items-center gap-2">
-          {/* Surface Mode Toggle */}
-          <button
-            onClick={handleToggleMarsSurfaceMode}
-            className="px-3 py-1.5 rounded-xl bg-[#101A29]/90 hover:bg-[#C6A36B] text-[#F0E8D9] hover:text-[#080D16] border border-white/15 text-[11px] font-mono transition-all backdrop-blur-md flex items-center gap-1.5"
-            title="Toggle between NASA Viking optical color and MGS MOLA elevation topography"
-          >
-            <span>🗺️ VISUAL LAYER:</span>
-            <span className="font-bold text-[#C6A36B] group-hover:text-[#080D16]">
-              {marsSurfaceMode === 'VIKING_COLOR' ? 'VIKING GLOBAL COLOR' : 'MOLA SHADED RELIEF'}
-            </span>
-          </button>
-
-          {/* Landmarks Toggle */}
-          <button
-            onClick={() => setShowLandmarks(!showLandmarks)}
-            className={`px-3 py-1.5 rounded-xl border text-[11px] font-mono transition-all backdrop-blur-md flex items-center gap-1.5 ${
-              showLandmarks
-                ? 'bg-[#38bdf8]/15 border-[#38bdf8]/60 text-[#38bdf8]'
-                : 'bg-[#101A29]/90 border-white/15 text-[#B6C0CC]'
-            }`}
-          >
-            <span>🏔️ LANDMARKS:</span>
-            <span className="font-bold">{showLandmarks ? 'ON' : 'OFF'}</span>
-          </button>
-
-          {/* Map Provenance Information Button */}
-          <button
-            onClick={() => setShowMapSourcesModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-[#101A29]/90 hover:bg-white/10 border border-white/15 text-[11px] font-mono text-[#B6C0CC] transition-all backdrop-blur-md"
-          >
-            ℹ️ DATA PROVENANCE
-          </button>
-        </div>
-      )}
-
       {/* Scientific Transparency & Disclaimer Badges */}
       <div className="absolute bottom-4 right-4 z-20 hidden md:block max-w-sm pointer-events-none">
         {viewMode === 'SOLAR_SYSTEM' && (
@@ -1432,27 +1465,27 @@ export const Universe3DPage: React.FC = () => {
         )}
         {viewMode === 'MERCURY' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
-            🪨 Mercury: Procedural illustrative model informed by surface features documented by NASA's MESSENGER mission. Not a spacecraft image or scientific surface mosaic.
+            🪨 Mercury: Procedural illustrative model informed by surface features documented by NASA's MESSENGER mission.
           </div>
         )}
         {viewMode === 'VENUS' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
-            🟡 Venus: Procedural atmospheric haze model representing dense sulfuric acid cloud decks documented by Pioneer Venus and Magellan radar.
+            🟡 Venus: Procedural atmospheric haze model representing dense sulfuric acid cloud decks.
           </div>
         )}
         {viewMode === 'MARS' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/80 bg-[#080D16]/90 px-3 py-1.5 rounded-xl border border-[#C6A36B]/40 backdrop-blur-sm">
-            🔴 Mars Surface: Authentic NASA Viking MDIM 2.1 Global Color Mosaic (232 m/px) & MGS MOLA elevation topography (1.5× vertical relief).
+            🔴 Mars Surface: Authentic NASA Viking MDIM 2.1 Global Color Mosaic on spherical globe.
           </div>
         )}
         {viewMode === 'JUPITER' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
-            🪐 Jupiter: Procedural illustrative model depicting dynamic zonal belts and Great Red Spot anticyclone informed by NASA Juno and Cassini observations.
+            🪐 Jupiter: Procedural model depicting dynamic zonal belts and Great Red Spot anticyclone.
           </div>
         )}
         {viewMode === 'SATURN' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
-            🪐 Saturn & Rings: Procedural illustrative model depicting atmospheric bands and Cassini Division ring gap informed by Voyager and Cassini imagery.
+            🪐 Saturn & Rings: Procedural model depicting atmospheric bands and Cassini Division ring gap.
           </div>
         )}
       </div>
@@ -1463,7 +1496,12 @@ export const Universe3DPage: React.FC = () => {
         <span>•</span>
         <span>SCROLL: ZOOM IN / OUT</span>
         <span>•</span>
-        <span>CLICK LANDMARK OR LANDING SITE TO ENTER</span>
+        <span>CLICK MONUMENT OR LANDMARK TO ENTER</span>
+      </div>
+
+      {/* Mobile Touch Guidance Banner */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none md:hidden bg-[#080D16]/90 border border-white/10 px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-xl text-[10px] sm:text-[11px] font-mono text-[#F0E8D9]/90 text-center whitespace-nowrap">
+        👆 Drag to rotate • Pinch to zoom • Tap monument
       </div>
 
       {/* Mars Landmark Information Drawer */}
@@ -1471,13 +1509,19 @@ export const Universe3DPage: React.FC = () => {
         <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
           <div>
             <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
-              <div>
-                <span className="text-[10px] mono font-semibold tracking-widest text-[#38bdf8] uppercase block">
-                  GEOLOGICAL FEATURE // {selectedLandmark.type.toUpperCase()}
-                </span>
-                <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-1">
-                  {selectedLandmark.name}
-                </h2>
+              <div className="flex items-start gap-2.5">
+                <span className="text-2xl mt-0.5">🏔️</span>
+                <div>
+                  <span className="text-[10px] font-mono font-semibold tracking-widest text-[#38bdf8] uppercase block">
+                    MARTIAN GEOLOGICAL LANDMARK
+                  </span>
+                  <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-0.5">
+                    {selectedLandmark.name}
+                  </h2>
+                  <div className="text-xs text-[#B6C0CC]/80 font-mono mt-0.5 capitalize">
+                    {selectedLandmark.type} on Mars
+                  </div>
+                </div>
               </div>
               <button
                 onClick={handleCloseDrawer}
@@ -1488,33 +1532,37 @@ export const Universe3DPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Coordinates & Elevation */}
-            <div className="bg-[#101A29]/80 rounded-xl p-3 border border-white/5 mb-4 text-xs font-mono">
-              <div className="text-[#38bdf8] font-medium mb-1">
-                📍 MARTIAN COORDINATES: {formatCoordinates({ lat: selectedLandmark.lat, lon: selectedLandmark.lon })}
+            {/* Quick Fact Strip */}
+            <div className="bg-[#101A29]/80 rounded-2xl p-3.5 border border-white/5 mb-5 space-y-1.5 text-xs font-sans">
+              <div className="flex items-center justify-between">
+                <span className="text-[#B6C0CC] font-mono text-[11px]">LOCATION:</span>
+                <span className="text-[#F0E8D9] font-medium">Martian Surface</span>
               </div>
-              <div className="text-[#B6C0CC]">
-                ELEVATION:{' '}
-                <span className="text-[#F0E8D9]">
-                  {selectedLandmark.elevationKm > 0 ? `+${selectedLandmark.elevationKm}` : selectedLandmark.elevationKm} km above Martian datum
+              <div className="flex items-center justify-between">
+                <span className="text-[#B6C0CC] font-mono text-[11px]">PEAK ELEVATION:</span>
+                <span className="text-[#38bdf8] font-mono font-semibold">
+                  {selectedLandmark.elevationKm > 0 ? `+${selectedLandmark.elevationKm} km` : `${selectedLandmark.elevationKm} km`}
                 </span>
+              </div>
+              <div className="text-[11px] text-[#B6C0CC]/70 italic pt-1 border-t border-white/5">
+                {selectedLandmark.elevationKm > 10 ? 'Nearly 3× the height of Earth\'s Mount Everest' : 'Prominent planetary geological feature'}
               </div>
             </div>
 
-            {/* Geological Description */}
+            {/* Geological Story */}
             <div className="mb-5">
               <h3 className="text-xs font-mono tracking-wider text-[#38bdf8] uppercase mb-1.5">
-                GEOLOGICAL SIGNIFICANCE
+                THE GEOLOGICAL STORY
               </h3>
               <p className="text-sm font-sans text-[#F0E8D9]/90 leading-relaxed font-light">
                 {selectedLandmark.description}
               </p>
             </div>
 
-            {/* Discovery Quote */}
+            {/* Fascinating Discovery */}
             <div className="bg-[#38bdf8]/10 border-l-2 border-[#38bdf8] p-3.5 rounded-r-xl mb-6">
-              <span className="text-[10px] mono font-bold text-[#38bdf8] tracking-wider uppercase block mb-1">
-                💡 GEOLOGICAL DISCOVERY
+              <span className="text-[10px] font-mono font-bold text-[#38bdf8] tracking-wider uppercase block mb-1">
+                💡 WHY IT MATTERS
               </span>
               <p className="text-xs font-serif italic text-[#F0E8D9] leading-relaxed">
                 "{selectedLandmark.funFact}"
@@ -1526,7 +1574,7 @@ export const Universe3DPage: React.FC = () => {
             onClick={handleCloseDrawer}
             className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/20 transition-all text-xs font-sans tracking-[0.18em] uppercase font-medium text-center"
           >
-            RETURN TO PLANETARY VIEW
+            RETURN TO PLANET VIEW
           </button>
         </div>
       )}
@@ -1537,15 +1585,18 @@ export const Universe3DPage: React.FC = () => {
           <div>
             {/* Header info */}
             <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
-              <div>
-                <span className="text-[10px] mono font-semibold tracking-widest text-[#C6A36B] uppercase block">
-                  EXPLORATION DOSSIER // {selectedSite.body.toUpperCase()}
-                </span>
-                <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-1">
-                  {selectedSite.name}
-                </h2>
-                <div className="text-xs text-[#B6C0CC]/80 font-mono mt-0.5">
-                  {selectedSite.designation}
+              <div className="flex items-start gap-2.5">
+                <span className="text-2xl mt-0.5">{getMonumentIcon(getMonumentType(selectedSite))}</span>
+                <div>
+                  <span className="text-[10px] font-mono font-semibold tracking-widest text-[#C6A36B] uppercase block">
+                    {selectedSite.body.toUpperCase()} // {getMonumentTypeLabel(getMonumentType(selectedSite)).toUpperCase()}
+                  </span>
+                  <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-0.5">
+                    {selectedSite.name}
+                  </h2>
+                  <div className="text-xs text-[#B6C0CC]/80 font-mono mt-0.5">
+                    {selectedSite.designation}
+                  </div>
                 </div>
               </div>
               <button
@@ -1557,50 +1608,40 @@ export const Universe3DPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Coordinates & Location */}
-            {selectedSite.body === 'saturn' ? (
-              <div className="bg-purple-900/20 rounded-xl p-3 border border-purple-500/30 mb-4 text-xs font-mono">
-                <div className="text-purple-300 font-medium mb-1">
-                  🪐 {selectedSite.locationName}
-                </div>
-                <div className="text-[#B6C0CC]">
-                  MISSION TYPE: <span className="text-[#F0E8D9]">Saturn Flagship Orbiter // Grand Finale</span>
-                </div>
-                <div className="text-[#B6C0CC] mt-1">
-                  HISTORIC PLUNGE: <span className="text-[#F0E8D9]">September 15, 2017 (10:31 UTC Entry)</span>
-                </div>
-                <div className="text-[#B6C0CC] mt-1">
-                  HISTORICAL DISTANCE: <span className="text-[#F0E8D9]">{selectedSite.distanceFromEarth}</span>
-                </div>
-                <div className="text-[#B6C0CC] mt-1">
-                  STATUS: <span className="text-purple-400 font-bold">{selectedSite.status}</span>
-                </div>
-                <div className="mt-2 text-[10px] text-amber-300 bg-amber-500/10 p-1.5 rounded border border-amber-500/20">
-                  ⚠️ MISSION CONCLUDED // SPACECRAFT VAPORIZED IN SATURN UPPER ATMOSPHERE — NO OPERATIONAL RECEIVER
-                </div>
+            {/* Plain Language Museum Dossier */}
+            <div className="bg-[#101A29]/80 rounded-2xl p-3.5 border border-white/5 mb-5 space-y-2 text-xs font-sans">
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-[#B6C0CC] font-mono text-[11px] whitespace-nowrap">LOCATION:</span>
+                <span className="text-[#F0E8D9] font-medium text-right">{selectedSite.locationName}</span>
               </div>
-            ) : (
-              <div className="bg-[#101A29]/80 rounded-xl p-3 border border-white/5 mb-4 text-xs font-mono">
-                <div className="text-[#C6A36B] font-medium mb-1">
-                  📍 {selectedSite.locationName}
+              <div className="flex items-center justify-between">
+                <span className="text-[#B6C0CC] font-mono text-[11px]">TIMELINE:</span>
+                <span className="text-[#F0E8D9] font-mono font-medium">
+                  {selectedSite.year ? `Touchdown: ${selectedSite.year}` : 'Historical Flight'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#B6C0CC] font-mono text-[11px]">STATUS:</span>
+                <span className="text-[#C6A36B] font-mono font-semibold">
+                  {selectedSite.status}
+                </span>
+              </div>
+              {selectedSite.distanceFromEarth && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[#B6C0CC] font-mono text-[11px]">DISTANCE FROM EARTH:</span>
+                  <span className="text-[#B6C0CC] font-mono text-[11px]">{selectedSite.distanceFromEarth}</span>
                 </div>
-                <div className="text-[#B6C0CC]">
-                  COORDINATES:{' '}
-                  <span className="text-[#F0E8D9]">
-                    {formatCoordinates({ lat: selectedSite.lat, lon: selectedSite.lon })}
-                  </span>
+              )}
+            </div>
+
+            {/* Special Saturn / Cassini atmospheric plunge notice */}
+            {selectedSite.body === 'saturn' && (
+              <div className="mb-4 p-3 rounded-xl bg-purple-900/25 border border-purple-500/40 text-xs font-sans text-purple-200">
+                <div className="font-semibold text-purple-300 mb-1 flex items-center gap-1.5">
+                  <span>🪐</span>
+                  <span>The Grand Finale Plunge</span>
                 </div>
-                {selectedSite.elevationKm !== undefined && (
-                  <div className="text-[#B6C0CC] mt-1">
-                    DATUM ELEVATION: <span className="text-[#F0E8D9]">{selectedSite.elevationKm} km</span>
-                  </div>
-                )}
-                <div className="text-[#B6C0CC] mt-1">
-                  TOUCHDOWN YEAR: <span className="text-[#F0E8D9]">{selectedSite.year}</span>
-                </div>
-                <div className="text-[#B6C0CC] mt-1">
-                  STATUS: <span className="text-[#C6A36B]">{selectedSite.status}</span>
-                </div>
+                Cassini completed 22 daring dives between Saturn and its rings before intentional atmospheric entry on September 15, 2017, transmitting atmospheric data until its final seconds.
               </div>
             )}
 
@@ -1615,12 +1656,10 @@ export const Universe3DPage: React.FC = () => {
                     <button
                       key={sIdx}
                       onClick={() => focusLandingSite(sub.lat, sub.lon, true)}
-                      className="w-full text-left p-1.5 rounded-lg bg-black/40 hover:bg-[#67e8f9]/20 border border-white/5 transition-all text-[11px] font-mono flex items-center justify-between"
+                      className="w-full text-left p-2 rounded-lg bg-black/40 hover:bg-[#67e8f9]/20 border border-white/5 transition-all text-xs font-sans flex items-center justify-between"
                     >
-                      <span className="text-[#F0E8D9]">{sub.name}</span>
-                      <span className="text-[#67e8f9] text-[10px]">
-                        {formatCoordinates({ lat: sub.lat, lon: sub.lon })}
-                      </span>
+                      <span className="text-[#F0E8D9] font-medium">{sub.name}</span>
+                      <span className="text-[#67e8f9] text-[10px] font-mono">View Site →</span>
                     </button>
                   ))}
                 </div>
@@ -1629,59 +1668,28 @@ export const Universe3DPage: React.FC = () => {
 
             {/* Shared Location Notice (e.g. Ingenuity with Perseverance) */}
             {selectedSite.sharedWith && (
-              <div className="mb-4 p-3 rounded-xl bg-[#C6A36B]/10 border border-[#C6A36B]/30 text-xs font-mono">
-                <span className="text-[#C6A36B] font-bold block mb-0.5">🔗 SHARED MISSION AREA</span>
+              <div className="mb-4 p-3 rounded-xl bg-[#C6A36B]/10 border border-[#C6A36B]/30 text-xs font-sans">
+                <span className="text-[#C6A36B] font-bold block mb-0.5">🔗 SHARED EXPLORATION SITE</span>
                 <span className="text-[#B6C0CC]">
-                  Operated in conjunction with the {selectedSite.sharedWith.toUpperCase()} exploration site at Jezero Crater.
+                  Operated in conjunction with {selectedSite.sharedWith.toUpperCase()} across the Jezero Crater ancient river delta.
                 </span>
               </div>
             )}
 
-            {/* Regional High-Resolution Orbital Reconnaissance (Section 4.1 & 4.2 Fix) */}
-            {selectedSite.body === 'mars' && (() => {
-              const layer = getRegionalMarsLayer(selectedSite.id);
-              if (!layer) return null;
-              return (
-                <div className="mb-4 rounded-xl overflow-hidden border border-white/10 bg-[#101A29]">
-                  <div className="p-2 border-b border-white/10 flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-[#C6A36B] font-semibold">
-                      🛰️ REGIONAL RECONNAISSANCE ({layer.instrument.includes('CTX') ? `MRO CTX ~${layer.processedResolutionMetersPerPixel} m/px` : 'NASA Viking MDIM 2.1'})
-                    </span>
-                    <span className="text-[#B6C0CC]">
-                      {layer.isGeoreferenced ? 'GEOREFERENCED SURFACE LOD' : 'REGIONAL PREVIEW'}
-                    </span>
-                  </div>
-                  <div className="relative h-36 w-full overflow-hidden">
-                    <img
-                      src={layer.imageAsset}
-                      alt={`${selectedSite.name} regional reconnaissance`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex items-end p-2">
-                      <div className="text-[10px] font-mono text-[#F0E8D9] bg-black/75 px-2 py-0.5 rounded leading-tight">
-                        <span>{layer.name}</span>
-                        <span className="block text-[#C6A36B] text-[9px]">{layer.productId}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
             {/* Accessible Narrative Story */}
             <div className="mb-5">
               <h3 className="text-xs font-mono tracking-wider text-[#C6A36B] uppercase mb-1.5">
-                WHAT HAPPENED TO IT?
+                THE STORY
               </h3>
               <p className="text-sm font-sans text-[#F0E8D9]/90 leading-relaxed font-light">
                 {selectedSite.description}
               </p>
             </div>
 
-            {/* Fascinating Discovery */}
+            {/* Why It Matters / Fascinating Discovery */}
             <div className="bg-[#C6A36B]/10 border-l-2 border-[#C6A36B] p-3.5 rounded-r-xl mb-6">
-              <span className="text-[10px] mono font-bold text-[#C6A36B] tracking-wider uppercase block mb-1">
-                💡 FASCINATING DISCOVERY
+              <span className="text-[10px] font-mono font-bold text-[#C6A36B] tracking-wider uppercase block mb-1">
+                💡 WHY IT MATTERS
               </span>
               <p className="text-xs font-serif italic text-[#F0E8D9] leading-relaxed">
                 "{selectedSite.fascinatingFact}"
@@ -1708,6 +1716,13 @@ export const Universe3DPage: React.FC = () => {
               className="w-full py-2.5 rounded-xl bg-[#F0E8D9]/5 hover:bg-[#F0E8D9]/15 text-[#F0E8D9] border border-[#F0E8D9]/20 transition-all text-xs font-sans tracking-[0.18em] uppercase font-medium text-center block"
             >
               EXPLORE FULL MISSION STORY →
+            </button>
+
+            <button
+              onClick={handleCloseDrawer}
+              className="w-full py-2 rounded-xl bg-transparent hover:bg-white/5 text-[#B6C0CC] hover:text-[#F0E8D9] transition-all text-[11px] font-mono tracking-wider uppercase text-center"
+            >
+              RETURN TO PLANET
             </button>
           </div>
         </div>
@@ -1829,92 +1844,7 @@ export const Universe3DPage: React.FC = () => {
         </div>
       )}
 
-      {/* Map Data Provenance & Sources Modal */}
-      {showMapSourcesModal && (
-        <div className="absolute inset-0 z-50 bg-[#080D16]/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="max-w-xl w-full bg-[#101A29] border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[85vh]">
-            <div className="flex items-start justify-between pb-3 border-b border-white/10 mb-4">
-              <div>
-                <span className="text-[10px] font-mono text-[#C6A36B] tracking-wider uppercase block">
-                  SCIENTIFIC DATA PROVENANCE //
-                </span>
-                <h3 className="font-display text-2xl text-[#F0E8D9]">Mars Planetary Map Sources</h3>
-              </div>
-              <button
-                onClick={() => setShowMapSourcesModal(false)}
-                className="text-xs p-1.5 rounded-full border border-white/15 text-[#B6C0CC] hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="space-y-4 text-xs font-sans text-[#B6C0CC] leading-relaxed">
-              <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                <span className="font-mono text-[#C6A36B] font-bold block mb-1">
-                  1. GLOBAL SURFACE COLOR MOSAIC
-                </span>
-                <p>
-                  <strong className="text-[#F0E8D9]">Product:</strong> Mars Viking MDIM 2.1 Color Mosaic (NASA / USGS Astrogeology).
-                  <br />
-                  <strong className="text-[#F0E8D9]">Native Resolution:</strong> 232 meters/pixel (downsampled to 2048×1024 equirectangular raster for real-time 60fps rendering).
-                  <br />
-                  <strong className="text-[#F0E8D9]">Projection:</strong> Equirectangular (Center Longitude = 0° at Sinus Meridiani).
-                  <br />
-                  <strong className="text-[#F0E8D9]">License:</strong> Public Domain (USGS / NASA Open Data).
-                </p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                <span className="font-mono text-[#C6A36B] font-bold block mb-1">
-                  2. NUMERICAL 3D TERRAIN ELEVATION MODEL
-                </span>
-                <p>
-                  <strong className="text-[#F0E8D9]">Source Product:</strong> USGS Astrogeology Mars MGS MOLA DEM 463m (Mars Orbiter Laser Altimeter, Mars Global Surveyor).
-                  <br />
-                  <strong className="text-[#F0E8D9]">Format & Samples:</strong> 2048×1024 16-bit unsigned integer height array (lossless integer meter mapping: elevation = uint16 - 32768).
-                  <br />
-                  <strong className="text-[#F0E8D9]">Elevation Range:</strong> -8,152 m (Hellas Basin) to +21,171 m (Olympus Mons) referenced to the Martian Areoid.
-                  <br />
-                  <strong className="text-[#F0E8D9]">3D Implementation:</strong> Displaced vertex positions generated dynamically on the sphere grid with 1.5× vertical exaggeration and real surface normals.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                <span className="font-mono text-[#C6A36B] font-bold block mb-1">
-                  3. REGIONAL GEOREFERENCED SURFACE LOD
-                </span>
-                <p>
-                  <strong className="text-[#F0E8D9]">Jezero Crater (Perseverance & Ingenuity):</strong> MRO Context Camera (CTX) uncontrolled mosaic, Tile (Level 6, Row 25, Col 91), covering 75.94°E–78.75°E, 16.88°N–19.69°N at ~325 m/pixel.
-                  <br />
-                  <strong className="text-[#F0E8D9]">Gale Crater (Curiosity):</strong> MRO Context Camera (CTX) uncontrolled mosaic, Tile (Level 6, Row 33, Col 112), covering 135.0°E–137.81°E, -5.63°S to -2.81°S at ~325 m/pixel.
-                  <br />
-                  <strong className="text-[#F0E8D9]">Surface Integration:</strong> Curved spherical surface patches draped onto the MOLA terrain that smoothly fade in as the visitor zooms close.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                <span className="font-mono text-[#C6A36B] font-bold block mb-1">
-                  4. HISTORICAL MISSIONS & EPHEMERIS
-                </span>
-                <p>
-                  <strong className="text-[#F0E8D9]">Cassini-Huygens:</strong> Represented as a historical mission event in Saturn's upper atmosphere concluding on September 15, 2017 (Grand Finale), not as an escaping deep-space craft.
-                  <br />
-                  <strong className="text-[#F0E8D9]">Light Delay Simulation:</strong> Distances and light delays are educational reference values based on documented planetary ephemerides and do not claim live telemetry links.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-white/10 text-right">
-              <button
-                onClick={() => setShowMapSourcesModal(false)}
-                className="px-5 py-2 rounded-xl bg-[#C6A36B] text-[#080D16] font-mono text-xs font-bold uppercase hover:brightness-110"
-              >
-                CLOSE
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 360° Panorama Viewer Modal */}
       {selectedSite?.hasPanorama && (
