@@ -1,10 +1,48 @@
 import * as THREE from 'three';
+import marsVikingMap from '../assets/mars-viking-2048.jpg';
+import marsMolaMap from '../assets/mars-mola-topography.jpg';
 
 /**
- * Procedural planet texture generator using Offscreen/Canvas2D.
- * Guarantees 100% offline functionality, instantaneous load, zero network dependencies.
+ * Authentic NASA Planetary Map Loaders & Procedural Texture Generators
+ * Guarantees 100% offline functionality, zero external network dependencies,
+ * and traceable scientific provenance.
  */
 
+/**
+ * Authentic NASA Viking Orbiter MDIM 2.1 Global Color Mosaic Texture.
+ * Product: Mars_Viking_MDIM21_ClrMosaic_global_232m
+ * Resolution: 2048 x 1024 equirectangular projection, centered on 0° longitude.
+ */
+export function createMarsVikingTexture(): THREE.Texture {
+  const loader = new THREE.TextureLoader();
+  const texture = loader.load(marsVikingMap);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  return texture;
+}
+
+/**
+ * Authentic NASA MGS MOLA Topographic Elevation Color Hillshade Texture.
+ * Product: Mars_MGS_MOLA_ClrShade_merge_global_463m
+ * Resolution: 2048 x 1024 equirectangular projection.
+ */
+export function createMarsMolaTexture(): THREE.Texture {
+  const loader = new THREE.TextureLoader();
+  const texture = loader.load(marsMolaMap);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  return texture;
+}
+
+/**
+ * Sun self-luminous procedural corona texture.
+ */
 export function createSunTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -48,6 +86,10 @@ export function createSunTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+/**
+ * Mercury procedural illustrative model informed by NASA MESSENGER surface features.
+ * Note: Procedural illustrative model; not a spacecraft image or scientific surface mosaic.
+ */
 export function createMercuryTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -136,6 +178,9 @@ export function createMercuryTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+/**
+ * Jupiter procedural illustrative model depicting atmospheric cloud belts and Great Red Spot.
+ */
 export function createJupiterTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -217,71 +262,10 @@ export function createJupiterTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-export function createMarsTexture(): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d')!;
-
-  // Base Martian red/ochre gradient
-  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  grad.addColorStop(0, '#E88655');
-  grad.addColorStop(0.5, '#C45729');
-  grad.addColorStop(1, '#B3461D');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Dark albedo regions (Syrtis Major, Acidalia, Sinus Sabaeus)
-  ctx.fillStyle = 'rgba(70, 32, 20, 0.45)';
-  const darkRegions = [
-    { x: 0.65 * canvas.width, y: 0.45 * canvas.height, rx: 90, ry: 60 }, // Syrtis Major
-    { x: 0.35 * canvas.width, y: 0.35 * canvas.height, rx: 140, ry: 50 }, // Acidalia
-    { x: 0.5 * canvas.width, y: 0.55 * canvas.height, rx: 180, ry: 40 },  // Sinus Sabaeus / Meridiani
-    { x: 0.15 * canvas.width, y: 0.52 * canvas.height, rx: 80, ry: 45 },  // Mare Sirenum
-  ];
-  darkRegions.forEach(reg => {
-    ctx.beginPath();
-    ctx.ellipse(reg.x, reg.y, reg.rx, reg.ry, 0, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // Valles Marineris canyon scratch
-  ctx.strokeStyle = 'rgba(45, 18, 10, 0.6)';
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.moveTo(0.25 * canvas.width, 0.55 * canvas.height);
-  ctx.bezierCurveTo(0.35 * canvas.width, 0.57 * canvas.height, 0.45 * canvas.width, 0.53 * canvas.height, 0.55 * canvas.width, 0.56 * canvas.height);
-  ctx.stroke();
-
-  // Subtle crater rims
-  ctx.strokeStyle = 'rgba(230, 160, 120, 0.35)';
-  ctx.lineWidth = 2;
-  for (let i = 0; i < 60; i++) {
-    const cx = Math.random() * canvas.width;
-    const cy = 0.15 * canvas.height + Math.random() * (0.7 * canvas.height);
-    const cr = Math.random() * 16 + 4;
-    ctx.beginPath();
-    ctx.arc(cx, cy, cr, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  // Polar Ice Caps (Planum Boreum and Planum Australe)
-  ctx.fillStyle = 'rgba(245, 248, 255, 0.9)';
-  // North Pole
-  ctx.beginPath();
-  ctx.ellipse(canvas.width / 2, 8, canvas.width * 0.45, 22, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // South Pole
-  ctx.beginPath();
-  ctx.ellipse(canvas.width / 2, canvas.height - 8, canvas.width * 0.4, 18, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
-  return texture;
-}
-
+/**
+ * Moon procedural texture showing lunar maria (Oceanus Procellarum, Mare Tranquillitatis)
+ * and Tycho ray splash.
+ */
 export function createMoonTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -302,7 +286,7 @@ export function createMoonTexture(): THREE.CanvasTexture {
     { x: 0.68 * canvas.width, y: 0.44 * canvas.height, rx: 45, ry: 45 },  // Mare Crisium
     { x: 0.45 * canvas.width, y: 0.60 * canvas.height, rx: 70, ry: 40 },  // Mare Nubium
   ];
-  maria.forEach(m => {
+  maria.forEach((m) => {
     ctx.beginPath();
     ctx.ellipse(m.x, m.y, m.rx, m.ry, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -343,6 +327,9 @@ export function createMoonTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+/**
+ * Venus sulfuric cloud deck procedural model.
+ */
 export function createVenusTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -375,6 +362,9 @@ export function createVenusTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+/**
+ * Earth oceanic and continental procedural model.
+ */
 export function createEarthTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -427,6 +417,9 @@ export function createEarthTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+/**
+ * Saturn atmospheric bands procedural model.
+ */
 export function createSaturnTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -449,6 +442,9 @@ export function createSaturnTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+/**
+ * Saturn rings procedural texture showing Cassini division gap.
+ */
 export function createSaturnRingTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
@@ -459,7 +455,7 @@ export function createSaturnRingTexture(): THREE.CanvasTexture {
   grad.addColorStop(0, 'rgba(0,0,0,0)');
   grad.addColorStop(0.1, 'rgba(195, 170, 130, 0.8)');
   grad.addColorStop(0.45, 'rgba(180, 155, 115, 0.7)');
-  grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.05)'); // Cassini Division gap!
+  grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.05)'); // Cassini Division gap
   grad.addColorStop(0.55, 'rgba(160, 135, 95, 0.6)');
   grad.addColorStop(0.9, 'rgba(140, 115, 75, 0.4)');
   grad.addColorStop(1, 'rgba(0,0,0,0)');
