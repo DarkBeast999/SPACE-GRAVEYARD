@@ -1270,6 +1270,8 @@ export const Universe3DPage: React.FC = () => {
                   pos,
                   1000
                 );
+              } else if (site.body === 'saturn') {
+                glideCamera(new THREE.Vector3(12, 10, 32), new THREE.Vector3(5, 1, 2), 1200);
               }
               setSearchParams({ planet: site.body, target: site.id });
             } else if (root.userData?.landmarkData) {
@@ -2018,7 +2020,167 @@ export const Universe3DPage: React.FC = () => {
               onClick={handleCloseDrawer}
               className="w-full py-2 rounded-xl bg-transparent hover:bg-white/5 text-[#B6C0CC] hover:text-[#F0E8D9] transition-all text-[11px] font-mono tracking-wider uppercase text-center"
             >
-              {viewMode === 'DEEP_SPACE' ? 'RETURN TO MISSION DIRECTORY' : 'RETURN TO PLANET'}
+              {['DEEP_SPACE', 'MARS', 'MOON', 'SATURN'].includes(viewMode)
+                ? 'RETURN TO MISSION DIRECTORY'
+                : 'RETURN TO PLANET'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Planetary Mission Directory (When in Mars, Moon, or Saturn and No Site/Landmark is Selected) */}
+      {['MARS', 'MOON', 'SATURN'].includes(viewMode) && !selectedSite && !selectedLandmark && (
+        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
+          <div>
+            {/* Header info */}
+            <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl mt-0.5">
+                  {viewMode === 'MARS' ? '🔴' : viewMode === 'MOON' ? '🌑' : '🪐'}
+                </span>
+                <div>
+                  <span className="text-[10px] font-mono font-semibold tracking-widest text-[#C6A36B] uppercase block">
+                    {viewMode === 'MARS'
+                      ? 'MARTIAN SURFACE FLEET'
+                      : viewMode === 'MOON'
+                      ? 'LUNAR EXPLORATION SITES'
+                      : 'SATURN SYSTEM EXPEDITION'}
+                  </span>
+                  <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-0.5">
+                    Mission Directory
+                  </h2>
+                  <div className="text-xs text-[#B6C0CC]/80 font-mono mt-0.5">
+                    {viewMode === 'MARS'
+                      ? `${LANDING_SITES_3D.filter((s) => s.body === 'mars').length} Historic & Active Surface Explorers`
+                      : viewMode === 'MOON'
+                      ? `${LANDING_SITES_3D.filter((s) => s.body === 'moon').length} Historic Landers & Robotic Stations`
+                      : `${LANDING_SITES_3D.filter((s) => s.body === 'saturn').length} Flagship Planetary Explorer`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#B6C0CC] mb-4 font-light leading-relaxed">
+              {viewMode === 'MARS' &&
+                "Humanity has deployed an armada of robotic explorers across the Martian sands. Select an explorer below or tap any 3D monument on the globe to inspect its landing site, discoveries, and mission dossier."}
+              {viewMode === 'MOON' &&
+                "Trace humanity's first footsteps and robotic scouts across the lunar maria and highlands. Select a mission below or tap any 3D monument on the Moon to inspect its landing site and artifacts."}
+              {viewMode === 'SATURN' &&
+                "Explore the historic flagship mission that revolutionized our understanding of the ringed giant and its ocean moons before its final Grand Finale atmospheric entry on September 15, 2017."}
+            </p>
+
+            {/* Selectable Spacecraft Cards */}
+            <div className="space-y-2.5 mb-5">
+              {LANDING_SITES_3D.filter((s) => s.body === (viewMode === 'MARS' ? 'mars' : viewMode === 'MOON' ? 'moon' : 'saturn')).map((craft) => (
+                <button
+                  key={craft.id}
+                  onClick={() => {
+                    playSignalPing(750);
+                    prevTargetRef.current = craft.id;
+                    setSelectedLandmark(null);
+                    setSelectedSite(craft);
+                    setSearchParams({ planet: craft.body, target: craft.id });
+                    if (craft.body === 'mars' || craft.body === 'moon') {
+                      focusLandingSite(craft.lat, craft.lon, true);
+                    } else if (craft.body === 'saturn') {
+                      glideCamera(new THREE.Vector3(12, 10, 32), new THREE.Vector3(5, 1, 2), 1200);
+                    }
+                  }}
+                  className="w-full p-3 rounded-2xl bg-[#101A29]/90 hover:bg-[#C6A36B]/15 border border-white/10 hover:border-[#C6A36B]/60 transition-all text-left flex items-center justify-between group shadow-md"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <MonumentIcon
+                      type={getMonumentType(craft)}
+                      className="w-8 h-8 shrink-0 group-hover:scale-110 transition-transform"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-display text-sm text-[#F0E8D9] font-medium group-hover:text-[#C6A36B] truncate">
+                        {craft.name}
+                      </div>
+                      <div className="text-[10px] font-mono text-[#B6C0CC]/75 truncate">
+                        {craft.status}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <span className="font-mono text-xs font-semibold text-[#C6A36B] block">
+                      {craft.year ? (craft.body === 'saturn' ? `Launch: ${craft.year}` : craft.year) : ''}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#B6C0CC]/60 group-hover:text-[#F0E8D9]">
+                      Dossier →
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Educational Planetary Exploration Summary */}
+            <div className="p-3.5 rounded-2xl bg-[#101A29]/70 border border-white/5 space-y-1.5 text-xs">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#C6A36B] font-semibold block mb-1">
+                {viewMode === 'MARS'
+                  ? 'PLANETARY EXPLORATION SUMMARY'
+                  : viewMode === 'MOON'
+                  ? 'LUNAR EXPLORATION SUMMARY'
+                  : 'SATURN SYSTEM SUMMARY'}
+              </span>
+              {viewMode === 'MARS' && (
+                <>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Documented Sites:</span>
+                    <span className="text-[#F0E8D9] font-medium">{LANDING_SITES_3D.filter((s) => s.body === 'mars').length} Surface Locations</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Active Rovers:</span>
+                    <span className="text-[#38bdf8] font-medium">Curiosity & Perseverance</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Rotorcraft Scout:</span>
+                    <span className="text-[#C6A36B] font-medium">Ingenuity Mars Helicopter</span>
+                  </div>
+                </>
+              )}
+              {viewMode === 'MOON' && (
+                <>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Documented Sites:</span>
+                    <span className="text-[#F0E8D9] font-medium">{LANDING_SITES_3D.filter((s) => s.body === 'moon').length} Historic Stations</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Laser Retroreflectors:</span>
+                    <span className="text-[#67e8f9] font-medium">Apollo & Lunokhod Arrays</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Far Side Pioneer:</span>
+                    <span className="text-[#C6A36B] font-medium">Chang'e 4 (Von Kármán Basin)</span>
+                  </div>
+                </>
+              )}
+              {viewMode === 'SATURN' && (
+                <>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Mission Duration:</span>
+                    <span className="text-[#F0E8D9] font-medium">1997–2017 (20 Years)</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Grand Finale Dives:</span>
+                    <span className="text-purple-300 font-medium">22 Ring-Gap Orbits</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                    <span>Atmospheric Plunge:</span>
+                    <span className="text-[#C6A36B] font-medium">Sept 15, 2017 (Concluded)</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Return Action */}
+          <div className="pt-4 border-t border-white/10 mt-4">
+            <button
+              onClick={() => handleSelectViewMode('SOLAR_SYSTEM')}
+              className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/15 transition-all text-xs font-mono tracking-wider uppercase text-center"
+            >
+              ← RETURN TO SOLAR SYSTEM
             </button>
           </div>
         </div>
