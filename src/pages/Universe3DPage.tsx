@@ -25,19 +25,15 @@ import { PanoramaViewer } from '../components/PanoramaViewer';
 import heroOpportunity from '../assets/hero-opportunity.jpg';
 import heroSurveyor3 from '../assets/hero-surveyor3.jpg';
 
-// Regional high-resolution Mars exploration tiles
-import regionalOpportunity from '../assets/mars/regional/opportunity.jpg';
-import regionalSpirit from '../assets/mars/regional/spirit.jpg';
-import regionalCuriosity from '../assets/mars/regional/curiosity.jpg';
-import regionalPerseverance from '../assets/mars/regional/perseverance.jpg';
-import regionalIngenuity from '../assets/mars/regional/ingenuity.jpg';
-import regionalViking1 from '../assets/mars/regional/viking-1.jpg';
-import regionalViking2 from '../assets/mars/regional/viking-2.jpg';
-import regionalPathfinder from '../assets/mars/regional/pathfinder.jpg';
-import regionalPhoenix from '../assets/mars/regional/phoenix.jpg';
-import regionalInsight from '../assets/mars/regional/insight.jpg';
-import jezeroCtx from '../assets/mars/regional/jezero-ctx.png';
-import curiosityCtx from '../assets/mars/regional/curiosity-ctx.png';
+import {
+  loadMolaHeightData,
+  createMolaMarsGeometry,
+  createRegionalSurfacePatchGeometry,
+} from '../utils/marsElevation';
+import {
+  REGIONAL_MARS_LAYERS,
+  getRegionalMarsLayer,
+} from '../data/marsRegionalLayers';
 
 import { playSignalPing, playWhooshSound, playSuccessChime } from '../utils/audio';
 import { formatCoordinates, normalizeLongitude } from '../utils/coordinateUtils';
@@ -98,18 +94,6 @@ interface CameraTransition {
   onComplete?: () => void;
 }
 
-const REGIONAL_IMAGES: Record<string, string> = {
-  opportunity: regionalOpportunity,
-  spirit: regionalSpirit,
-  curiosity: regionalCuriosity,
-  perseverance: regionalPerseverance,
-  ingenuity: regionalIngenuity,
-  'viking-1': regionalViking1,
-  'viking-2': regionalViking2,
-  pathfinder: regionalPathfinder,
-  phoenix: regionalPhoenix,
-  insight: regionalInsight,
-};
 
 export const Universe3DPage: React.FC = () => {
   const navigate = useNavigate();
@@ -159,6 +143,10 @@ export const Universe3DPage: React.FC = () => {
   const marsVikingTexRef = useRef<THREE.Texture | null>(null);
   const marsMolaTexRef = useRef<THREE.Texture | null>(null);
   const marsLandmarksGroupRef = useRef<THREE.Group | null>(null);
+  const marsRegionalPatchesGroupRef = useRef<THREE.Group | null>(null);
+  const jezeroPatchMeshRef = useRef<THREE.Mesh | null>(null);
+  const galePatchMeshRef = useRef<THREE.Mesh | null>(null);
+  const molaHeightDataRef = useRef<Uint16Array | null>(null);
 
   // Globe groups
   const solarSystemGroupRef = useRef<THREE.Group | null>(null);
@@ -354,6 +342,10 @@ export const Universe3DPage: React.FC = () => {
           } else if (mode === 'DEEP_SPACE') {
             setSelectedDeepCraft(resolved.site);
             return;
+          } else if (mode === 'SATURN') {
+            setSelectedSite(resolved.site);
+            glideCamera(new THREE.Vector3(12, 10, 32), new THREE.Vector3(5, 1, 2), 1200);
+            return;
           }
         }
       }
@@ -395,7 +387,17 @@ export const Universe3DPage: React.FC = () => {
   useEffect(() => {
     const p = searchParams.get('planet');
     const target = searchParams.get('target');
-    const resolvedMode = parsePlanetParam(p);
+    let resolvedMode = parsePlanetParam(p);
+
+    if (target && !p) {
+      const match = resolve3DArtifact(target);
+      if (match) {
+        if (match.targetMode === 'MARS') resolvedMode = 'MARS';
+        else if (match.targetMode === 'MOON') resolvedMode = 'MOON';
+        else if (match.targetMode === 'DEEP_SPACE') resolvedMode = 'DEEP_SPACE';
+        else if (match.targetMode === 'SATURN') resolvedMode = 'SATURN';
+      }
+    }
 
     if (resolvedMode !== viewMode) {
       setViewMode(resolvedMode);
@@ -408,6 +410,8 @@ export const Universe3DPage: React.FC = () => {
           focusLandingSite(match.site.lat, match.site.lon, true);
         } else if (match.site.body === 'deep-space') {
           setSelectedDeepCraft(match.site);
+        } else if (match.site.body === 'saturn') {
+          setSelectedSite(match.site);
         }
       }
     } else if (!target && selectedSite) {
@@ -614,24 +618,22 @@ export const Universe3DPage: React.FC = () => {
       }
     });
 
-    // Deep Space craft trajectories & markers in Solar System view
-    const deepCraftsConfig = [
-      { id: 'voyager-1', name: 'Voyager 1', angle: 0.7, dist: 165, color: 0x38bdf8 },
-      { id: 'voyager-2', name: 'Voyager 2', angle: 2.4, dist: 145, color: 0x38bdf8 },
-      { id: 'pioneer-10', name: 'Pioneer 10', angle: 5.2, dist: 135, color: 0xec4899 },
-      { id: 'pioneer-11', name: 'Pioneer 11', angle: 4.6, dist: 115, color: 0xec4899 },
-      { id: 'new-horizons', name: 'New Horizons', angle: 3.9, dist: 135, color: 0xf59e0b },
-      { id: 'cassini', name: 'Cassini (Saturn)', angle: 5.85, dist: 122, color: 0xa855f7 },
-    ];
+    // Deep Space craft trajectories & markers in Solar System view (Single Source of Truth)
+    // Note: Cassini is NOT an escaping spacecraft; it is positioned in Saturn's historical context.
+    const deepSpaceCraft = LANDING_SITES_3D.filter((s) => s.body === 'deep-space');
 
-    deepCraftsConfig.forEach((dc) => {
+    deepSpaceCraft.forEach((dc) => {
+      const angle = dc.trajectoryAngle ?? 0.7;
+      const dist = dc.trajectoryDistance ?? 140;
+      const color = dc.trajectoryColor ?? 0x38bdf8;
+
       const trajPts = [
         new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(Math.cos(dc.angle) * dc.dist, Math.sin(dc.angle * 0.3) * 15, Math.sin(dc.angle) * dc.dist),
+        new THREE.Vector3(Math.cos(angle) * dist, Math.sin(angle * 0.3) * 15, Math.sin(angle) * dist),
       ];
       const trajGeo = new THREE.BufferGeometry().setFromPoints(trajPts);
       const trajMat = new THREE.LineDashedMaterial({
-        color: dc.color,
+        color: color,
         dashSize: 4,
         gapSize: 3,
         transparent: true,
@@ -643,11 +645,11 @@ export const Universe3DPage: React.FC = () => {
 
       // Marker diamond
       const markGeo = new THREE.OctahedronGeometry(1.3, 0);
-      const markMat = new THREE.MeshBasicMaterial({ color: dc.color, wireframe: true });
+      const markMat = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
       const marker = new THREE.Mesh(markGeo, markMat);
       marker.position.copy(trajPts[1]);
       marker.userData = {
-        name: dc.name,
+        name: `${dc.name} (Escaping Fleet)`,
         craftId: dc.id,
         mode: 'DEEP_SPACE' as ViewMode,
         type: 'deep-craft',
@@ -704,25 +706,86 @@ export const Universe3DPage: React.FC = () => {
     const moon = createGlobe(createMoonTexture(), 12, 0.95);
     moonGlobeGroupRef.current = moon.group;
 
-    // 7e. Mars — AUTHENTIC NASA VIKING 2048x1024 MAP + MOLA RELIEF!
+    // 7e. Mars — AUTHENTIC NASA VIKING 2048x1024 MAP + NUMERICAL MOLA DEM 3D RELIEF
     const marsGroup = new THREE.Group();
     marsGroup.visible = false;
     scene.add(marsGroup);
     marsGlobeGroupRef.current = marsGroup;
 
-    // Mars spherical geometry with 128x128 subdivision for topographic displacement
-    const marsGeo = new THREE.SphereGeometry(12, 128, 128);
+    // Base standard material (displacementMap removed; height-displacement built directly into geometry vertices)
     const marsMat = new THREE.MeshStandardMaterial({
       map: marsVikingTex,
-      displacementMap: marsMolaTex,
-      displacementScale: 0.35, // 1.5x subtle planetary vertical relief
-      displacementBias: -0.15,
       roughness: 0.85,
       metalness: 0.05,
     });
-    const marsGlobeMesh = new THREE.Mesh(marsGeo, marsMat);
+    const marsInitialGeo = new THREE.SphereGeometry(12, 128, 128);
+    const marsGlobeMesh = new THREE.Mesh(marsInitialGeo, marsMat);
     marsGroup.add(marsGlobeMesh);
     marsGlobeMeshRef.current = marsGlobeMesh;
+
+    // Regional Surface LOD Patches Group (Jezero Crater & Gale Crater)
+    const marsRegionalPatchesGroup = new THREE.Group();
+    marsGroup.add(marsRegionalPatchesGroup);
+    marsRegionalPatchesGroupRef.current = marsRegionalPatchesGroup;
+
+    // Asynchronously construct Mars geometry from genuine numerical MOLA DEM array
+    loadMolaHeightData().then((heightData) => {
+      if (!marsGlobeMeshRef.current) return;
+      molaHeightDataRef.current = heightData;
+      const isMobile = window.innerWidth < 768;
+      const molaGeometry = createMolaMarsGeometry(
+        heightData,
+        12,
+        isMobile ? 256 : 512,
+        isMobile ? 128 : 256,
+        1.5
+      );
+      const prevGeo = marsGlobeMeshRef.current.geometry;
+      marsGlobeMeshRef.current.geometry = molaGeometry;
+      prevGeo.dispose();
+
+      // Construct geographically registered regional surface patches for Jezero & Gale
+      const texLoader = new THREE.TextureLoader();
+      const jezeroLayer = REGIONAL_MARS_LAYERS['jezero-ctx'];
+      const galeLayer = REGIONAL_MARS_LAYERS['gale-ctx'];
+
+      const jezeroTex = texLoader.load(jezeroLayer.imageAsset);
+      const galeTex = texLoader.load(galeLayer.imageAsset);
+
+      const jezeroGeo = createRegionalSurfacePatchGeometry(jezeroLayer, heightData, 12, 32, 1.5);
+      const galeGeo = createRegionalSurfacePatchGeometry(galeLayer, heightData, 12, 32, 1.5);
+
+      const jezeroMat = new THREE.MeshStandardMaterial({
+        map: jezeroTex,
+        transparent: true,
+        opacity: 0.0,
+        roughness: 0.85,
+        metalness: 0.05,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -2,
+      });
+
+      const galeMat = new THREE.MeshStandardMaterial({
+        map: galeTex,
+        transparent: true,
+        opacity: 0.0,
+        roughness: 0.85,
+        metalness: 0.05,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -2,
+      });
+
+      const jezeroMesh = new THREE.Mesh(jezeroGeo, jezeroMat);
+      const galeMesh = new THREE.Mesh(galeGeo, galeMat);
+
+      marsRegionalPatchesGroup.add(jezeroMesh);
+      marsRegionalPatchesGroup.add(galeMesh);
+
+      jezeroPatchMeshRef.current = jezeroMesh;
+      galePatchMeshRef.current = galeMesh;
+    });
 
     // Thin Martian carbon-dioxide atmosphere halo
     const marsAtmo = new THREE.Mesh(
@@ -760,7 +823,7 @@ export const Universe3DPage: React.FC = () => {
     const jupiter = createGlobe(createJupiterTexture(), 12, 0.7);
     jupiterGlobeGroupRef.current = jupiter.group;
 
-    // 7g. Saturn (Globe + Rings)
+    // 7g. Saturn (Globe + Rings + Cassini Grand Finale Historical Marker)
     const saturn = createGlobe(createSaturnTexture(), 11, 0.7);
     saturnGlobeGroupRef.current = saturn.group;
     const saturnRingGeo = new THREE.RingGeometry(15.4, 25.3, 64);
@@ -773,6 +836,28 @@ export const Universe3DPage: React.FC = () => {
     });
     const saturnRing = new THREE.Mesh(saturnRingGeo, saturnRingMat);
     saturn.group.add(saturnRing);
+
+    // Cassini Grand Finale Historical Mission Event Marker (Atmospheric entry Sept 15, 2017)
+    const cassiniEventGroup = new THREE.Group();
+    cassiniEventGroup.position.set(11.2, 2.4, 3.8);
+    const cassiniEventCore = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.55, 0),
+      new THREE.MeshBasicMaterial({ color: 0xa855f7 })
+    );
+    const cassiniEventRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.85, 1.15, 24),
+      new THREE.MeshBasicMaterial({ color: 0xa855f7, side: THREE.DoubleSide, transparent: true, opacity: 0.6 })
+    );
+    cassiniEventRing.rotation.x = Math.PI / 2;
+    cassiniEventGroup.add(cassiniEventCore);
+    cassiniEventGroup.add(cassiniEventRing);
+
+    const cassiniData = LANDING_SITES_3D.find((s) => s.id === 'cassini');
+    cassiniEventGroup.userData = {
+      isLandingSite: true,
+      siteData: cassiniData,
+    };
+    saturn.group.add(cassiniEventGroup);
 
     // 7h. Deep Space Group
     const deepSpaceGroup = new THREE.Group();
@@ -879,10 +964,14 @@ export const Universe3DPage: React.FC = () => {
           setHoveredObject(null);
           mountEl.style.cursor = 'default';
         }
-      } else if (marsGlobeGroupRef.current?.visible || moonGlobeGroupRef.current?.visible) {
+      } else if (
+        marsGlobeGroupRef.current?.visible ||
+        moonGlobeGroupRef.current?.visible ||
+        saturnGlobeGroupRef.current?.visible
+      ) {
         const group = marsGlobeGroupRef.current?.visible
           ? marsGlobeGroupRef.current
-          : moonGlobeGroupRef.current!;
+          : (moonGlobeGroupRef.current?.visible ? moonGlobeGroupRef.current! : saturnGlobeGroupRef.current!);
 
         const targets: THREE.Object3D[] = [];
         group.traverse((c) => {
@@ -933,10 +1022,14 @@ export const Universe3DPage: React.FC = () => {
             handleSelectViewMode(targetMode);
           }
         }
-      } else if (marsGlobeGroupRef.current?.visible || moonGlobeGroupRef.current?.visible) {
+      } else if (
+        marsGlobeGroupRef.current?.visible ||
+        moonGlobeGroupRef.current?.visible ||
+        saturnGlobeGroupRef.current?.visible
+      ) {
         const group = marsGlobeGroupRef.current?.visible
           ? marsGlobeGroupRef.current
-          : moonGlobeGroupRef.current!;
+          : (moonGlobeGroupRef.current?.visible ? moonGlobeGroupRef.current! : saturnGlobeGroupRef.current!);
 
         const targets: THREE.Object3D[] = [];
         group.traverse((c) => {
@@ -1028,6 +1121,29 @@ export const Universe3DPage: React.FC = () => {
         }
       } else {
         controls.update();
+      }
+
+      // Update regional LOD patch opacity based on camera proximity
+      if (marsGlobeGroupRef.current?.visible && camera) {
+        const camPos = camera.position;
+
+        if (jezeroPatchMeshRef.current) {
+          const jezeroPos = latLonToVector3(18.38, 77.58, 12.1);
+          const distToJezero = camPos.distanceTo(jezeroPos);
+          const targetOpacity = distToJezero < 36 ? Math.min(1.0, Math.max(0, (36 - distToJezero) / 12)) : 0.0;
+          const mat = jezeroPatchMeshRef.current.material as THREE.MeshStandardMaterial;
+          mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.1);
+          mat.visible = mat.opacity > 0.01;
+        }
+
+        if (galePatchMeshRef.current) {
+          const galePos = latLonToVector3(-4.59, 137.44, 12.1);
+          const distToGale = camPos.distanceTo(galePos);
+          const targetOpacity = distToGale < 36 ? Math.min(1.0, Math.max(0, (36 - distToGale) / 12)) : 0.0;
+          const mat = galePatchMeshRef.current.material as THREE.MeshStandardMaterial;
+          mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.1);
+          mat.visible = mat.opacity > 0.01;
+        }
       }
 
       renderer.render(scene, camera);
@@ -1230,9 +1346,9 @@ export const Universe3DPage: React.FC = () => {
             className="px-3 py-1.5 rounded-xl bg-[#101A29]/90 hover:bg-[#C6A36B] text-[#F0E8D9] hover:text-[#080D16] border border-white/15 text-[11px] font-mono transition-all backdrop-blur-md flex items-center gap-1.5"
             title="Toggle between NASA Viking optical color and MGS MOLA elevation topography"
           >
-            <span>🗺️ MAP:</span>
+            <span>🗺️ VISUAL LAYER:</span>
             <span className="font-bold text-[#C6A36B] group-hover:text-[#080D16]">
-              {marsSurfaceMode === 'VIKING_COLOR' ? 'VIKING TRUE COLOR' : 'MOLA TOPOGRAPHY'}
+              {marsSurfaceMode === 'VIKING_COLOR' ? 'VIKING GLOBAL COLOR' : 'MOLA SHADED RELIEF'}
             </span>
           </button>
 
@@ -1394,28 +1510,51 @@ export const Universe3DPage: React.FC = () => {
             </div>
 
             {/* Coordinates & Location */}
-            <div className="bg-[#101A29]/80 rounded-xl p-3 border border-white/5 mb-4 text-xs font-mono">
-              <div className="text-[#C6A36B] font-medium mb-1">
-                📍 {selectedSite.locationName}
-              </div>
-              <div className="text-[#B6C0CC]">
-                COORDINATES:{' '}
-                <span className="text-[#F0E8D9]">
-                  {formatCoordinates({ lat: selectedSite.lat, lon: selectedSite.lon })}
-                </span>
-              </div>
-              {selectedSite.elevationKm !== undefined && (
-                <div className="text-[#B6C0CC] mt-1">
-                  DATUM ELEVATION: <span className="text-[#F0E8D9]">{selectedSite.elevationKm} km</span>
+            {selectedSite.body === 'saturn' ? (
+              <div className="bg-purple-900/20 rounded-xl p-3 border border-purple-500/30 mb-4 text-xs font-mono">
+                <div className="text-purple-300 font-medium mb-1">
+                  🪐 {selectedSite.locationName}
                 </div>
-              )}
-              <div className="text-[#B6C0CC] mt-1">
-                TOUCHDOWN YEAR: <span className="text-[#F0E8D9]">{selectedSite.year}</span>
+                <div className="text-[#B6C0CC]">
+                  MISSION TYPE: <span className="text-[#F0E8D9]">Saturn Flagship Orbiter // Grand Finale</span>
+                </div>
+                <div className="text-[#B6C0CC] mt-1">
+                  HISTORIC PLUNGE: <span className="text-[#F0E8D9]">September 15, 2017 (10:31 UTC Entry)</span>
+                </div>
+                <div className="text-[#B6C0CC] mt-1">
+                  HISTORICAL DISTANCE: <span className="text-[#F0E8D9]">{selectedSite.distanceFromEarth}</span>
+                </div>
+                <div className="text-[#B6C0CC] mt-1">
+                  STATUS: <span className="text-purple-400 font-bold">{selectedSite.status}</span>
+                </div>
+                <div className="mt-2 text-[10px] text-amber-300 bg-amber-500/10 p-1.5 rounded border border-amber-500/20">
+                  ⚠️ MISSION CONCLUDED // SPACECRAFT VAPORIZED IN SATURN UPPER ATMOSPHERE — NO OPERATIONAL RECEIVER
+                </div>
               </div>
-              <div className="text-[#B6C0CC] mt-1">
-                STATUS: <span className="text-[#C6A36B]">{selectedSite.status}</span>
+            ) : (
+              <div className="bg-[#101A29]/80 rounded-xl p-3 border border-white/5 mb-4 text-xs font-mono">
+                <div className="text-[#C6A36B] font-medium mb-1">
+                  📍 {selectedSite.locationName}
+                </div>
+                <div className="text-[#B6C0CC]">
+                  COORDINATES:{' '}
+                  <span className="text-[#F0E8D9]">
+                    {formatCoordinates({ lat: selectedSite.lat, lon: selectedSite.lon })}
+                  </span>
+                </div>
+                {selectedSite.elevationKm !== undefined && (
+                  <div className="text-[#B6C0CC] mt-1">
+                    DATUM ELEVATION: <span className="text-[#F0E8D9]">{selectedSite.elevationKm} km</span>
+                  </div>
+                )}
+                <div className="text-[#B6C0CC] mt-1">
+                  TOUCHDOWN YEAR: <span className="text-[#F0E8D9]">{selectedSite.year}</span>
+                </div>
+                <div className="text-[#B6C0CC] mt-1">
+                  STATUS: <span className="text-[#C6A36B]">{selectedSite.status}</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Multi-Location Stations Listing (for Lunar Retroreflectors) */}
             {selectedSite.isMultiLocation && selectedSite.subLocations && (
@@ -1450,29 +1589,36 @@ export const Universe3DPage: React.FC = () => {
               </div>
             )}
 
-            {/* Regional High-Resolution Orbital Reconnaissance (Part B) */}
-            {selectedSite.body === 'mars' && REGIONAL_IMAGES[selectedSite.id] && (
-              <div className="mb-4 rounded-xl overflow-hidden border border-white/10 bg-[#101A29]">
-                <div className="p-2 border-b border-white/10 flex items-center justify-between text-[10px] font-mono">
-                  <span className="text-[#C6A36B] font-semibold">
-                    🛰️ REGIONAL RECONNAISSANCE ({selectedSite.id === 'perseverance' ? 'MRO CTX 6 m/px' : 'NASA Viking MDIM 2.1'})
-                  </span>
-                  <span className="text-[#B6C0CC]">FOV ~300 KM</span>
-                </div>
-                <div className="relative h-36 w-full overflow-hidden">
-                  <img
-                    src={selectedSite.id === 'perseverance' ? jezeroCtx : (selectedSite.id === 'curiosity' ? curiosityCtx : REGIONAL_IMAGES[selectedSite.id])}
-                    alt={`${selectedSite.name} regional reconnaissance`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
-                    <span className="text-[10px] font-mono text-[#F0E8D9] bg-black/60 px-2 py-0.5 rounded">
-                      Authentic orbital tile: {selectedSite.locationName}
+            {/* Regional High-Resolution Orbital Reconnaissance (Section 4.1 & 4.2 Fix) */}
+            {selectedSite.body === 'mars' && (() => {
+              const layer = getRegionalMarsLayer(selectedSite.id);
+              if (!layer) return null;
+              return (
+                <div className="mb-4 rounded-xl overflow-hidden border border-white/10 bg-[#101A29]">
+                  <div className="p-2 border-b border-white/10 flex items-center justify-between text-[10px] font-mono">
+                    <span className="text-[#C6A36B] font-semibold">
+                      🛰️ REGIONAL RECONNAISSANCE ({layer.instrument.includes('CTX') ? `MRO CTX ~${layer.processedResolutionMetersPerPixel} m/px` : 'NASA Viking MDIM 2.1'})
+                    </span>
+                    <span className="text-[#B6C0CC]">
+                      {layer.isGeoreferenced ? 'GEOREFERENCED SURFACE LOD' : 'REGIONAL PREVIEW'}
                     </span>
                   </div>
+                  <div className="relative h-36 w-full overflow-hidden">
+                    <img
+                      src={layer.imageAsset}
+                      alt={`${selectedSite.name} regional reconnaissance`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex items-end p-2">
+                      <div className="text-[10px] font-mono text-[#F0E8D9] bg-black/75 px-2 py-0.5 rounded leading-tight">
+                        <span>{layer.name}</span>
+                        <span className="block text-[#C6A36B] text-[9px]">{layer.productId}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Accessible Narrative Story */}
             <div className="mb-5">
@@ -1569,14 +1715,11 @@ export const Universe3DPage: React.FC = () => {
 
           {/* Inactive Mission Receiver Status Banner */}
           {(selectedDeepCraft.id === 'pioneer-10' ||
-            selectedDeepCraft.id === 'pioneer-11' ||
-            selectedDeepCraft.id === 'cassini') && (
+            selectedDeepCraft.id === 'pioneer-11') && (
             <div className="mt-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono text-amber-300">
               ⚠️ MISSION CONCLUDED // NO OPERATIONAL RECEIVER
               <div className="text-[10px] text-[#B6C0CC] mt-0.5 font-sans">
-                {selectedDeepCraft.id === 'cassini'
-                  ? 'Spacecraft disintegrated into Saturn upper atmosphere on September 15, 2017.'
-                  : 'Spacecraft power depleted; no signals received since final decommissioning.'}
+                Spacecraft power depleted; no signals received since final decommissioning.
               </div>
             </div>
           )}
@@ -1621,7 +1764,9 @@ export const Universe3DPage: React.FC = () => {
                 "{selectedDeepCraft.fascinatingFact}"
               </p>
               <div className="mt-3 pt-2 border-t border-white/10 flex justify-between items-center text-[10px] mono text-[#B6C0CC]">
-                <span>REFERENCE DISTANCE: JPL HORIZONS EPHEMERIS</span>
+                <span>
+                  {selectedDeepCraft.referenceEpoch || 'APPROXIMATE REFERENCE DISTANCE // EDUCATIONAL DEMONSTRATION'}
+                </span>
                 <a
                   href="https://eyes.nasa.gov/dsn/dsn.html"
                   target="_blank"
@@ -1636,7 +1781,7 @@ export const Universe3DPage: React.FC = () => {
         </div>
       )}
 
-      {/* Map Data Provenance & Sources Modal (Part B & C) */}
+      {/* Map Data Provenance & Sources Modal */}
       {showMapSourcesModal && (
         <div className="absolute inset-0 z-50 bg-[#080D16]/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="max-w-xl w-full bg-[#101A29] border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl overflow-y-auto max-h-[85vh]">
@@ -1663,46 +1808,50 @@ export const Universe3DPage: React.FC = () => {
                 <p>
                   <strong className="text-[#F0E8D9]">Product:</strong> Mars Viking MDIM 2.1 Color Mosaic (NASA / USGS Astrogeology).
                   <br />
-                  <strong className="text-[#F0E8D9]">Resolution:</strong> 232 meters/pixel (downsampled to 2048×1024 equirectangular projection for real-time 60fps performance).
+                  <strong className="text-[#F0E8D9]">Native Resolution:</strong> 232 meters/pixel (downsampled to 2048×1024 equirectangular raster for real-time 60fps rendering).
                   <br />
-                  <strong className="text-[#F0E8D9]">Projection:</strong> Simple Cylindrical (Equirectangular, Center Longitude = 0°).
+                  <strong className="text-[#F0E8D9]">Projection:</strong> Equirectangular (Center Longitude = 0° at Sinus Meridiani).
                   <br />
-                  <strong className="text-[#F0E8D9]">License / Source:</strong> Public Domain / NASA Solar System Treks.
+                  <strong className="text-[#F0E8D9]">License:</strong> Public Domain (USGS / NASA Open Data).
                 </p>
               </div>
 
               <div className="p-3 rounded-xl bg-black/40 border border-white/5">
                 <span className="font-mono text-[#C6A36B] font-bold block mb-1">
-                  2. TOPOGRAPHY & 3D TERRAIN RELIEF
+                  2. NUMERICAL 3D TERRAIN ELEVATION MODEL
                 </span>
                 <p>
-                  <strong className="text-[#F0E8D9]">Product:</strong> Mars Global Surveyor MOLA (Mars Orbiter Laser Altimeter) Global DEM & Color Hillshade.
+                  <strong className="text-[#F0E8D9]">Source Product:</strong> USGS Astrogeology Mars MGS MOLA DEM 463m (Mars Orbiter Laser Altimeter, Mars Global Surveyor).
                   <br />
-                  <strong className="text-[#F0E8D9]">Resolution:</strong> 463 meters/pixel.
+                  <strong className="text-[#F0E8D9]">Format & Samples:</strong> 2048×1024 16-bit unsigned integer height array (lossless integer meter mapping: elevation = uint16 - 32768).
                   <br />
-                  <strong className="text-[#F0E8D9]">Vertical Exaggeration:</strong> 1.5× vertical relief displacement applied to the 128×128 vertex sphere mesh to reveal authentic geological elevations (Olympus Mons, Tharsis, Valles Marineris, Hellas Basin).
+                  <strong className="text-[#F0E8D9]">Elevation Range:</strong> -8,152 m (Hellas Basin) to +21,171 m (Olympus Mons) referenced to the Martian Areoid.
+                  <br />
+                  <strong className="text-[#F0E8D9]">3D Implementation:</strong> Displaced vertex positions generated dynamically on the sphere grid with 1.5× vertical exaggeration and real surface normals.
                 </p>
               </div>
 
               <div className="p-3 rounded-xl bg-black/40 border border-white/5">
                 <span className="font-mono text-[#C6A36B] font-bold block mb-1">
-                  3. REGIONAL RECONNAISSANCE MOSAICS
+                  3. REGIONAL GEOREFERENCED SURFACE LOD
                 </span>
                 <p>
-                  <strong className="text-[#F0E8D9]">Jezero Crater:</strong> MRO CTX Orthorctified Mosaic (6 meters/pixel) covering river delta and Perseverance traverse.
+                  <strong className="text-[#F0E8D9]">Jezero Crater (Perseverance & Ingenuity):</strong> MRO Context Camera (CTX) uncontrolled mosaic, Tile (Level 6, Row 25, Col 91), covering 75.94°E–78.75°E, 16.88°N–19.69°N at ~325 m/pixel.
                   <br />
-                  <strong className="text-[#F0E8D9]">Gale Crater:</strong> MRO CTX Curiosity Roving Site Mosaic (6 meters/pixel).
+                  <strong className="text-[#F0E8D9]">Gale Crater (Curiosity):</strong> MRO Context Camera (CTX) uncontrolled mosaic, Tile (Level 6, Row 33, Col 112), covering 135.0°E–137.81°E, -5.63°S to -2.81°S at ~325 m/pixel.
                   <br />
-                  <strong className="text-[#F0E8D9]">Meridiani, Gusev, Chryse, Elysium:</strong> NASA Viking / MRO regional orthomosaics.
+                  <strong className="text-[#F0E8D9]">Surface Integration:</strong> Curved spherical surface patches draped onto the MOLA terrain that smoothly fade in as the visitor zooms close.
                 </p>
               </div>
 
               <div className="p-3 rounded-xl bg-black/40 border border-white/5">
                 <span className="font-mono text-[#C6A36B] font-bold block mb-1">
-                  4. OFFLINE BUNDLE INTEGRITY
+                  4. HISTORICAL MISSIONS & EPHEMERIS
                 </span>
                 <p>
-                  All planetary map textures and regional reconnaissance mosaics are self-contained within the application build, enabling complete offline exploration in the standalone single-file distribution without external network dependencies.
+                  <strong className="text-[#F0E8D9]">Cassini-Huygens:</strong> Represented as a historical mission event in Saturn's upper atmosphere concluding on September 15, 2017 (Grand Finale), not as an escaping deep-space craft.
+                  <br />
+                  <strong className="text-[#F0E8D9]">Light Delay Simulation:</strong> Distances and light delays are educational reference values based on documented planetary ephemerides and do not claim live telemetry links.
                 </p>
               </div>
             </div>

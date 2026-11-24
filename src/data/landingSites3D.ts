@@ -9,7 +9,7 @@ export interface LandingSite3D {
   id: string;
   name: string;
   designation: string;
-  body: 'mars' | 'moon' | 'venus' | 'deep-space';
+  body: 'mars' | 'moon' | 'venus' | 'deep-space' | 'saturn';
   locationName: string;
   lat: number;
   lon: number;
@@ -26,6 +26,11 @@ export interface LandingSite3D {
   sharedWith?: string;
   isSchematic?: boolean;
   elevationKm?: number;
+  trajectoryAngle?: number;
+  trajectoryDistance?: number;
+  trajectoryColor?: number;
+  trajectoryHeading?: string;
+  referenceEpoch?: string;
 }
 
 export interface MarsLandmark {
@@ -463,6 +468,10 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
   // =========================================================================
   // --- DEEP SPACE VOYAGERS (6 Artifacts Covered - Single Source of Truth) ---
   // =========================================================================
+  // DEEP-SPACE / INTERSTELLAR CRAFT (Escaping Heliocentric Trajectories)
+  // Single Source of Truth for trajectory geometry, colors, headings, and epochs
+  // Note: Cassini is NOT an escaping spacecraft; it is in body: 'saturn' below.
+  // =========================================================================
   {
     id: 'voyager-1',
     name: 'Voyager 1',
@@ -472,11 +481,17 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     lat: 0,
     lon: 0,
     year: 1977,
-    status: 'Still Operating in Interstellar Space',
+    status: 'Operating in Interstellar Space',
+    isSchematic: true,
     description: 'Humanity’s most distant machine. Having completed grand flybys of Jupiter and Saturn, it crossed the heliopause in 2012, escaping the solar wind into the true interstellar ocean.',
     fascinatingFact: 'Travelling at over 61,000 km/h (38,000 mph). A radio command travelling at the speed of light takes more than 23 hours to reach it!',
     distanceFromEarth: '~24.9 billion km (166.7 AU)',
-    lightDelaySeconds: 83200 // ~23.1 hours
+    lightDelaySeconds: 83200, // ~23.1 hours
+    trajectoryAngle: 0.65,
+    trajectoryDistance: 170,
+    trajectoryColor: 0x38bdf8,
+    trajectoryHeading: 'Ophiuchus / Ecliptic North (~35°)',
+    referenceEpoch: 'Approximate 2024 Reference Distance'
   },
   {
     id: 'voyager-2',
@@ -487,11 +502,17 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     lat: 0,
     lon: 0,
     year: 1977,
-    status: 'Still Operating in Interstellar Space',
+    status: 'Operating in Interstellar Space',
+    isSchematic: true,
     description: 'The only spacecraft ever to visit all four gas giant worlds: Jupiter, Saturn, Uranus, and Neptune. Crossed into interstellar space in November 2018.',
     fascinatingFact: 'Discovered 16 new moons and the unexpected Great Dark Spot in Neptune’s methane atmosphere.',
     distanceFromEarth: '~20.7 billion km (138.4 AU)',
-    lightDelaySeconds: 69200 // ~19.2 hours
+    lightDelaySeconds: 69200, // ~19.2 hours
+    trajectoryAngle: 2.45,
+    trajectoryDistance: 142,
+    trajectoryColor: 0x818cf8,
+    trajectoryHeading: 'Pavo / Ecliptic South (-48°)',
+    referenceEpoch: 'Approximate 2024 Reference Distance'
   },
   {
     id: 'pioneer-10',
@@ -507,7 +528,12 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     description: 'The first spacecraft to transit the asteroid belt and fly by Jupiter. Transmitted humanity\'s first close-up images of the Jovian atmosphere before cruising into the outer heliosphere.',
     fascinatingFact: 'Carried the famous gold-anodized aluminium plaque designed by Carl Sagan and Frank Drake, showing pictorial figures of humans and galactic coordinates of our Sun.',
     distanceFromEarth: '~20.2 billion km (135.2 AU)',
-    lightDelaySeconds: 67300 // ~18.7 hours
+    lightDelaySeconds: 67300, // ~18.7 hours
+    trajectoryAngle: 3.85,
+    trajectoryDistance: 138,
+    trajectoryColor: 0xf59e0b,
+    trajectoryHeading: 'Taurus / Toward Aldebaran',
+    referenceEpoch: 'Approximate Reference Distance'
   },
   {
     id: 'pioneer-11',
@@ -523,7 +549,12 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     description: 'Pioneered the gravitational slingshot trajectory past Jupiter to become humanity’s first spacecraft to explore Saturn, discovering its delicate F Ring and two icy moons.',
     fascinatingFact: 'Last transmission received September 30, 1995, at ~44 AU. It is cruising into deep interstellar space in the opposite direction of Pioneer 10.',
     distanceFromEarth: '~17.2 billion km (115 AU)',
-    lightDelaySeconds: 57400 // ~15.9 hours
+    lightDelaySeconds: 57400, // ~15.9 hours
+    trajectoryAngle: 4.65,
+    trajectoryDistance: 120,
+    trajectoryColor: 0xef4444,
+    trajectoryHeading: 'Scutum / Galactic Center direction',
+    referenceEpoch: 'Approximate Reference Distance'
   },
   {
     id: 'new-horizons',
@@ -534,26 +565,39 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     lat: 0,
     lon: 0,
     year: 2006,
-    status: 'Still Operating in Kuiper Belt',
+    status: 'Operating in Kuiper Belt',
+    isSchematic: true,
     description: 'Flew past Pluto in July 2015, capturing the breathtaking heart-shaped nitrogen ice glacier Tombaugh Regio, before conducting humanity’s most distant flyby of Arrokoth.',
     fascinatingFact: 'Carried some of the cremated ashes of Clyde Tombaugh, the American astronomer who discovered Pluto in 1930.',
     distanceFromEarth: '~8.9 billion km (59.6 AU)',
-    lightDelaySeconds: 29800 // ~8.3 hours
+    lightDelaySeconds: 29800, // ~8.3 hours
+    trajectoryAngle: 5.10,
+    trajectoryDistance: 95,
+    trajectoryColor: 0x10b981,
+    trajectoryHeading: 'Sagittarius / Kuiper Belt',
+    referenceEpoch: 'Approximate Reference Distance'
   },
+  // =========================================================================
+  // SATURN HISTORICAL MISSIONS (Grand Finale Atmospheric Entry)
+  // Cassini concluded its mission on September 15, 2017 inside Saturn.
+  // It is NOT on an outward escaping trajectory.
+  // =========================================================================
   {
     id: 'cassini',
     name: 'Cassini-Huygens',
     designation: 'NASA / ESA / ASI Saturn Flagship Mission',
-    body: 'deep-space',
-    locationName: 'Saturn Upper Atmosphere (Grand Finale Impact - Sept 15, 2017)',
+    body: 'saturn',
+    locationName: 'Saturn Upper Atmosphere (Grand Finale Atmospheric Entry — Sept 15, 2017)',
     lat: 0,
     lon: 0,
     year: 1997,
-    status: 'Vaporized into Saturn Atmosphere (Grand Finale 2017)',
-    description: 'Orbited Saturn for 13 years, discovering liquid methane seas on Titan and geysers of salty water jetting into space from Enceladus. Unlike interstellar voyagers, its mission concluded inside Saturn.',
+    status: 'Historical Mission Event (Concluded September 15, 2017)',
+    isSchematic: true,
+    description: 'Orbited Saturn for 13 years, discovering liquid methane seas on Titan and geysers of salty water jetting into space from Enceladus. Unlike interstellar voyagers, its mission concluded on September 15, 2017, with a deliberate, historic plunge into Saturn’s atmosphere.',
     fascinatingFact: 'In September 2017, deliberately plunged into Saturn’s crushing upper atmosphere to protect potentially habitable ocean moons (Enceladus and Titan) from Earth microbes.',
-    distanceFromEarth: '~1.5 billion km (~10 AU at Saturn)',
-    lightDelaySeconds: 5000 // ~83 minutes
+    distanceFromEarth: '~1.5 billion km (~10 AU historical reference distance at Saturn)',
+    lightDelaySeconds: 5000, // ~83 minutes historical one-way light time
+    referenceEpoch: 'Historical Reference Epoch: September 15, 2017 (Grand Finale)'
   }
 ];
 
@@ -564,7 +608,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
  */
 export function resolve3DArtifact(artifactId: string): {
   site: LandingSite3D;
-  targetMode: 'MARS' | 'MOON' | 'DEEP_SPACE';
+  targetMode: 'MARS' | 'MOON' | 'DEEP_SPACE' | 'SATURN';
   isMultiLocation?: boolean;
   sharedLocation?: boolean;
 } | null {
@@ -574,9 +618,10 @@ export function resolve3DArtifact(artifactId: string): {
   const site = LANDING_SITES_3D.find((s) => s.id === normalizedId);
   if (!site) return null;
 
-  let targetMode: 'MARS' | 'MOON' | 'DEEP_SPACE' = 'MARS';
+  let targetMode: 'MARS' | 'MOON' | 'DEEP_SPACE' | 'SATURN' = 'MARS';
   if (site.body === 'moon') targetMode = 'MOON';
   else if (site.body === 'deep-space') targetMode = 'DEEP_SPACE';
+  else if (site.body === 'saturn') targetMode = 'SATURN';
 
   return {
     site,

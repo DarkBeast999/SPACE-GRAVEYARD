@@ -1,80 +1,132 @@
 # MARS DATA SOURCES & SCIENTIFIC PROVENANCE INVENTORY
-## Space Graveyard — Iteration 6B: Realistic Planetary Exploration
+## Space Graveyard — Iteration 6B.1: Mars Terrain Accuracy & Regional Surface LOD
 
-This document catalogues the scientific datasets, planetary maps, elevation models, and regional orbital reconnaissance mosaics utilized in the **SPACE GRAVEYARD — They Never Came Home** 3D Universe exploration environment.
+This document catalogues the scientific datasets, planetary maps, numerical elevation models, and regional orbital reconnaissance mosaics utilized in the **SPACE GRAVEYARD — They Never Came Home** 3D Universe exploration environment.
+
+To maintain scientific integrity, the project strictly distinguishes between:
+1. **Global Optical Color Imagery** (visual surface reflection)
+2. **Topographic Shaded Relief** (visual elevation shading)
+3. **Numerical Elevation Data** (physical 3D terrain geometry)
+4. **Geographically Registered Regional Orbital Reconnaissance** (3D surface LOD patches)
 
 ---
 
-### 1. Global Mars Surface Color Mosaic
+### 1. Global Surface Color Mosaic (Optical Texture)
 
 - **Product Name:** `Mars_Viking_MDIM21_ClrMosaic_global_232m` (Viking Mars Digital Image Model version 2.1 Color Mosaic)
-- **Publisher / Provider:** U.S. Geological Survey (USGS) Astrogeology Science Center / NASA Planetary Data System (PDS)
+- **Publisher / Custodian:** U.S. Geological Survey (USGS) Astrogeology Science Center / NASA Planetary Data System (PDS)
 - **Spacecraft / Instrument:** Viking Orbiters 1 & 2 (Visual Imaging Subsystem - VIS)
-- **Primary Source URL:** [https://trek.nasa.gov/tiles/apidoc/trekAPI.html?body=mars](https://trek.nasa.gov/tiles/apidoc/trekAPI.html?body=mars) / [https://astrogeology.usgs.gov/search/map/mars_viking_color_mosaic](https://astrogeology.usgs.gov/search/map/mars_viking_color_mosaic)
+- **Primary Source URL:** [https://astrogeology.usgs.gov/search/map/mars_viking_color_mosaic](https://astrogeology.usgs.gov/search/map/mars_viking_color_mosaic)
 - **Native Resolution:** 232 meters/pixel (~16 pixels/degree)
-- **Deployed Resolution:** $2048 \times 1024$ equirectangular raster (processed to balance optimal 60fps WebGL rendering across mobile and desktop environments with zero external runtime network requests)
-- **Map Projection & Datum:** Simple Cylindrical (Equirectangular) projection, IAU 2000 Mars sphere, Prime Meridian centered on $0^\circ$ longitude (Airy-0 crater in Sinus Meridiani)
-- **Processing Performed:** 32 individual Level 2 WMTS tiles ($256 \times 256$) were fetched, seamlessly stitched, color-calibrated, and compressed into an optimized progressive JPEG asset bundled directly into the standalone distribution.
-- **License / Terms of Use:** Public Domain (U.S. Government work)
-- **Attribution:** NASA / USGS Astrogeology Science Center / JPL-Caltech
+- **Deployed Raster:** $2048 \times 1024$ equirectangular JPEG texture (`src/assets/mars-viking-2048.jpg`, 389 KB)
+- **Map Projection & Datum:** Simple Cylindrical (Equirectangular) projection, IAU 2000 Mars reference sphere ($R = 3,396,190.0\text{ m}$), Prime Meridian centered on $0^\circ$ longitude (Airy-0 crater in Sinus Meridiani).
+- **Role in Application:** Base visual color texture (`map: marsVikingTex`).
+- **License:** Public Domain (U.S. Government work).
+- **Attribution:** NASA / USGS Astrogeology Science Center / JPL-Caltech.
 
 ---
 
-### 2. Global Mars Topography & 3D Terrain Relief
+### 2. Global Topographic Shaded Relief (Visual Display Layer)
 
-- **Product Name:** `Mars_MGS_MOLA_ClrShade_merge_global_463m` (MGS MOLA Global Color Hillshade & Digital Elevation Model Merge)
-- **Publisher / Provider:** NASA Goddard Space Flight Center (GSFC) / USGS Astrogeology Science Center
+- **Product Name:** `Mars_MGS_MOLA_ClrShade_merge_global_463m` (MGS MOLA Color Shaded Relief Merge)
+- **Publisher / Custodian:** NASA Goddard Space Flight Center (GSFC) / USGS Astrogeology Science Center
 - **Spacecraft / Instrument:** Mars Global Surveyor (MGS) / Mars Orbiter Laser Altimeter (MOLA)
-- **Primary Source URL:** [https://astrogeology.usgs.gov/search/map/mars_mgs_mola_dem_463m](https://astrogeology.usgs.gov/search/map/mars_mgs_mola_dem_463m) / [https://trek.nasa.gov/mars/](https://trek.nasa.gov/mars/)
+- **Primary Source URL:** [https://astrogeology.usgs.gov/search/map/mars_mgs_mola_dem_463m](https://astrogeology.usgs.gov/search/map/mars_mgs_mola_dem_463m)
 - **Native Resolution:** 463 meters/pixel (128 pixels/degree at equator)
-- **Deployed Resolution:** $2048 \times 1024$ equirectangular raster
-- **Map Projection & Coordinate Frame:** Equirectangular, Mars Areoid Datum ($0\text{ km}$ elevation reference corresponding to average atmospheric pressure of $6.1\text{ mbar}$)
-- **Topographic Range:** $-8,200\text{ m}$ (Hellas Planitia floor) to $+21,229\text{ m}$ (Olympus Mons summit caldera)
-- **Vertical Relief & Exaggeration Factor:** Applied as a scalar displacement map on a $128 \times 128$ vertex sphere mesh with an intentional **$1.5\times$ vertical exaggeration factor** to ensure prominent planetary landforms (Olympus Mons, Tharsis Montes, Valles Marineris, Hellas Basin) are perceptible from orbital vantage points without distorting planetary sphericity.
-- **License / Terms of Use:** Public Domain (NASA / GSFC)
-- **Attribution:** NASA / GSFC / MOLA Science Team / USGS Astrogeology
+- **Deployed Raster:** $2048 \times 1024$ equirectangular JPEG texture (`src/assets/mars-mola-topography.jpg`, 465 KB)
+- **Role in Application:** Alternative visual layer ("MOLA SHADED RELIEF") selectable in the UI to visualize global altimetric gradations.
+- **Note:** This raster is treated strictly as an illustrative color texture and is **NOT** used as numerical height data for geometry displacement.
+- **License:** Public Domain (NASA Open Data).
+- **Attribution:** NASA / GSFC / MOLA Science Team / USGS Astrogeology.
 
 ---
 
-### 3. Regional Landing-Site Reconnaissance Mosaics
+### 3. Numerical 3D Elevation Model (Physical Terrain Geometry)
 
-| Landing Site | Exploration Target | Primary Instrument / Product | Resolution | Geographic Coverage |
-| :--- | :--- | :--- | :--- | :--- |
-| **Jezero Crater** | Perseverance & Ingenuity | MRO CTX (`JEZ_ctx_B_soc_008_orthoMosaic_6m`) | $6\text{ m/px}$ | River delta and Nerio Airfield ($18.44^\circ\text{N}, 77.45^\circ\text{E}$) |
-| **Gale Crater** | Curiosity Rover | MRO CTX (`curiosity_ctx_mosaic`) | $6\text{ m/px}$ | Mount Sharp (Aeolis Mons) lakebed mudstones ($-4.59^\circ\text{S}, 137.44^\circ\text{E}$) |
-| **Gusev Crater** | Spirit Rover | NASA Viking MDIM 2.1 Regional Tile | $232\text{ m/px}$ | Columbia Hills hydrothermal silica deposit ($-14.57^\circ\text{S}, 175.48^\circ\text{E}$) |
-| **Meridiani Planum** | Opportunity Rover | NASA Viking MDIM 2.1 Regional Tile | $232\text{ m/px}$ | Endurance & Santa Maria craters ($-1.95^\circ\text{S}, -5.53^\circ\text{W}$) |
-| **Chryse Planitia** | Viking 1 Lander | NASA Viking MDIM 2.1 Regional Tile | $232\text{ m/px}$ | First successful Mars surface landing ($22.27^\circ\text{N}, -47.97^\circ\text{W}$) |
-| **Utopia Planitia** | Viking 2 Lander | NASA Viking MDIM 2.1 Regional Tile | $232\text{ m/px}$ | Northern rock-strewn plain ($47.97^\circ\text{N}, -134.26^\circ\text{W}$) |
-| **Ares Vallis** | Mars Pathfinder & Sojourner | NASA Viking MDIM 2.1 Regional Tile | $232\text{ m/px}$ | Catastrophic ancient outflow channel ($19.33^\circ\text{N}, -33.56^\circ\text{W}$) |
-| **Vastitas Borealis** | Phoenix Lander | NASA Viking MDIM 2.1 Regional Tile | $232\text{ m/px}$ | Arctic permafrost ice-soil boundary ($68.22^\circ\text{N}, -125.74^\circ\text{W}$) |
-| **Elysium Planitia** | InSight Lander | NASA Viking MDIM 2.1 Regional Tile | $232\text{ m/px}$ | Smooth volcanic plain for seismometer ($4.50^\circ\text{N}, 135.62^\circ\text{E}$) |
-
-- **Attribution:** NASA / JPL-Caltech / Malin Space Science Systems (MSSS) / USGS
-
----
-
-### 4. Major Planetary Landmarks Reference
-
-All geological feature coordinates and elevation metrics are cross-checked against the **IAU Gazetteer of Planetary Nomenclature**:
-
-1. **Olympus Mons:** $18.65^\circ\text{N}, 226.20^\circ\text{E}$ ($-133.80^\circ\text{W}$), Peak Elevation $+21.9\text{ km}$
-2. **Valles Marineris:** $13.90^\circ\text{S}, 300.80^\circ\text{E}$ ($-59.20^\circ\text{W}$), Canyon Floor Depth down to $-7.0\text{ km}$
-3. **Hellas Planitia:** $42.40^\circ\text{S}, 70.50^\circ\text{E}$, Basin Floor $-7.15\text{ km}$
-4. **Tharsis Montes:** $2.80^\circ\text{N}, 247.20^\circ\text{E}$ ($-112.80^\circ\text{W}$), Regional Elevation $\sim +15.0\text{ km}$
-5. **Gale Crater:** $5.37^\circ\text{S}, 137.44^\circ\text{E}$, Basin Floor $-4.5\text{ km}$
-6. **Jezero Crater:** $18.38^\circ\text{N}, 77.58^\circ\text{E}$, Basin Floor $-2.5\text{ km}$
-7. **Gusev Crater:** $14.57^\circ\text{S}, 175.48^\circ\text{E}$, Basin Floor $-1.9\text{ km}$
-8. **Meridiani Planum:** $0.20^\circ\text{N}, 357.50^\circ\text{E}$ ($-2.50^\circ\text{W}$), Regional Elevation $-1.4\text{ km}$
+- **Source Product:** USGS Astrogeology `Mars_MGS_MOLA_DEM_mosaic_global_463m.tif`
+- **Official Product Page:** [https://astrogeology.usgs.gov/search/map/mars_mgs_mola_dem_463m](https://astrogeology.usgs.gov/search/map/mars_mgs_mola_dem_463m)
+- **Direct Source Dataset:** `https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_DEM_mosaic_global_463m.tif` (2,125,771,142 bytes)
+- **Instrument & Mission:** Mars Orbiter Laser Altimeter (MOLA), Mars Global Surveyor (MGS)
+- **Native Grid:** $46,080 \times 23,040$ signed 16-bit integers (`Int16`), 128 pixels/degree, uncompressed PCM
+- **Datum & Vertical Reference:** Martian Areoid (gravitational equipotential surface computed via GMM-2B gravity model, IAU 2000 reference sphere $R = 3,396,190.0\text{ m}$)
+- **Preprocessing Workflow:**
+  - Script: `scripts/process-mola-dem.js` (with `scripts/process-mola-dem.py` reference implementation)
+  - Method: Direct HTTP range sampling across 1,024 equidistant latitude strips, downsampling each row to 2,048 samples.
+  - Deployed Height Dataset: `src/assets/mars/mars-mola-height-2048x1024.u16` (4,194,304 bytes, 16-bit unsigned integers)
+  - Lossless Value Mapping: $\text{elevation}_{\text{meters}} = \text{uint16Value} - 32768$ (1 integer unit = exactly 1 meter, zero floating-point quantization error)
+  - Measured Dataset Range: $-8,152\text{ m}$ (Hellas Basin floor) to $+21,171\text{ m}$ (Olympus Mons caldera peak)
+  - Associated Metadata: `src/assets/mars/mars-mola-height-metadata.json`
+- **Three.js Geometry Construction:**
+  - Constructed dynamically in `src/utils/marsElevation.ts` via `createMolaMarsGeometry()`.
+  - Sphere Grid Resolution: $512 \times 256$ vertices on desktop, $256 \times 128$ on mobile.
+  - Physical Radial Offset Formula:
+    $$\Delta r = \left(\frac{h_{\text{km}}}{R_{\text{mars}}}\right) \times R_{\text{model}} \times \text{VE}$$
+    Where $R_{\text{model}} = 12$, $R_{\text{mars}} = 3,396.19\text{ km}$, $\text{VE} = 1.5$ (documented vertical exaggeration factor).
+  - Surface Normals: Computed analytically from the displaced mesh (`geometry.computeVertexNormals()`), producing genuine physical specular highlights and shadows on volcanic calderas and canyon chasms.
 
 ---
 
-### 5. Procedural Texture Provenance Disclosures
+### 4. Geographically Registered Regional CTX Surface LOD (3D Globe Patches)
 
-To prevent scientific misattribution, procedural models used for other planets in the Solar System are explicitly catalogued as non-photographic illustrative models:
+High-resolution orbital reconnaissance imagery is geographically registered directly onto the 3D Mars globe. When visitors zoom close to landing sites, the corresponding regional surface patch smoothly fades in over the terrain.
 
-- **Mercury:** Procedural illustrative model generated via Canvas2D informed by crater distribution and lobate scarps documented by NASA's MESSENGER mission. Not a spacecraft image or scientific surface mosaic.
-- **Venus:** Procedural illustrative atmospheric model depicting sulfuric acid cloud decks documented by Pioneer Venus and Magellan radar mapping.
-- **Jupiter:** Procedural illustrative cloud band model depicting zonal cloud belts and the Great Red Spot anticyclone informed by NASA Juno and Cassini observations.
-- **Saturn & Rings:** Procedural illustrative model depicting atmospheric bands and the Cassini Division gap informed by Voyager and Cassini imagery.
-- **Deep Space Fleet:** Trajectories are educational schematic representations based on JPL Horizons ephemerides. Pioneer 10, Pioneer 11, and Cassini are clearly noted as inactive/concluded missions with no operational receiver.
+#### 4.1 Jezero Crater (Perseverance & Ingenuity)
+- **Layer ID:** `jezero-ctx`
+- **Region Name:** Jezero Crater River Delta & Nerio Airfield
+- **Source Product:** USGS Astrogeology / Caltech Bruce Murray Lab `CTX_beta01_uncontrolled_5m_Caltech` (Tile Matrix Level 6, Row 25, Col 91)
+- **Instrument:** Context Camera (CTX), Mars Reconnaissance Orbiter (MRO)
+- **Primary Source URL:** `https://astro.arcgis.com/arcgis/rest/services/OnMars/CTX/MapServer/tile/6/25/91`
+- **Native Resolution:** $6\text{ m/pixel}$ (downsampled in Level 6 tile to $\sim 325\text{ m/pixel}$)
+- **Geographic Bounds:**
+  - West: $75.9375^\circ\text{E}$
+  - East: $78.75^\circ\text{E}$
+  - South: $16.875^\circ\text{N}$
+  - North: $19.6875^\circ\text{N}$
+- **Landing Site Inside Bounds:** Perseverance & Ingenuity at $18.38^\circ\text{N}, 77.58^\circ\text{E}$
+- **3D Implementation:** Spherical patch geometry ($32 \times 32$ grid) conforming to MOLA elevation with $+0.015$ radial bias and `polygonOffset` to prevent z-fighting.
+- **Shared Mission Asset:** Both Perseverance and Ingenuity reference this single georeferenced asset (`src/assets/mars/regional/jezero-ctx.png`, 125 KB), eliminating asset duplication.
+- **Attribution:** NASA / JPL-Caltech / MSSS / USGS Astrogeology / Caltech.
+
+#### 4.2 Gale Crater (Curiosity Rover)
+- **Layer ID:** `gale-ctx`
+- **Region Name:** Northern Gale Crater Floor & Aeolis Mons (Mount Sharp) Slopes
+- **Source Product:** USGS Astrogeology / Caltech Bruce Murray Lab `CTX_beta01_uncontrolled_5m_Caltech` (Tile Matrix Level 6, Row 33, Col 112)
+- **Instrument:** Context Camera (CTX), Mars Reconnaissance Orbiter (MRO)
+- **Primary Source URL:** `https://astro.arcgis.com/arcgis/rest/services/OnMars/CTX/MapServer/tile/6/33/112`
+- **Native Resolution:** $6\text{ m/pixel}$ (downsampled in Level 6 tile to $\sim 325\text{ m/pixel}$)
+- **Geographic Bounds:**
+  - West: $135.0^\circ\text{E}$
+  - East: $137.8125^\circ\text{E}$
+  - South: $-5.625^\circ\text{S}$
+  - North: $-2.8125^\circ\text{S}$
+- **Landing Site Inside Bounds:** Curiosity (Bradbury Landing) at $-4.59^\circ\text{S}, 137.44^\circ\text{E}$
+- **3D Implementation:** Spherical patch geometry ($32 \times 32$ grid) conforming to MOLA elevation.
+- **Attribution:** NASA / JPL-Caltech / MSSS / USGS Astrogeology / Caltech.
+
+---
+
+### 5. Historical Missions & Ephemeris Provenance
+
+1. **Cassini-Huygens (Saturn Grand Finale):**
+   - **Correction:** Cassini is **not** an outbound escaping spacecraft and is excluded from the deep-space interstellar trajectory fleet.
+   - **Historical Context:** Cassini concluded its 13-year Saturn orbital mission on September 15, 2017, with a deliberate, historic plunge into Saturn’s upper atmosphere (10:31 UTC entry / 11:55 UTC Earth-received signal loss).
+   - **Visualization:** Represented as a historical mission event marker in the Saturn system view, clearly distinguished from active spacecraft locations, with no fabricated surface coordinates.
+2. **Deep-Space Escaping Fleet:**
+   - Outward trajectory lines from the Sun are rendered exclusively for genuine escaping spacecraft:
+     - Voyager 1 (interstellar space, $\sim 167\text{ AU}$, Ophiuchus)
+     - Voyager 2 (interstellar space, $\sim 138\text{ AU}$, Pavo)
+     - Pioneer 10 (outer heliosphere, $\sim 135\text{ AU}$, Taurus)
+     - Pioneer 11 (outer heliosphere, $\sim 115\text{ AU}$, Scutum)
+     - New Horizons (Kuiper Belt, $\sim 60\text{ AU}$, Sagittarius)
+3. **Signal Travel Simulation & Ephemeris Disclosures:**
+   - Previous claims of live "JPL Horizons ephemeris" connections have been replaced with honest scientific disclosures:
+     - Distances are approximate historical and astronomical reference values.
+     - One-way light-travel times are educational derivations calculated via $t = d / c$.
+     - Inactive spacecraft (Pioneer 10, Pioneer 11, Cassini) display an explicit alert banner: `MISSION CONCLUDED // NO OPERATIONAL RECEIVER`.
+
+---
+
+### 6. Offline Self-Containment
+
+- All planetary textures, MOLA elevation data, and regional CTX reconnaissance tiles are bundled directly into the compiled standalone single-file distribution ([`SPACE_GRAVEYARD.html`](file:///d:/VSCODE/Space%20Program/SPACE_GRAVEYARD.html)).
+- Zero external runtime network requests are executed during exploration.

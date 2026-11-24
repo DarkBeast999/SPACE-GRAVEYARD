@@ -1,0 +1,31 @@
+{
+  "sourceProduct": "Mars_MGS_MOLA_DEM_mosaic_global_463m",
+  "sourceUrl": "https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_DEM_mosaic_global_463m.tif",
+  "description": "Numerical digital elevation model derived from Mars Global Surveyor Mars Orbiter Laser Altimeter (MOLA) observations.",
+  "custodian": "USGS Astrogeology Science Center / NASA Planetary Data System (PDS)",
+  "width": 2048,
+  "height": 1024,
+  "dataType": "uint16",
+  "byteOrder": "little-endian",
+  "minElevationMeters": -8152,
+  "maxElevationMeters": 21171,
+  "elevationOffset": -32768,
+  "elevationScale": 1,
+  "elevationFormula": "elevationMeters = uint16Value - 32768",
+  "datum": "Martian Areoid (GMM-2B gravity model equipotential surface, IAU 2000 reference radius 3,396,190.0 m)",
+  "projection": "Equirectangular (Plate Carrée)",
+  "longitudeConvention": "Planetocentric, centered on Prime Meridian 0° (-180° to +180°)",
+  "latitudeLimits": {
+    "north": 90,
+    "south": -90
+  },
+  "longitudeLimits": {
+    "west": -180,
+    "east": 180
+  },
+  "rowOrientation": "North to South (Row 0 = +90°N, Row 1023 = -90°S)",
+  "columnOrientation": "West to East (Col 0 = -180°W, Col 1024 = 0° Prime Meridian, Col 2047 = +180°E)",
+  "verticalExaggerationFactor": 1.5,
+  "referenceRadiusKm": 3396.19,
+  "processingHistory": "Direct numerical downsampling from 46080x23040 signed Int16 USGS GeoTIFF via reproducible HTTP range sampling script scripts/process-mola-dem.js."
+}

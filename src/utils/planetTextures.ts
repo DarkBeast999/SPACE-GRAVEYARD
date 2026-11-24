@@ -25,9 +25,12 @@ export function createMarsVikingTexture(): THREE.Texture {
 }
 
 /**
- * Authentic NASA MGS MOLA Topographic Elevation Color Hillshade Texture.
+ * Authentic NASA MGS MOLA Topographic Shaded Relief Visual Texture.
  * Product: Mars_MGS_MOLA_ClrShade_merge_global_463m
  * Resolution: 2048 x 1024 equirectangular projection.
+ * Note: Used exclusively as an illustrative visual surface texture layer (MOLA SHADED RELIEF).
+ * Numerical 3D elevation displacement is handled separately via the authentic MGS MOLA DEM
+ * binary raster (src/assets/mars/mars-mola-height-2048x1024.u16) and marsElevation.ts.
  */
 export function createMarsMolaTexture(): THREE.Texture {
   const loader = new THREE.TextureLoader();
