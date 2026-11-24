@@ -1304,7 +1304,7 @@ export const Universe3DPage: React.FC = () => {
 
       {/* Mars Landmark Information Drawer */}
       {selectedLandmark && (
-        <div className="absolute top-16 right-4 sm:right-6 bottom-4 z-30 w-[92%] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
+        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
           <div>
             <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
               <div>
@@ -1369,7 +1369,7 @@ export const Universe3DPage: React.FC = () => {
 
       {/* Site Inspector Drawer (When Landing Site is Clicked) */}
       {selectedSite && !selectedLandmark && (
-        <div className="absolute top-16 right-4 sm:right-6 bottom-4 z-30 w-[92%] sm:w-[420px] bg-[#080D16]/95 border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
+        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
           <div>
             {/* Header info */}
             <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
@@ -1521,7 +1521,7 @@ export const Universe3DPage: React.FC = () => {
 
       {/* Deep Space: "Signal Travel Simulation" Drawer (Part A Fix) */}
       {viewMode === 'DEEP_SPACE' && !selectedSite && (
-        <div className="absolute top-16 right-4 sm:right-6 z-30 w-[92%] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/50 rounded-3xl p-6 shadow-2xl backdrop-blur-xl animate-fadeIn">
+        <div className="absolute top-16 right-3 sm:right-6 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/50 rounded-3xl p-6 shadow-2xl backdrop-blur-xl animate-fadeIn">
           <div className="flex items-center gap-2 mb-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] animate-ping" />
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#38bdf8]">
