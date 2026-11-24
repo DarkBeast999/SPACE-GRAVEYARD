@@ -708,7 +708,8 @@ export const Universe3DPage: React.FC = () => {
       { name: 'Saturn', radius: 4.2, dist: 122, mode: 'SATURN' as ViewMode, tex: createSaturnTexture, hasRings: true },
     ];
 
-    const solarMeshes: THREE.Object3D[] = [];
+    const solarPlanetTargets: THREE.Object3D[] = [];
+    const solarSpacecraftTargets: THREE.Object3D[] = [];
 
     planetsConfig.forEach((p, idx) => {
       solarSystemGroup.add(createOrbitLine(p.dist));
@@ -722,7 +723,7 @@ export const Universe3DPage: React.FC = () => {
       pMesh.position.set(Math.cos(angle) * p.dist, 0, Math.sin(angle) * p.dist);
       pMesh.userData = { name: p.name, mode: p.mode, type: 'planet' };
       solarSystemGroup.add(pMesh);
-      solarMeshes.push(pMesh);
+      solarPlanetTargets.push(pMesh);
 
       // Dedicated Moon Mesh around Earth
       if (p.hasMoon) {
@@ -733,7 +734,7 @@ export const Universe3DPage: React.FC = () => {
         moonMesh.position.set(pMesh.position.x + 4.5, 0.8, pMesh.position.z + 2.5);
         moonMesh.userData = { name: 'The Moon', mode: 'MOON' as ViewMode, type: 'moon' };
         solarSystemGroup.add(moonMesh);
-        solarMeshes.push(moonMesh);
+        solarPlanetTargets.push(moonMesh);
       }
 
       // Saturn Rings
@@ -781,7 +782,7 @@ export const Universe3DPage: React.FC = () => {
       probeSymbol.position.copy(pos);
       probeSymbol.scale.set(2.4, 2.4, 2.4);
       solarSystemGroup.add(probeSymbol);
-      solarMeshes.push(probeSymbol);
+      solarSpacecraftTargets.push(probeSymbol);
     });
 
     // 7. BUILD INDEPENDENT GLOBES
@@ -1145,13 +1146,34 @@ export const Universe3DPage: React.FC = () => {
       let newHovered: string | null = null;
 
       if (solarSystemGroup.visible) {
-        const intersects = raycaster.intersectObjects(solarMeshes, true);
-        if (intersects.length > 0) {
-          let root = intersects[0].object;
-          while (root.parent && !root.userData?.name) {
+        // Priority 1: Escaping deep-space spacecraft targets (strictly prioritized over planets)
+        const craftIntersects = raycaster.intersectObjects(solarSpacecraftTargets, true);
+        if (craftIntersects.length > 0) {
+          let root: THREE.Object3D | null = craftIntersects[0].object;
+          while (root && !root.userData?.craftId) {
             root = root.parent;
           }
-          newHovered = root.userData?.name || intersects[0].object.userData?.name || null;
+          const craftId = root?.userData?.craftId as string | undefined;
+          if (craftId) {
+            const matched = LANDING_SITES_3D.find((s) => s.id === craftId);
+            if (matched) {
+              newHovered = `${matched.name} (Interstellar Bound)`;
+            }
+          }
+        }
+
+        // Priority 2: Only when no spacecraft is hovered, raycast planetary targets
+        if (!newHovered) {
+          const planetIntersects = raycaster.intersectObjects(solarPlanetTargets, true);
+          if (planetIntersects.length > 0) {
+            let root: THREE.Object3D | null = planetIntersects[0].object;
+            while (root && !root.userData?.mode) {
+              root = root.parent;
+            }
+            if (root?.userData?.name) {
+              newHovered = root.userData.name;
+            }
+          }
         }
       } else {
         const targets = getActiveTargets();
@@ -1189,13 +1211,14 @@ export const Universe3DPage: React.FC = () => {
       raycaster.setFromCamera(mouse, camera);
 
       if (solarSystemGroup.visible) {
-        const intersects = raycaster.intersectObjects(solarMeshes, true);
-        if (intersects.length > 0) {
-          let root = intersects[0].object;
-          while (root.parent && !root.userData?.mode && !root.userData?.craftId) {
+        // Priority 1: Escaping deep-space spacecraft targets (strictly prioritized over planets)
+        const craftIntersects = raycaster.intersectObjects(solarSpacecraftTargets, true);
+        if (craftIntersects.length > 0) {
+          let root: THREE.Object3D | null = craftIntersects[0].object;
+          while (root && !root.userData?.craftId) {
             root = root.parent;
           }
-          const craftId = (root.userData?.craftId || root.userData?.id) as string | undefined;
+          const craftId = root?.userData?.craftId as string | undefined;
           if (craftId) {
             const matched = LANDING_SITES_3D.find((s) => s.id === craftId);
             if (matched) {
@@ -1203,15 +1226,26 @@ export const Universe3DPage: React.FC = () => {
               prevTargetRef.current = matched.id;
               setSelectedSite(matched);
               handleSelectViewMode('DEEP_SPACE', matched.id);
-              return;
+              return; // Crucial: terminate immediately so no planetary navigation can run
             }
           }
-          const targetMode = (root.userData?.mode || intersects[0].object.userData?.mode) as ViewMode | undefined;
+        }
+
+        // Priority 2: Only when no spacecraft marker is hit, raycast planetary targets
+        const planetIntersects = raycaster.intersectObjects(solarPlanetTargets, true);
+        if (planetIntersects.length > 0) {
+          let root: THREE.Object3D | null = planetIntersects[0].object;
+          while (root && !root.userData?.mode) {
+            root = root.parent;
+          }
+          const targetMode = root?.userData?.mode as ViewMode | undefined;
           if (targetMode) {
             playWhooshSound();
             handleSelectViewMode(targetMode);
+            return;
           }
         }
+        return;
       } else {
         const targets = getActiveTargets();
         if (targets.length > 0) {
