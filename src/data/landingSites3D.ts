@@ -20,6 +20,7 @@ export interface LandingSite3D {
   hasPanorama?: boolean;
   panoramaTitle?: string;
   distanceFromEarth?: string;
+  approximateAu?: number; // Numeric AU distance for programmatic 3D scene placement
   lightDelaySeconds?: number; // for deep space
   isMultiLocation?: boolean;
   subLocations?: SubLocation[];
@@ -486,6 +487,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     description: 'Humanity’s most distant machine. Having completed grand flybys of Jupiter and Saturn, it crossed the heliopause in 2012, escaping the solar wind into the true interstellar ocean.',
     fascinatingFact: 'Travelling at over 61,000 km/h (38,000 mph). A radio command travelling at the speed of light takes more than 23 hours to reach it!',
     distanceFromEarth: '~24.9 billion km (166.7 AU)',
+    approximateAu: 166.7,
     lightDelaySeconds: 83200, // ~23.1 hours
     trajectoryAngle: 0.65,
     trajectoryDistance: 170,
@@ -507,6 +509,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     description: 'The only spacecraft ever to visit all four gas giant worlds: Jupiter, Saturn, Uranus, and Neptune. Crossed into interstellar space in November 2018.',
     fascinatingFact: 'Discovered 16 new moons and the unexpected Great Dark Spot in Neptune’s methane atmosphere.',
     distanceFromEarth: '~20.7 billion km (138.4 AU)',
+    approximateAu: 138.4,
     lightDelaySeconds: 69200, // ~19.2 hours
     trajectoryAngle: 2.45,
     trajectoryDistance: 142,
@@ -528,6 +531,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     description: 'The first spacecraft to transit the asteroid belt and fly by Jupiter. Transmitted humanity\'s first close-up images of the Jovian atmosphere before cruising into the outer heliosphere.',
     fascinatingFact: 'Carried the famous gold-anodized aluminium plaque designed by Carl Sagan and Frank Drake, showing pictorial figures of humans and galactic coordinates of our Sun.',
     distanceFromEarth: '~20.2 billion km (135.2 AU)',
+    approximateAu: 135.2,
     lightDelaySeconds: 67300, // ~18.7 hours
     trajectoryAngle: 3.85,
     trajectoryDistance: 138,
@@ -549,6 +553,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     description: 'Pioneered the gravitational slingshot trajectory past Jupiter to become humanity’s first spacecraft to explore Saturn, discovering its delicate F Ring and two icy moons.',
     fascinatingFact: 'Last transmission received September 30, 1995, at ~44 AU. It is cruising into deep interstellar space in the opposite direction of Pioneer 10.',
     distanceFromEarth: '~17.2 billion km (115 AU)',
+    approximateAu: 115.0,
     lightDelaySeconds: 57400, // ~15.9 hours
     trajectoryAngle: 4.65,
     trajectoryDistance: 120,
@@ -570,6 +575,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     description: 'Flew past Pluto in July 2015, capturing the breathtaking heart-shaped nitrogen ice glacier Tombaugh Regio, before conducting humanity’s most distant flyby of Arrokoth.',
     fascinatingFact: 'Carried some of the cremated ashes of Clyde Tombaugh, the American astronomer who discovered Pluto in 1930.',
     distanceFromEarth: '~8.9 billion km (59.6 AU)',
+    approximateAu: 59.6,
     lightDelaySeconds: 29800, // ~8.3 hours
     trajectoryAngle: 5.10,
     trajectoryDistance: 95,

@@ -30,10 +30,49 @@ import {
   MonumentIcon,
   getMonumentTypeLabel,
   getMonumentType,
+  getLabelSpriteTexture,
 } from '../utils/monumentSymbols';
 
-import { playSignalPing, playWhooshSound, playSuccessChime } from '../utils/audio';
+import { playSignalPing, playWhooshSound } from '../utils/audio';
 import { normalizeLongitude } from '../utils/coordinateUtils';
+
+/**
+ * Calculates 3D scene coordinates for escaping deep-space craft based on genuine
+ * astronomical AU distance and documented galactic escape headings.
+ */
+export function getDeepSpaceCraftPosition(dc: LandingSite3D): THREE.Vector3 {
+  const au = dc.approximateAu || 100;
+  const auScale = 0.6; // 1 AU = 0.6 units in Deep Space schematic scene
+  const dist = au * auScale;
+
+  let decDeg = 0; // Declination from ecliptic
+  let azRad = dc.trajectoryAngle ?? 0.7; // Ecliptic azimuth
+
+  if (dc.id === 'voyager-1') {
+    decDeg = 35; // Ophiuchus / north of ecliptic
+    azRad = 0.65;
+  } else if (dc.id === 'voyager-2') {
+    decDeg = -48; // Pavo / south of ecliptic
+    azRad = 2.45;
+  } else if (dc.id === 'pioneer-10') {
+    decDeg = 3; // Taurus / Aldebaran direction
+    azRad = 3.85;
+  } else if (dc.id === 'pioneer-11') {
+    decDeg = 14; // Scutum / Galactic Center
+    azRad = 4.65;
+  } else if (dc.id === 'new-horizons') {
+    decDeg = -2; // Sagittarius / Kuiper Belt
+    azRad = 5.10;
+  }
+
+  const decRad = (decDeg * Math.PI) / 180;
+  const rEcliptic = dist * Math.cos(decRad);
+  const x = rEcliptic * Math.cos(azRad);
+  const y = dist * Math.sin(decRad);
+  const z = rEcliptic * Math.sin(azRad);
+
+  return new THREE.Vector3(x, y, z);
+}
 
 export type ViewMode =
   | 'SOLAR_SYSTEM'
@@ -133,11 +172,6 @@ export const Universe3DPage: React.FC = () => {
 
   const [hoveredObject, setHoveredObject] = useState<string | null>(null);
   const [isPanoramaOpen, setIsPanoramaOpen] = useState(false);
-  const [radioInput, setRadioInput] = useState('');
-  const [radioSent, setRadioSent] = useState(false);
-  const [selectedDeepCraft, setSelectedDeepCraft] = useState<LandingSite3D>(
-    LANDING_SITES_3D.find((s) => s.id === 'voyager-1') || LANDING_SITES_3D[15]
-  );
 
   // Three.js internal refs
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -148,6 +182,7 @@ export const Universe3DPage: React.FC = () => {
   const transitionRef = useRef<CameraTransition | null>(null);
   const isInteractingRef = useRef(false);
   const isContextLostRef = useRef(false);
+  const prevTargetRef = useRef<string | null>(searchParams.get('target'));
 
   // Mars mesh and texture refs
   const marsGlobeMeshRef = useRef<THREE.Mesh | null>(null);
@@ -316,10 +351,11 @@ export const Universe3DPage: React.FC = () => {
 
         case 'DEEP_SPACE':
           if (deepSpaceGroupRef.current) deepSpaceGroupRef.current.visible = true;
-          if (solarSystemGroupRef.current) solarSystemGroupRef.current.visible = true;
-          targetPos.set(120, 60, 160);
-          minDist = 40;
-          maxDist = 700;
+          if (solarSystemGroupRef.current) solarSystemGroupRef.current.visible = false;
+          targetPos.set(0, 95, 175);
+          targetLookAt.set(0, 0, 0);
+          minDist = 20;
+          maxDist = 600;
           break;
       }
 
@@ -335,7 +371,13 @@ export const Universe3DPage: React.FC = () => {
             focusLandingSite(resolved.site.lat, resolved.site.lon, true);
             return;
           } else if (mode === 'DEEP_SPACE') {
-            setSelectedDeepCraft(resolved.site);
+            setSelectedSite(resolved.site);
+            const pos = getDeepSpaceCraftPosition(resolved.site);
+            glideCamera(
+              new THREE.Vector3(pos.x + 18, pos.y + 12, pos.z + 24),
+              pos,
+              1200
+            );
             return;
           } else if (mode === 'SATURN') {
             setSelectedSite(resolved.site);
@@ -352,25 +394,35 @@ export const Universe3DPage: React.FC = () => {
 
   // User selects view mode from UI
   const handleSelectViewMode = useCallback(
-    (newMode: ViewMode) => {
+    (newMode: ViewMode, preserveSiteId?: string) => {
       playWhooshSound();
       setViewMode(newMode);
-      setSelectedSite(null);
+      if (!preserveSiteId) {
+        setSelectedSite(null);
+        prevTargetRef.current = null;
+      } else {
+        prevTargetRef.current = preserveSiteId;
+      }
       setSelectedLandmark(null);
 
       const dest = DESTINATIONS.find((d) => d.mode === newMode);
       if (dest && dest.mode !== 'SOLAR_SYSTEM') {
-        setSearchParams({ planet: dest.param });
+        if (preserveSiteId) {
+          setSearchParams({ planet: dest.param, target: preserveSiteId });
+        } else {
+          setSearchParams({ planet: dest.param });
+        }
       } else {
         setSearchParams({});
       }
-      applyViewMode(newMode);
+      applyViewMode(newMode, preserveSiteId);
     },
     [applyViewMode, setSearchParams]
   );
 
   // Bug Fix: Clean drawer close and URL synchronization
   const handleCloseDrawer = useCallback(() => {
+    prevTargetRef.current = null;
     setSelectedSite(null);
     setSelectedLandmark(null);
     const params = new URLSearchParams(searchParams);
@@ -397,26 +449,35 @@ export const Universe3DPage: React.FC = () => {
     if (resolvedMode !== viewMode) {
       setViewMode(resolvedMode);
       applyViewMode(resolvedMode, target);
-    } else if (target) {
+      prevTargetRef.current = target;
+    } else if (target && target !== prevTargetRef.current) {
+      prevTargetRef.current = target;
       const match = resolve3DArtifact(target);
-      if (match && (!selectedSite || selectedSite.id !== match.site.id)) {
+      if (match) {
         setSelectedSite(match.site);
         if (match.site.body === 'mars' || match.site.body === 'moon') {
           focusLandingSite(match.site.lat, match.site.lon, true);
         } else if (match.site.body === 'deep-space') {
-          setSelectedDeepCraft(match.site);
+          const pos = getDeepSpaceCraftPosition(match.site);
+          glideCamera(
+            new THREE.Vector3(pos.x + 18, pos.y + 12, pos.z + 24),
+            pos,
+            1200
+          );
         } else if (match.site.body === 'saturn') {
           setSelectedSite(match.site);
         }
       }
-    } else if (!target && selectedSite) {
+    } else if (!target && prevTargetRef.current !== null) {
+      prevTargetRef.current = null;
       setSelectedSite(null);
     }
-  }, [searchParams, viewMode, applyViewMode, selectedSite, focusLandingSite]);
+  }, [searchParams, viewMode, applyViewMode, focusLandingSite, glideCamera]);
 
   // Reset View helper to return to default camera orbit
   const handleResetView = useCallback(() => {
     playWhooshSound();
+    prevTargetRef.current = null;
     setSelectedSite(null);
     setSelectedLandmark(null);
     const dest = DESTINATIONS.find((d) => d.mode === viewMode);
@@ -428,6 +489,8 @@ export const Universe3DPage: React.FC = () => {
     if (!cameraRef.current || !controlsRef.current) return;
     if (viewMode === 'SOLAR_SYSTEM') {
       glideCamera(new THREE.Vector3(0, 75, 175), new THREE.Vector3(0, 0, 0), 1000);
+    } else if (viewMode === 'DEEP_SPACE') {
+      glideCamera(new THREE.Vector3(0, 95, 175), new THREE.Vector3(0, 0, 0), 1000);
     } else {
       glideCamera(new THREE.Vector3(0, 8, 38), new THREE.Vector3(0, 0, 0), 1000);
     }
@@ -463,17 +526,24 @@ export const Universe3DPage: React.FC = () => {
       if (result.type === 'site') {
         const site = result.data;
         const targetPlanet = parsePlanetParam(site.body);
-        handleSelectViewMode(targetPlanet);
+        prevTargetRef.current = site.id;
         setSelectedLandmark(null);
         setSelectedSite(site);
+        handleSelectViewMode(targetPlanet, site.id);
         if (site.body === 'mars' || site.body === 'moon') {
           focusLandingSite(site.lat, site.lon, true);
         } else if (site.body === 'deep-space') {
-          setSelectedDeepCraft(site);
+          const pos = getDeepSpaceCraftPosition(site);
+          glideCamera(
+            new THREE.Vector3(pos.x + 18, pos.y + 12, pos.z + 24),
+            pos,
+            1200
+          );
         }
         setSearchParams({ planet: site.body, target: site.id });
       } else {
         const lm = result.data;
+        prevTargetRef.current = null;
         handleSelectViewMode('MARS');
         setSelectedSite(null);
         setSelectedLandmark(lm);
@@ -682,40 +752,34 @@ export const Universe3DPage: React.FC = () => {
       }
     });
 
-    // Deep Space craft trajectories & markers in Solar System view (Single Source of Truth)
+    // Escaping deep space probe markers in Solar System view (No Sun-to-craft connector lines)
     // Note: Cassini is NOT an escaping spacecraft; it is positioned in Saturn's historical context.
     const deepSpaceCraft = LANDING_SITES_3D.filter((s) => s.body === 'deep-space');
 
     deepSpaceCraft.forEach((dc) => {
       const angle = dc.trajectoryAngle ?? 0.7;
-      const dist = dc.trajectoryDistance ?? 140;
-      const color = dc.trajectoryColor ?? 0x38bdf8;
+      const dist = dc.trajectoryDistance ?? 150;
+      const pos = new THREE.Vector3(
+        Math.cos(angle) * dist,
+        Math.sin(angle * 0.3) * 15,
+        Math.sin(angle) * dist
+      );
 
-      const trajPts = [
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(Math.cos(angle) * dist, Math.sin(angle * 0.3) * 15, Math.sin(angle) * dist),
-      ];
-      const trajGeo = new THREE.BufferGeometry().setFromPoints(trajPts);
-      const trajMat = new THREE.LineDashedMaterial({
-        color: color,
-        dashSize: 4,
-        gapSize: 3,
-        transparent: true,
-        opacity: 0.6,
-      });
-      const line = new THREE.Line(trajGeo, trajMat);
-      line.computeLineDistances();
-      solarSystemGroup.add(line);
-
-      // Escaping deep space probe marker using the authentic probe vector symbol
+      // Deep space probe marker using authentic vector symbol + readable name label
       const probeSymbol = createMonumentSymbol(dc, {
-        name: `${dc.name} (Escaping Fleet)`,
+        name: `${dc.name} (Interstellar Bound)`,
         craftId: dc.id,
         mode: 'DEEP_SPACE' as ViewMode,
         type: 'deep-craft',
+        showLabel: true,
+        labelText: dc.name,
+        labelSubtitle: dc.approximateAu ? `~${dc.approximateAu} AU` : undefined,
+        labelScale: [18.0, 4.5, 1.0],
+        labelOffsetY: -3.8,
+        hitRadius: 4.5,
       });
-      probeSymbol.position.copy(trajPts[1]);
-      probeSymbol.scale.set(1.5, 1.5, 1.5);
+      probeSymbol.position.copy(pos);
+      probeSymbol.scale.set(2.4, 2.4, 2.4);
       solarSystemGroup.add(probeSymbol);
       solarMeshes.push(probeSymbol);
     });
@@ -843,31 +907,147 @@ export const Universe3DPage: React.FC = () => {
       saturnInteractiveTargets.push(cassiniSymbol);
     }
 
-    // 7h. Deep Space Group
+    // 7h. Deep Space Group (Schematic Heliosphere & Interstellar Space)
     const deepSpaceGroup = new THREE.Group();
     deepSpaceGroupRef.current = deepSpaceGroup;
     scene.add(deepSpaceGroup);
     deepSpaceGroup.visible = false;
 
-    // Outer heliosphere bubble
-    const helioGeo = new THREE.SphereGeometry(30, 24, 24);
-    const helioMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.15,
-    });
-    deepSpaceGroup.add(new THREE.Mesh(helioGeo, helioMat));
+    // 1. Sun & Inner Planetary Core Origin at (0, 0, 0)
+    const sunCore = new THREE.Mesh(
+      new THREE.SphereGeometry(1.5, 24, 24),
+      new THREE.MeshBasicMaterial({ color: 0xffd166 })
+    );
+    deepSpaceGroup.add(sunCore);
 
-    // Escaping deep space probes in deepSpaceGroup
+    const originLabel = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: getLabelSpriteTexture('SUN / INNER SYSTEM', 'Origin (0 AU)'),
+        transparent: true,
+        depthTest: false,
+      })
+    );
+    originLabel.position.set(0, -2.4, 0);
+    originLabel.scale.set(10.0, 2.5, 1.0);
+    deepSpaceGroup.add(originLabel);
+
+    // 2. Kuiper Belt (~30-50 AU): Subtle translucent toroidal ring
+    const kuiperGeo = new THREE.RingGeometry(18, 30, 96);
+    kuiperGeo.rotateX(Math.PI / 2);
+    const kuiperMesh = new THREE.Mesh(
+      kuiperGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0x93c5fd,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.08,
+      })
+    );
+    deepSpaceGroup.add(kuiperMesh);
+
+    const kuiperLabel = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: getLabelSpriteTexture('KUIPER BELT', '~30–50 AU · Debris Disk'),
+        transparent: true,
+        depthTest: false,
+      })
+    );
+    kuiperLabel.position.set(24, 0.4, 0);
+    kuiperLabel.scale.set(11.0, 2.75, 1.0);
+    deepSpaceGroup.add(kuiperLabel);
+
+    // 3. Termination Shock (~90 AU / 54 units): Where solar wind abruptly drops
+    const termShockGeo = new THREE.RingGeometry(53.6, 54.4, 128);
+    termShockGeo.rotateX(Math.PI / 2);
+    const termShockMesh = new THREE.Mesh(
+      termShockGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.35,
+      })
+    );
+    deepSpaceGroup.add(termShockMesh);
+
+    const termWashGeo = new THREE.RingGeometry(30, 53.6, 64);
+    termWashGeo.rotateX(Math.PI / 2);
+    deepSpaceGroup.add(
+      new THREE.Mesh(
+        termWashGeo,
+        new THREE.MeshBasicMaterial({
+          color: 0x38bdf8,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.025,
+        })
+      )
+    );
+
+    const termLabel = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: getLabelSpriteTexture('TERMINATION SHOCK', '~90 AU · Schematic Boundary'),
+        transparent: true,
+        depthTest: false,
+      })
+    );
+    termLabel.position.set(0, 0.4, 54);
+    termLabel.scale.set(12.0, 3.0, 1.0);
+    deepSpaceGroup.add(termLabel);
+
+    // 4. Heliopause (~120 AU / 72 units): Theoretical edge of solar magnetic field
+    const heliopauseGeo = new THREE.RingGeometry(71.4, 72.6, 128);
+    heliopauseGeo.rotateX(Math.PI / 2);
+    const heliopauseMesh = new THREE.Mesh(
+      heliopauseGeo,
+      new THREE.MeshBasicMaterial({
+        color: 0x818cf8,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.45,
+      })
+    );
+    deepSpaceGroup.add(heliopauseMesh);
+
+    const heliopauseLabel = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: getLabelSpriteTexture('HELIOPAUSE', '~120 AU · Interstellar Frontier'),
+        transparent: true,
+        depthTest: false,
+      })
+    );
+    heliopauseLabel.position.set(0, 0.4, -72);
+    heliopauseLabel.scale.set(12.0, 3.0, 1.0);
+    deepSpaceGroup.add(heliopauseLabel);
+
+    // 5. Interstellar Space Label beyond Heliopause
+    const interstellarLabel = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: getLabelSpriteTexture('INTERSTELLAR SPACE', '>120 AU · Pristine Interstellar Ocean'),
+        transparent: true,
+        depthTest: false,
+      })
+    );
+    interstellarLabel.position.set(0, 0.4, 96);
+    interstellarLabel.scale.set(14.0, 3.5, 1.0);
+    deepSpaceGroup.add(interstellarLabel);
+
+    // 6. Escaping deep space probes in deepSpaceGroup (Positioned by genuine AU distance & heading)
     const deepSpaceInteractiveTargets: THREE.Object3D[] = [];
     deepSpaceCraft.forEach((dc) => {
-      const angle = dc.trajectoryAngle ?? 0.7;
-      const dist = 22;
-      const pos = new THREE.Vector3(Math.cos(angle) * dist, Math.sin(angle * 0.3) * 6, Math.sin(angle) * dist);
-      const symbol = createMonumentSymbol(dc);
+      const pos = getDeepSpaceCraftPosition(dc);
+      const symbol = createMonumentSymbol(dc, {
+        name: `${dc.name} (Interstellar Explorer)`,
+        craftId: dc.id,
+        showLabel: true,
+        labelText: dc.name,
+        labelSubtitle: dc.approximateAu ? `~${dc.approximateAu} AU` : undefined,
+        labelScale: [11.0, 2.75, 1.0],
+        labelOffsetY: -2.2,
+        hitRadius: 3.5,
+      });
       symbol.position.copy(pos);
-      symbol.scale.set(1.4, 1.4, 1.4);
+      symbol.scale.set(2.0, 2.0, 2.0);
       deepSpaceGroup.add(symbol);
       deepSpaceInteractiveTargets.push(symbol);
     });
@@ -967,8 +1147,11 @@ export const Universe3DPage: React.FC = () => {
       if (solarSystemGroup.visible) {
         const intersects = raycaster.intersectObjects(solarMeshes, true);
         if (intersects.length > 0) {
-          const obj = intersects[0].object;
-          newHovered = obj.userData?.name || null;
+          let root = intersects[0].object;
+          while (root.parent && !root.userData?.name) {
+            root = root.parent;
+          }
+          newHovered = root.userData?.name || intersects[0].object.userData?.name || null;
         }
       } else {
         const targets = getActiveTargets();
@@ -1008,14 +1191,24 @@ export const Universe3DPage: React.FC = () => {
       if (solarSystemGroup.visible) {
         const intersects = raycaster.intersectObjects(solarMeshes, true);
         if (intersects.length > 0) {
-          const obj = intersects[0].object;
-          const targetMode = obj.userData?.mode as ViewMode | undefined;
+          let root = intersects[0].object;
+          while (root.parent && !root.userData?.mode && !root.userData?.craftId) {
+            root = root.parent;
+          }
+          const craftId = (root.userData?.craftId || root.userData?.id) as string | undefined;
+          if (craftId) {
+            const matched = LANDING_SITES_3D.find((s) => s.id === craftId);
+            if (matched) {
+              playSignalPing(750);
+              prevTargetRef.current = matched.id;
+              setSelectedSite(matched);
+              handleSelectViewMode('DEEP_SPACE', matched.id);
+              return;
+            }
+          }
+          const targetMode = (root.userData?.mode || intersects[0].object.userData?.mode) as ViewMode | undefined;
           if (targetMode) {
             playWhooshSound();
-            if (obj.userData?.craftId) {
-              const matched = LANDING_SITES_3D.find((s) => s.id === obj.userData.craftId);
-              if (matched) setSelectedDeepCraft(matched);
-            }
             handleSelectViewMode(targetMode);
           }
         }
@@ -1031,12 +1224,18 @@ export const Universe3DPage: React.FC = () => {
             if (root.userData?.siteData) {
               const site = root.userData.siteData as LandingSite3D;
               playSignalPing(720);
+              prevTargetRef.current = site.id;
               setSelectedLandmark(null);
               setSelectedSite(site);
               if (site.body === 'mars' || site.body === 'moon') {
                 focusLandingSite(site.lat, site.lon, true);
               } else if (site.body === 'deep-space') {
-                setSelectedDeepCraft(site);
+                const pos = root.position;
+                glideCamera(
+                  new THREE.Vector3(pos.x + 18, pos.y + 12, pos.z + 24),
+                  pos,
+                  1000
+                );
               }
               setSearchParams({ planet: site.body, target: site.id });
             } else if (root.userData?.landmarkData) {
@@ -1222,13 +1421,6 @@ export const Universe3DPage: React.FC = () => {
     }
   }, [showLandmarks]);
 
-  // Handle Radio Packet send in "Signal Travel Simulation"
-  const handleSendRadio = () => {
-    if (!radioInput.trim()) return;
-    playSuccessChime();
-    setRadioSent(true);
-  };
-
   // Graceful WebGL Fallback UI for terminal failure
   if (webglError) {
     return (
@@ -1282,7 +1474,7 @@ export const Universe3DPage: React.FC = () => {
       <div className="absolute top-16 left-4 z-20 flex flex-col gap-2 max-w-[320px] sm:max-w-[360px]">
         {/* Navigation & Search Bar */}
         <div className="flex items-center gap-2">
-          {viewMode !== 'SOLAR_SYSTEM' ? (
+          {viewMode !== 'SOLAR_SYSTEM' && (
             <button
               onClick={() => handleSelectViewMode('SOLAR_SYSTEM')}
               aria-label="Back to Solar System Overview"
@@ -1291,10 +1483,6 @@ export const Universe3DPage: React.FC = () => {
               <span className="group-hover:-translate-x-1 transition-transform">←</span>
               <span className="hidden sm:inline">SOLAR SYSTEM</span>
             </button>
-          ) : (
-            <div className="px-3 py-1.5 rounded-full bg-[#101A29]/80 border border-white/10 text-[11px] font-mono text-[#B6C0CC] backdrop-blur-md hidden sm:block shrink-0">
-              <span className="text-[#C6A36B] font-semibold">SOLAR SYSTEM</span>
-            </div>
           )}
 
           {/* Real-time Mission and Place Search Bar */}
@@ -1369,10 +1557,10 @@ export const Universe3DPage: React.FC = () => {
             <span>RESET VIEW</span>
           </button>
 
-          {/* Visual Legend Toggle */}
+          {/* Marker Guide Toggle */}
           <button
             onClick={() => setIsLegendOpen(!isLegendOpen)}
-            title="Visual guide to spacecraft symbols"
+            title="Visual guide to spacecraft and landmark markers"
             className={`px-3 py-1.5 rounded-full border text-[11px] font-mono backdrop-blur-md shadow-md transition-all flex items-center gap-1.5 ${
               isLegendOpen
                 ? 'bg-[#C6A36B] text-[#080D16] font-semibold border-[#C6A36B]'
@@ -1380,7 +1568,7 @@ export const Universe3DPage: React.FC = () => {
             }`}
           >
             <span>🧭</span>
-            <span>LEGEND</span>
+            <span>MARKER GUIDE</span>
           </button>
 
           {/* Mars Landmarks Toggle (visible only on Mars) */}
@@ -1409,18 +1597,18 @@ export const Universe3DPage: React.FC = () => {
         )}
       </div>
 
-      {/* Visual Legend Dialog */}
+      {/* Marker Guide Dialog */}
       {isLegendOpen && (
         <div className="absolute top-[148px] left-4 z-40 w-72 sm:w-80 p-4 rounded-2xl bg-[#080D16]/98 border border-[#C6A36B]/60 shadow-2xl backdrop-blur-xl animate-fadeIn">
           <div className="flex items-center justify-between pb-2 mb-3 border-b border-white/10">
             <div className="flex items-center gap-2">
               <span className="text-base">🧭</span>
-              <h4 className="font-display text-sm text-[#F0E8D9]">Spacecraft & Landmark Symbols</h4>
+              <h4 className="font-display text-sm text-[#F0E8D9]">Marker Guide</h4>
             </div>
             <button
               onClick={() => setIsLegendOpen(false)}
               className="text-xs p-1 rounded-full text-[#B6C0CC] hover:text-white"
-              aria-label="Close Legend"
+              aria-label="Close Marker Guide"
             >
               ✕
             </button>
@@ -1526,6 +1714,11 @@ export const Universe3DPage: React.FC = () => {
         {viewMode === 'SATURN' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
             🪐 Saturn & Rings: Authentic NASA Cassini Cylindrical Mosaic & concentric ring divisions.
+          </div>
+        )}
+        {viewMode === 'DEEP_SPACE' && (
+          <div className="text-[10px] font-mono text-[#38bdf8]/90 bg-[#080D16]/90 px-3.5 py-2 rounded-xl border border-[#38bdf8]/40 backdrop-blur-sm">
+            🌌 Deep Space: Schematic astronomical regions & boundaries (~30–50 AU Kuiper Belt, ~90 AU Termination Shock, ~120 AU Heliopause). Distances are approximate historical baselines.
           </div>
         )}
       </div>
@@ -1657,7 +1850,11 @@ export const Universe3DPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-[#B6C0CC] font-mono text-[11px]">TIMELINE:</span>
                 <span className="text-[#F0E8D9] font-mono font-medium">
-                  {selectedSite.year ? `Touchdown: ${selectedSite.year}` : 'Historical Flight'}
+                  {selectedSite.body === 'deep-space'
+                    ? `Launch: ${selectedSite.year}`
+                    : selectedSite.year
+                    ? `Touchdown: ${selectedSite.year}`
+                    : 'Historical Flight'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -1669,10 +1866,35 @@ export const Universe3DPage: React.FC = () => {
               {selectedSite.distanceFromEarth && (
                 <div className="flex items-center justify-between">
                   <span className="text-[#B6C0CC] font-mono text-[11px]">DISTANCE FROM EARTH:</span>
-                  <span className="text-[#B6C0CC] font-mono text-[11px]">{selectedSite.distanceFromEarth}</span>
+                  <span className="text-[#38bdf8] font-mono text-[11px] font-semibold">{selectedSite.distanceFromEarth}</span>
+                </div>
+              )}
+              {selectedSite.lightDelaySeconds && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[#B6C0CC] font-mono text-[11px]">ONE-WAY LIGHT DELAY:</span>
+                  <span className="text-[#38bdf8] font-mono text-[11px] font-semibold">
+                    ~{Math.round(selectedSite.lightDelaySeconds / 3600)}h {Math.round((selectedSite.lightDelaySeconds % 3600) / 60)}m (Theoretical)
+                  </span>
+                </div>
+              )}
+              {selectedSite.referenceEpoch && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[#B6C0CC] font-mono text-[11px]">REFERENCE EPOCH:</span>
+                  <span className="text-[#B6C0CC] font-mono text-[10px]">{selectedSite.referenceEpoch}</span>
                 </div>
               )}
             </div>
+
+            {/* Educational Deep Space Calculation Disclaimer */}
+            {selectedSite.body === 'deep-space' && (
+              <div className="mb-4 p-3 rounded-xl bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-xs font-sans text-[#B6C0CC]">
+                <div className="font-semibold text-[#38bdf8] mb-0.5 flex items-center gap-1.5">
+                  <span>📡</span>
+                  <span>Theoretical Signal Travel Time</span>
+                </div>
+                Calculated based on speed of light and documented astronomical distances. This is a mathematical educational demonstration, not an active radio link.
+              </div>
+            )}
 
             {/* Special Saturn / Cassini atmospheric plunge notice */}
             {selectedSite.body === 'saturn' && (
@@ -1762,125 +1984,112 @@ export const Universe3DPage: React.FC = () => {
               onClick={handleCloseDrawer}
               className="w-full py-2 rounded-xl bg-transparent hover:bg-white/5 text-[#B6C0CC] hover:text-[#F0E8D9] transition-all text-[11px] font-mono tracking-wider uppercase text-center"
             >
-              RETURN TO PLANET
+              {viewMode === 'DEEP_SPACE' ? 'RETURN TO MISSION DIRECTORY' : 'RETURN TO PLANET'}
             </button>
           </div>
         </div>
       )}
 
-      {/* Deep Space: "Signal Travel Simulation" Drawer (Part A Fix) */}
+      {/* Deep Space Mission Directory (When in Deep Space and No Craft is Selected) */}
       {viewMode === 'DEEP_SPACE' && !selectedSite && (
-        <div className="absolute top-16 right-3 sm:right-6 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/50 rounded-3xl p-6 shadow-2xl backdrop-blur-xl animate-fadeIn">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] animate-ping" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-[#38bdf8]">
-              EDUCATIONAL SIMULATION // SPEED OF LIGHT
-            </span>
-          </div>
+        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
+          <div>
+            {/* Header info */}
+            <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl mt-0.5">🌌</span>
+                <div>
+                  <span className="text-[10px] font-mono font-semibold tracking-widest text-[#38bdf8] uppercase block">
+                    INTERSTELLAR FLEET
+                  </span>
+                  <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-0.5">
+                    Mission Directory
+                  </h2>
+                  <div className="text-xs text-[#B6C0CC]/80 font-mono mt-0.5">
+                    Five Escaping Interstellar Artifacts
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-snug">
-            Signal Travel Simulation
-          </h2>
-          <p className="text-xs text-[#B6C0CC] mt-1 leading-relaxed font-light">
-            Calculates electromagnetic light-travel time based on documented astronomical distances.
-            <span className="block mt-1 text-[#F0E8D9]/70 italic">
-              Note: This is an educational demonstration. No real transmission occurs and this tool is not connected to NASA's Deep Space Network.
-            </span>
-          </p>
+            <p className="text-xs text-[#B6C0CC] mb-4 font-light leading-relaxed">
+              Humanity has launched five robotic messengers on hyperbolic escape trajectories that will never return. Select an explorer below or tap its 3D marker to inspect its distance, mission dossier, and light delay.
+            </p>
 
-          {/* Spacecraft Target Selector (Single Source of Truth) */}
-          <div className="mt-4">
-            <label className="text-[11px] font-mono text-[#C6A36B] block mb-1">
-              CHOOSE SPACECRAFT TARGET:
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+            {/* 5 Selectable Spacecraft Cards */}
+            <div className="space-y-2.5 mb-5">
               {LANDING_SITES_3D.filter((s) => s.body === 'deep-space').map((craft) => (
                 <button
                   key={craft.id}
                   onClick={() => {
-                    setSelectedDeepCraft(craft);
-                    setRadioSent(false);
+                    playSignalPing(750);
+                    prevTargetRef.current = craft.id;
+                    setSelectedSite(craft);
+                    setSearchParams({ planet: 'deep-space', target: craft.id });
+                    const pos = getDeepSpaceCraftPosition(craft);
+                    glideCamera(
+                      new THREE.Vector3(pos.x + 18, pos.y + 12, pos.z + 24),
+                      pos,
+                      1200
+                    );
                   }}
-                  className={`p-2 rounded-xl text-left border transition-all text-xs font-mono ${
-                    selectedDeepCraft.id === craft.id
-                      ? 'border-[#38bdf8] bg-[#38bdf8]/15 text-[#F0E8D9] font-bold'
-                      : 'border-white/10 bg-white/5 text-[#B6C0CC] hover:border-white/20'
-                  }`}
+                  className="w-full p-3 rounded-2xl bg-[#101A29]/90 hover:bg-[#38bdf8]/15 border border-white/10 hover:border-[#38bdf8]/60 transition-all text-left flex items-center justify-between group shadow-md"
                 >
-                  <div className="truncate">{craft.name}</div>
-                  <div className="text-[10px] text-[#38bdf8]">
-                    {craft.distanceFromEarth?.split(' ')[0]}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <MonumentIcon type="probe" className="w-8 h-8 shrink-0 group-hover:scale-110 transition-transform" />
+                    <div className="min-w-0">
+                      <div className="font-display text-sm text-[#F0E8D9] font-medium group-hover:text-[#38bdf8] truncate">
+                        {craft.name}
+                      </div>
+                      <div className="text-[10px] font-mono text-[#B6C0CC]/75 truncate">
+                        {craft.status}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <span className="font-mono text-xs font-semibold text-[#38bdf8] block">
+                      ~{craft.approximateAu} AU
+                    </span>
+                    <span className="text-[10px] font-mono text-[#B6C0CC]/60 group-hover:text-[#F0E8D9]">
+                      Dossier →
+                    </span>
                   </div>
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Inactive Mission Receiver Status Banner */}
-          {(selectedDeepCraft.id === 'pioneer-10' ||
-            selectedDeepCraft.id === 'pioneer-11') && (
-            <div className="mt-3 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono text-amber-300">
-              ⚠️ MISSION CONCLUDED // NO OPERATIONAL RECEIVER
-              <div className="text-[10px] text-[#B6C0CC] mt-0.5 font-sans">
-                Spacecraft power depleted; no signals received since final decommissioning.
+            {/* Educational Spatial Boundary Legend */}
+            <div className="p-3.5 rounded-2xl bg-[#101A29]/70 border border-white/5 space-y-1.5 text-xs">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#C6A36B] font-semibold block mb-1">
+                ASTRONOMICAL BOUNDARIES (APPROXIMATE)
+              </span>
+              <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                <span>Kuiper Belt:</span>
+                <span className="text-[#F0E8D9]">~30–50 AU (Debris Disk)</span>
               </div>
-            </div>
-          )}
-
-          {/* Transmit Message Input */}
-          <div className="mt-4">
-            <label className="text-[11px] font-mono text-[#B6C0CC] block mb-1">
-              SIMULATE TRANSMISSION TO {selectedDeepCraft.name.toUpperCase()}:
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={radioInput}
-                onChange={(e) => setRadioInput(e.target.value)}
-                placeholder="e.g. Humanity remembers your voyage..."
-                className="flex-1 bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-[#F0E8D9] focus:outline-none focus:border-[#38bdf8]"
-              />
-              <button
-                onClick={handleSendRadio}
-                className="px-4 py-2 bg-[#38bdf8] text-[#080D16] font-mono text-xs font-bold rounded-xl hover:brightness-110 transition-all uppercase"
-              >
-                SIMULATE
-              </button>
+              <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                <span>Termination Shock:</span>
+                <span className="text-[#38bdf8]">~90 AU (Subsonic Wind)</span>
+              </div>
+              <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                <span>Heliopause:</span>
+                <span className="text-[#818cf8]">~120 AU (Interstellar Edge)</span>
+              </div>
+              <div className="flex justify-between text-[11px] font-mono text-[#B6C0CC]">
+                <span>Interstellar Space:</span>
+                <span className="text-purple-300">&gt;120 AU (Pristine ISM)</span>
+              </div>
             </div>
           </div>
 
-          {/* Delay Result Output */}
-          {radioSent && (
-            <div className="mt-4 p-4 rounded-xl bg-[#38bdf8]/10 border border-[#38bdf8]/40 animate-fadeIn">
-              <div className="text-[11px] font-mono text-[#38bdf8] font-bold mb-1">
-                ✓ SIMULATED RADIO PACKET PROPAGATING ACROSS SOLAR SYSTEM
-              </div>
-              <div className="text-sm font-display text-[#F0E8D9]">
-                Theoretical one-way signal travel time:{' '}
-                <span className="text-[#38bdf8] font-semibold">
-                  {Math.round((selectedDeepCraft.lightDelaySeconds || 7200) / 3600)} hours{' '}
-                  {Math.round(((selectedDeepCraft.lightDelaySeconds || 7200) % 3600) / 60)} minutes
-                </span>{' '}
-                across {selectedDeepCraft.distanceFromEarth}.
-              </div>
-              <p className="text-xs text-[#B6C0CC] mt-2 font-serif italic leading-relaxed">
-                "{selectedDeepCraft.fascinatingFact}"
-              </p>
-              <div className="mt-3 pt-2 border-t border-white/10 flex justify-between items-center text-[10px] mono text-[#B6C0CC]">
-                <span>
-                  {selectedDeepCraft.referenceEpoch || 'APPROXIMATE REFERENCE DISTANCE // EDUCATIONAL DEMONSTRATION'}
-                </span>
-                <a
-                  href="https://eyes.nasa.gov/dsn/dsn.html"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[#38bdf8] underline hover:text-white"
-                >
-                  NASA DSN Live Status ↗
-                </a>
-              </div>
-            </div>
-          )}
+          <div className="pt-4 border-t border-white/10 mt-4">
+            <button
+              onClick={() => handleSelectViewMode('SOLAR_SYSTEM')}
+              className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/15 transition-all text-xs font-mono tracking-wider uppercase text-center"
+            >
+              ← RETURN TO SOLAR SYSTEM
+            </button>
+          </div>
         </div>
       )}
 

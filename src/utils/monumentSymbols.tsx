@@ -614,6 +614,87 @@ export function getMonumentSpriteTexture(type: MonumentType): THREE.CanvasTextur
   return texture;
 }
 
+// Texture caches for labels and selection halos
+const labelTextureCache = new Map<string, THREE.CanvasTexture>();
+let selectionHaloTexture: THREE.CanvasTexture | null = null;
+
+function getSelectionHaloTexture(): THREE.CanvasTexture {
+  if (selectionHaloTexture) return selectionHaloTexture;
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, 128, 128);
+
+  // Outer glowing ring
+  ctx.beginPath();
+  ctx.arc(64, 64, 58, 0, Math.PI * 2);
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Subtle inner accent dashed ring
+  ctx.beginPath();
+  ctx.arc(64, 64, 50, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255, 215, 0, 0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  selectionHaloTexture = tex;
+  return tex;
+}
+
+export function getLabelSpriteTexture(text: string, subtitle?: string): THREE.CanvasTexture {
+  const cacheKey = `${text}_${subtitle || ''}`;
+  if (labelTextureCache.has(cacheKey)) {
+    return labelTextureCache.get(cacheKey)!;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, 512, 128);
+
+  // Pill background for high contrast against starfield and bright planets
+  ctx.beginPath();
+  ctx.roundRect(16, 20, 480, 88, 24);
+  ctx.fillStyle = 'rgba(8, 13, 22, 0.88)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(198, 163, 107, 0.65)';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  if (subtitle) {
+    // Two-line label (Name + Subtitle/Distance)
+    ctx.font = 'bold 30px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#F0E8D9';
+    ctx.fillText(text, 256, 56);
+
+    ctx.font = '500 22px monospace';
+    ctx.fillStyle = '#38BDF8';
+    ctx.fillText(subtitle, 256, 90);
+  } else {
+    // Single line title
+    ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#F0E8D9';
+    ctx.fillText(text, 256, 64);
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  labelTextureCache.set(cacheKey, tex);
+  return tex;
+}
+
 // Materials for Selection Ring and Hit Target
 const selectionRingMat = new THREE.MeshBasicMaterial({
   color: 0xffd700,
@@ -659,7 +740,6 @@ export function createMonumentSymbol(
   });
   const sprite = new THREE.Sprite(spriteMat);
   sprite.name = 'monumentSprite';
-  // Positioned slightly above the planet surface
   sprite.position.y = 0.55;
   sprite.scale.set(1.35, 1.35, 1.0);
   sprite.userData = group.userData;
@@ -676,9 +756,45 @@ export function createMonumentSymbol(
   selRing.visible = false;
   group.add(selRing);
 
-  // 3. Generous Invisible Hit-Sphere for effortless touch / mouse raycasting
+  // 3. Billboard Selection Halo (For free-space and deep-space objects)
+  const haloMat = new THREE.SpriteMaterial({
+    map: getSelectionHaloTexture(),
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const selHalo = new THREE.Sprite(haloMat);
+  selHalo.name = 'selectionHalo';
+  selHalo.position.y = 0.55;
+  selHalo.scale.set(2.4, 2.4, 1.0);
+  selHalo.visible = false;
+  group.add(selHalo);
+
+  // 4. Optional Text Label Sprite (Near marker, no connecting lines)
+  const showLabel = extraData?.showLabel;
+  if (showLabel) {
+    const labelText = (extraData?.labelText as string) || item.name;
+    const labelSubtitle = extraData?.labelSubtitle as string | undefined;
+    const labelMat = new THREE.SpriteMaterial({
+      map: getLabelSpriteTexture(labelText, labelSubtitle),
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const labelScale = (extraData?.labelScale as [number, number, number]) || [4.2, 1.05, 1.0];
+    const labelOffsetY = (extraData?.labelOffsetY as number) ?? -1.2;
+    const labelSprite = new THREE.Sprite(labelMat);
+    labelSprite.name = 'labelSprite';
+    labelSprite.position.set(0, labelOffsetY, 0);
+    labelSprite.scale.set(labelScale[0], labelScale[1], labelScale[2]);
+    labelSprite.userData = { ...group.userData, originalScale: labelScale };
+    group.add(labelSprite);
+  }
+
+  // 5. Generous Invisible Hit-Sphere for effortless touch / mouse raycasting
+  const hitRadius = (extraData?.hitRadius as number) || 0.95;
   const hitSphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.85, 8, 8),
+    new THREE.SphereGeometry(hitRadius, 8, 8),
     invisibleHitMat
   );
   hitSphere.position.y = 0.55;
@@ -698,18 +814,29 @@ export function updateMonumentSelection(
   groups.forEach((g) => {
     if (!g) return;
     g.traverse((obj) => {
+      const parentId = obj.parent?.userData?.id;
+      const isSelected = !!(selectedId && parentId === selectedId);
+
       if (obj.name === 'selectionRing') {
-        const parentId = obj.parent?.userData?.id;
-        obj.visible = !!(selectedId && parentId === selectedId);
+        obj.visible = isSelected;
+      }
+      if (obj.name === 'selectionHalo') {
+        obj.visible = isSelected;
       }
       if (obj.name === 'monumentSprite') {
-        const parentId = obj.parent?.userData?.id;
-        const isSelected = !!(selectedId && parentId === selectedId);
         const sprite = obj as THREE.Sprite;
         if (isSelected) {
-          sprite.scale.set(1.65, 1.65, 1.0);
+          sprite.scale.set(1.7, 1.7, 1.0);
         } else {
           sprite.scale.set(1.35, 1.35, 1.0);
+        }
+      }
+      if (obj.name === 'labelSprite') {
+        const sprite = obj as THREE.Sprite;
+        if (isSelected) {
+          sprite.scale.set(4.8, 1.2, 1.0);
+        } else {
+          sprite.scale.set(4.2, 1.05, 1.0);
         }
       }
     });
