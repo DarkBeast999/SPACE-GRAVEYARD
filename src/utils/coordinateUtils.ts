@@ -12,6 +12,18 @@ export interface CoordinatePair {
 }
 
 /**
+ * Normalizes a planetary or lunar longitude into the canonical [-180, +180] degree range.
+ * Properly converts East-positive 0-360 systems (e.g., Opportunity at 354.47°E -> -5.53°)
+ * into standard signed hemispheric coordinates for 3D globe mapping without mutating original source data.
+ */
+export function normalizeLongitude(lon: number): number {
+  let norm = lon % 360;
+  if (norm > 180) norm -= 360;
+  if (norm < -180) norm += 360;
+  return norm;
+}
+
+/**
  * Format latitude into hemispheric notation:
  * - Positive latitude -> N (e.g. +10.5 -> "10.5°N")
  * - Negative latitude -> S (e.g. -10.5 -> "10.5°S", -2.994 -> "2.994°S")

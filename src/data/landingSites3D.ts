@@ -124,7 +124,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     body: 'mars',
     locationName: 'Green Valley (Vastitas Borealis)',
     lat: 68.22,
-    lon: 125.74,
+    lon: -125.74,
     year: 2008,
     status: 'Mission Completed (Frozen in Polar Ice)',
     description: 'Dug into the icy arctic plains of northern Mars, directly scraping and tasting subsurface water ice that sublimated into vapor before its cameras.',
@@ -280,6 +280,21 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     lightDelaySeconds: 29800 // ~8.3 hours
   },
   {
+    id: 'pioneer-10',
+    name: 'Pioneer 10',
+    designation: 'NASA Ames Pioneer Program',
+    body: 'deep-space',
+    locationName: 'Outer Heliosphere (> 135 AU, heading toward Aldebaran)',
+    lat: 0,
+    lon: 0,
+    year: 1972,
+    status: 'Silent Ghost (Mission Completed)',
+    description: 'The first spacecraft to transit the asteroid belt and fly by Jupiter. Transmitted humanity\'s first close-up images of the Jovian atmosphere before cruising into the outer heliosphere.',
+    fascinatingFact: 'Carried the famous gold-anodized aluminium plaque designed by Carl Sagan and Frank Drake, showing pictorial figures of humans and galactic coordinates of our Sun.',
+    distanceFromEarth: '~20.2 billion km (135 AU)',
+    lightDelaySeconds: 67300 // ~18.7 hours
+  },
+  {
     id: 'cassini',
     name: 'Cassini-Huygens',
     designation: 'NASA / ESA / ASI Saturn Mission',
@@ -288,10 +303,10 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     lat: 0,
     lon: 0,
     year: 1997,
-    status: 'Vaporized into Saturn Atmosphere',
-    description: 'Orbited Saturn for 13 years, discovering liquid methane seas on Titan and geysers of salty water jetting into space from Enceladus.',
-    fascinatingFact: 'In September 2017, deliberately plunged into Saturn’s upper atmosphere to prevent any accidental collision with the potentially habitable moons Enceladus and Titan.',
-    distanceFromEarth: '~1.5 billion km',
-    lightDelaySeconds: 5000
+    status: 'Vaporized into Saturn Atmosphere (Grand Finale 2017)',
+    description: 'Orbited Saturn for 13 years, discovering liquid methane seas on Titan and geysers of salty water jetting into space from Enceladus. Unlike interstellar voyagers, its journey concluded inside Saturn itself.',
+    fascinatingFact: 'In September 2017, deliberately plunged into Saturn’s crushing upper atmosphere to protect potentially habitable ocean moons (Enceladus and Titan) from Earth microbes.',
+    distanceFromEarth: '~1.5 billion km (~10 AU at Saturn)',
+    lightDelaySeconds: 5000 // ~83 minutes
   }
 ];
