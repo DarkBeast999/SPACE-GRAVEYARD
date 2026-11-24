@@ -27,7 +27,7 @@ import heroSurveyor3 from '../assets/hero-surveyor3.jpg';
 import {
   createMonumentSymbol,
   updateMonumentSelection,
-  getMonumentIcon,
+  MonumentIcon,
   getMonumentTypeLabel,
   getMonumentType,
 } from '../utils/monumentSymbols';
@@ -491,6 +491,8 @@ export const Universe3DPage: React.FC = () => {
         marsGlobeGroupRef.current,
         moonGlobeGroupRef.current,
         saturnGlobeGroupRef.current,
+        deepSpaceGroupRef.current,
+        solarSystemGroupRef.current,
       ],
       activeId
     );
@@ -705,19 +707,17 @@ export const Universe3DPage: React.FC = () => {
       line.computeLineDistances();
       solarSystemGroup.add(line);
 
-      // Marker diamond
-      const markGeo = new THREE.OctahedronGeometry(1.3, 0);
-      const markMat = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
-      const marker = new THREE.Mesh(markGeo, markMat);
-      marker.position.copy(trajPts[1]);
-      marker.userData = {
+      // Escaping deep space probe marker using the authentic probe vector symbol
+      const probeSymbol = createMonumentSymbol(dc, {
         name: `${dc.name} (Escaping Fleet)`,
         craftId: dc.id,
         mode: 'DEEP_SPACE' as ViewMode,
         type: 'deep-craft',
-      };
-      solarSystemGroup.add(marker);
-      solarMeshes.push(marker);
+      });
+      probeSymbol.position.copy(trajPts[1]);
+      probeSymbol.scale.set(1.5, 1.5, 1.5);
+      solarSystemGroup.add(probeSymbol);
+      solarMeshes.push(probeSymbol);
     });
 
     // 7. BUILD INDEPENDENT GLOBES
@@ -742,15 +742,25 @@ export const Universe3DPage: React.FC = () => {
       return { group, mesh };
     };
 
-    // 7a. Mercury
+    // 7a. Mercury — Authentic NASA MESSENGER Global Mosaic
     const mercury = createGlobe(createMercuryTexture(), 12, 0.85);
     mercuryGlobeGroupRef.current = mercury.group;
 
-    // 7b. Venus
+    // 7b. Venus — Realistic Swirling Cloud Deck & Atmospheric Halo
     const venus = createGlobe(createVenusTexture(), 12, 0.65);
     venusGlobeGroupRef.current = venus.group;
+    const venusAtmo = new THREE.Mesh(
+      new THREE.SphereGeometry(12.22, 32, 32),
+      new THREE.MeshBasicMaterial({
+        color: 0xf5d078,
+        transparent: true,
+        opacity: 0.18,
+        side: THREE.BackSide,
+      })
+    );
+    venus.group.add(venusAtmo);
 
-    // 7c. Earth
+    // 7c. Earth — Authentic NASA Blue Marble with Oceans & Dynamic Clouds
     const earth = createGlobe(createEarthTexture(), 12, 0.6);
     earthGlobeGroupRef.current = earth.group;
     const earthAtmo = new THREE.Mesh(
@@ -764,7 +774,7 @@ export const Universe3DPage: React.FC = () => {
     );
     earth.group.add(earthAtmo);
 
-    // 7d. Moon
+    // 7d. Moon — Authentic NASA Lunar Reconnaissance Orbiter (LRO) Mosaic
     const moon = createGlobe(createMoonTexture(), 12, 0.95);
     moonGlobeGroupRef.current = moon.group;
 
@@ -849,6 +859,19 @@ export const Universe3DPage: React.FC = () => {
     });
     deepSpaceGroup.add(new THREE.Mesh(helioGeo, helioMat));
 
+    // Escaping deep space probes in deepSpaceGroup
+    const deepSpaceInteractiveTargets: THREE.Object3D[] = [];
+    deepSpaceCraft.forEach((dc) => {
+      const angle = dc.trajectoryAngle ?? 0.7;
+      const dist = 22;
+      const pos = new THREE.Vector3(Math.cos(angle) * dist, Math.sin(angle * 0.3) * 6, Math.sin(angle) * dist);
+      const symbol = createMonumentSymbol(dc);
+      symbol.position.copy(pos);
+      symbol.scale.set(1.4, 1.4, 1.4);
+      deepSpaceGroup.add(symbol);
+      deepSpaceInteractiveTargets.push(symbol);
+    });
+
     // Store rotating meshes
     rotatingMeshesRef.current = [
       sunMesh,
@@ -919,6 +942,9 @@ export const Universe3DPage: React.FC = () => {
       if (saturnGlobeGroupRef.current?.visible) {
         return saturnInteractiveTargets;
       }
+      if (deepSpaceGroupRef.current?.visible) {
+        return deepSpaceInteractiveTargets;
+      }
       return [];
     };
 
@@ -954,10 +980,10 @@ export const Universe3DPage: React.FC = () => {
               root = root.parent;
             }
             if (root.userData?.siteData) {
-              const icon = getMonumentIcon(root.userData.monumentType || getMonumentType(root.userData.siteData));
-              newHovered = `${icon} ${root.userData.siteData.name}`;
+              const label = getMonumentTypeLabel(root.userData.monumentType || getMonumentType(root.userData.siteData));
+              newHovered = `${root.userData.siteData.name} (${label})`;
             } else if (root.userData?.landmarkData) {
-              newHovered = `🏔️ ${root.userData.landmarkData.name}`;
+              newHovered = `${root.userData.landmarkData.name} (Geological Landmark)`;
             }
           }
         }
@@ -1007,7 +1033,11 @@ export const Universe3DPage: React.FC = () => {
               playSignalPing(720);
               setSelectedLandmark(null);
               setSelectedSite(site);
-              focusLandingSite(site.lat, site.lon, true);
+              if (site.body === 'mars' || site.body === 'moon') {
+                focusLandingSite(site.lat, site.lon, true);
+              } else if (site.body === 'deep-space') {
+                setSelectedDeepCraft(site);
+              }
               setSearchParams({ planet: site.body, target: site.id });
             } else if (root.userData?.landmarkData) {
               const lm = root.userData.landmarkData as MarsLandmark;
@@ -1249,7 +1279,7 @@ export const Universe3DPage: React.FC = () => {
       )}
 
       {/* Top Controls: Search, Back & Quick Actions */}
-      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 max-w-[320px] sm:max-w-[360px]">
+      <div className="absolute top-16 left-4 z-20 flex flex-col gap-2 max-w-[320px] sm:max-w-[360px]">
         {/* Navigation & Search Bar */}
         <div className="flex items-center gap-2">
           {viewMode !== 'SOLAR_SYSTEM' ? (
@@ -1300,7 +1330,7 @@ export const Universe3DPage: React.FC = () => {
                 ) : (
                   searchResults.map((res, idx) => {
                     const isSite = res.type === 'site';
-                    const icon = isSite ? getMonumentIcon(getMonumentType(res.data)) : '🏔️';
+                    const type = getMonumentType(res.data);
                     const name = res.data.name;
                     const sub = isSite
                       ? `${res.data.body.toUpperCase()} • ${res.data.locationName}`
@@ -1311,7 +1341,7 @@ export const Universe3DPage: React.FC = () => {
                         onMouseDown={() => handleSelectSearchResult(res)}
                         className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#C6A36B]/20 transition-all flex items-center gap-2.5 group"
                       >
-                        <span className="text-base group-hover:scale-110 transition-transform">{icon}</span>
+                        <MonumentIcon type={type} className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" />
                         <div className="min-w-0 flex-1">
                           <div className="text-xs font-display text-[#F0E8D9] truncate group-hover:text-[#C6A36B]">
                             {name}
@@ -1381,7 +1411,7 @@ export const Universe3DPage: React.FC = () => {
 
       {/* Visual Legend Dialog */}
       {isLegendOpen && (
-        <div className="absolute top-28 left-4 z-40 w-72 sm:w-80 p-4 rounded-2xl bg-[#080D16]/98 border border-[#C6A36B]/60 shadow-2xl backdrop-blur-xl animate-fadeIn">
+        <div className="absolute top-[148px] left-4 z-40 w-72 sm:w-80 p-4 rounded-2xl bg-[#080D16]/98 border border-[#C6A36B]/60 shadow-2xl backdrop-blur-xl animate-fadeIn">
           <div className="flex items-center justify-between pb-2 mb-3 border-b border-white/10">
             <div className="flex items-center gap-2">
               <span className="text-base">🧭</span>
@@ -1395,37 +1425,37 @@ export const Universe3DPage: React.FC = () => {
               ✕
             </button>
           </div>
-          <div className="space-y-2.5 text-xs">
-            <div className="flex items-start gap-2.5">
-              <span className="text-lg">🚙</span>
+          <div className="space-y-3 text-xs">
+            <div className="flex items-start gap-3">
+              <MonumentIcon type="rover" className="w-7 h-7 shrink-0" />
               <div>
                 <div className="font-semibold text-[#F0E8D9]">Rover</div>
                 <div className="text-[11px] text-[#B6C0CC] font-light">Wheeled robotic explorer (e.g. Curiosity, Perseverance, Opportunity)</div>
               </div>
             </div>
-            <div className="flex items-start gap-2.5">
-              <span className="text-lg">🛸</span>
+            <div className="flex items-start gap-3">
+              <MonumentIcon type="lander" className="w-7 h-7 shrink-0" />
               <div>
                 <div className="font-semibold text-[#F0E8D9]">Lander</div>
                 <div className="text-[11px] text-[#B6C0CC] font-light">Stationary surface scientific station (e.g. Viking, InSight, Phoenix)</div>
               </div>
             </div>
-            <div className="flex items-start gap-2.5">
-              <span className="text-lg">🛰️</span>
+            <div className="flex items-start gap-3">
+              <MonumentIcon type="probe" className="w-7 h-7 shrink-0" />
               <div>
-                <div className="font-semibold text-[#F0E8D9]">Probe / Orbiter</div>
-                <div className="text-[11px] text-[#B6C0CC] font-light">Atmospheric entry, impactor, or orbital probe (e.g. Cassini, Galileo)</div>
+                <div className="font-semibold text-[#F0E8D9]">Orbiter / Deep-Space Probe</div>
+                <div className="text-[11px] text-[#B6C0CC] font-light">Atmospheric entry, orbital, or escaping probe (e.g. Cassini, Voyager)</div>
               </div>
             </div>
-            <div className="flex items-start gap-2.5">
-              <span className="text-lg">🚁</span>
+            <div className="flex items-start gap-3">
+              <MonumentIcon type="helicopter" className="w-7 h-7 shrink-0" />
               <div>
                 <div className="font-semibold text-[#F0E8D9]">Helicopter</div>
                 <div className="text-[11px] text-[#B6C0CC] font-light">Aerial rotorcraft scout (e.g. Ingenuity)</div>
               </div>
             </div>
-            <div className="flex items-start gap-2.5">
-              <span className="text-lg">🏔️</span>
+            <div className="flex items-start gap-3">
+              <MonumentIcon type="landmark" className="w-7 h-7 shrink-0" />
               <div>
                 <div className="font-semibold text-[#38bdf8]">Geological Landmark</div>
                 <div className="text-[11px] text-[#B6C0CC] font-light">Major volcanic peak, canyon, or crater (e.g. Olympus Mons)</div>
@@ -1439,7 +1469,7 @@ export const Universe3DPage: React.FC = () => {
       )}
 
       {/* Top Center Responsive Destination Bar */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 max-w-[92vw] overflow-x-auto no-scrollbar p-1 rounded-full bg-[#080D16]/90 border border-white/10 backdrop-blur-md shadow-2xl flex items-center gap-1">
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 max-w-[92vw] overflow-x-auto no-scrollbar p-1 rounded-full bg-[#080D16]/90 border border-white/10 backdrop-blur-md shadow-2xl flex items-center gap-1">
         {DESTINATIONS.map((item) => (
           <button
             key={item.mode}
@@ -1465,12 +1495,22 @@ export const Universe3DPage: React.FC = () => {
         )}
         {viewMode === 'MERCURY' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
-            🪨 Mercury: Procedural illustrative model informed by surface features documented by NASA's MESSENGER mission.
+            🪨 Mercury: Authentic NASA MESSENGER Global Color Mosaic & cratered terrain.
           </div>
         )}
         {viewMode === 'VENUS' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
-            🟡 Venus: Procedural atmospheric haze model representing dense sulfuric acid cloud decks.
+            🟡 Venus: Dense golden sulfuric acid cloud decks observed by Pioneer Venus & Akatsuki.
+          </div>
+        )}
+        {viewMode === 'EARTH' && (
+          <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
+            🌍 Earth: Authentic NASA Blue Marble with dynamic clouds, deep oceans, and coastlines.
+          </div>
+        )}
+        {viewMode === 'MOON' && (
+          <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
+            🌑 Moon: Authentic NASA Lunar Reconnaissance Orbiter (LRO) global albedo mosaic.
           </div>
         )}
         {viewMode === 'MARS' && (
@@ -1480,12 +1520,12 @@ export const Universe3DPage: React.FC = () => {
         )}
         {viewMode === 'JUPITER' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
-            🪐 Jupiter: Procedural model depicting dynamic zonal belts and Great Red Spot anticyclone.
+            🪐 Jupiter: Authentic NASA Cassini / Voyager Global Mosaic & Great Red Spot.
           </div>
         )}
         {viewMode === 'SATURN' && (
           <div className="text-[10px] font-mono text-[#B6C0CC]/70 bg-[#080D16]/85 px-3 py-1.5 rounded-xl border border-[#C6A36B]/30 backdrop-blur-sm">
-            🪐 Saturn & Rings: Procedural model depicting atmospheric bands and Cassini Division ring gap.
+            🪐 Saturn & Rings: Authentic NASA Cassini Cylindrical Mosaic & concentric ring divisions.
           </div>
         )}
       </div>
@@ -1509,8 +1549,8 @@ export const Universe3DPage: React.FC = () => {
         <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
           <div>
             <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
-              <div className="flex items-start gap-2.5">
-                <span className="text-2xl mt-0.5">🏔️</span>
+              <div className="flex items-start gap-3">
+                <MonumentIcon type="landmark" className="w-9 h-9 shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[10px] font-mono font-semibold tracking-widest text-[#38bdf8] uppercase block">
                     MARTIAN GEOLOGICAL LANDMARK
@@ -1585,8 +1625,8 @@ export const Universe3DPage: React.FC = () => {
           <div>
             {/* Header info */}
             <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
-              <div className="flex items-start gap-2.5">
-                <span className="text-2xl mt-0.5">{getMonumentIcon(getMonumentType(selectedSite))}</span>
+              <div className="flex items-start gap-3">
+                <MonumentIcon type={getMonumentType(selectedSite)} className="w-9 h-9 shrink-0 mt-0.5" />
                 <div>
                   <span className="text-[10px] font-mono font-semibold tracking-widest text-[#C6A36B] uppercase block">
                     {selectedSite.body.toUpperCase()} // {getMonumentTypeLabel(getMonumentType(selectedSite)).toUpperCase()}
