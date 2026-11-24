@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface Star {
   x: number;
@@ -21,38 +22,123 @@ interface ShootingStar {
 
 export const StarField: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { pathname } = useLocation();
+  const isUniverse = pathname.startsWith('/universe');
+  const isHome = pathname === '/';
+
+  // Cached offscreen canvas for background gradient + nebula
+  const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const starsRef = useRef<Star[]>([]);
 
   useEffect(() => {
+    if (isUniverse) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId: number;
+    let animId: number | null = null;
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    const handleResize = () => {
-      if (!canvas) return;
+    // Build cached background gradient, nebula and star positions
+    const generateCache = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+
+      let offscreen = bgCanvasRef.current;
+      if (!offscreen) {
+        offscreen = document.createElement('canvas');
+        bgCanvasRef.current = offscreen;
+      }
+      offscreen.width = width;
+      offscreen.height = height;
+      const offCtx = offscreen.getContext('2d');
+      if (!offCtx) return;
+
+      // Deep space background gradient
+      const bgGradient = offCtx.createRadialGradient(
+        width * 0.35,
+        height * 0.4,
+        80,
+        width * 0.5,
+        height * 0.5,
+        Math.max(width, height)
+      );
+      bgGradient.addColorStop(0, '#101A29');
+      bgGradient.addColorStop(0.55, '#0C1320');
+      bgGradient.addColorStop(1, '#080D16');
+      offCtx.fillStyle = bgGradient;
+      offCtx.fillRect(0, 0, width, height);
+
+      // Draw faint, elegant nebula clouds
+      const nebula = offCtx.createRadialGradient(
+        width * 0.8,
+        height * 0.25,
+        30,
+        width * 0.8,
+        height * 0.25,
+        Math.min(width, height) * 0.6
+      );
+      nebula.addColorStop(0, 'rgba(168, 150, 197, 0.05)');
+      nebula.addColorStop(0.5, 'rgba(120, 156, 184, 0.02)');
+      nebula.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      offCtx.fillStyle = nebula;
+      offCtx.fillRect(0, 0, width, height);
+
+      // Create static stars with warm, restrained values
+      const starCount = Math.min(200, Math.floor((width * height) / 6000));
+      starsRef.current = Array.from({ length: starCount }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 1.3 + 0.3,
+        alpha: Math.random() * 0.45 + 0.15,
+        speed: Math.random() * 0.012 + 0.003,
+        phase: Math.random() * Math.PI * 2,
+      }));
+    };
+
+    generateCache();
+
+    const drawStatic = () => {
+      if (!ctx || !bgCanvasRef.current) return;
+      ctx.drawImage(bgCanvasRef.current, 0, 0);
+
+      starsRef.current.forEach((star) => {
+        ctx.fillStyle = `rgba(240, 232, 217, ${star.alpha})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (star.size > 1.2 && star.phase > 4) {
+          ctx.fillStyle = `rgba(198, 163, 107, ${star.alpha * 0.7})`;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    };
+
+    const handleResize = () => {
+      generateCache();
+      if (!isHome) {
+        drawStatic();
+      }
     };
     window.addEventListener('resize', handleResize);
 
-    // Create static stars with warm, restrained values
-    const starCount = Math.min(200, Math.floor((width * height) / 6000));
-    const stars: Star[] = Array.from({ length: starCount }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 1.3 + 0.3,
-      alpha: Math.random() * 0.45 + 0.15,
-      speed: Math.random() * 0.012 + 0.003,
-      phase: Math.random() * Math.PI * 2,
-    }));
+    // If NOT home (e.g. /explore, /timeline, /play, /knowledge):
+    // Eliminate continuous per-frame repainting! Render static once.
+    if (!isHome) {
+      drawStatic();
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
 
-    // Shooting stars
+    // HOME: Warm twinkling stars + shooting stars with cached background
     const shootingStars: ShootingStar[] = [];
-
     const spawnShootingStar = () => {
       if (shootingStars.length < 1 && Math.random() < 0.008) {
         shootingStars.push({
@@ -68,42 +154,24 @@ export const StarField: React.FC = () => {
     };
 
     let t = 0;
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
+    let lastFrameTime = performance.now();
 
-      // Deep space background gradient
-      const bgGradient = ctx.createRadialGradient(
-        width * 0.35,
-        height * 0.4,
-        80,
-        width * 0.5,
-        height * 0.5,
-        Math.max(width, height)
-      );
-      bgGradient.addColorStop(0, '#101A29');
-      bgGradient.addColorStop(0.55, '#0C1320');
-      bgGradient.addColorStop(1, '#080D16');
-      ctx.fillStyle = bgGradient;
-      ctx.fillRect(0, 0, width, height);
+    const render = (now: number) => {
+      // Frame pace on home to conserve CPU cycles
+      if (now - lastFrameTime < 24) {
+        animId = requestAnimationFrame(render);
+        return;
+      }
+      lastFrameTime = now;
 
-      // Draw faint, elegant nebula clouds
-      const nebula = ctx.createRadialGradient(
-        width * 0.8,
-        height * 0.25,
-        30,
-        width * 0.8,
-        height * 0.25,
-        Math.min(width, height) * 0.6
-      );
-      nebula.addColorStop(0, 'rgba(168, 150, 197, 0.05)');
-      nebula.addColorStop(0.5, 'rgba(120, 156, 184, 0.02)');
-      nebula.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = nebula;
-      ctx.fillRect(0, 0, width, height);
+      // Instantaneous blit of pre-rendered background gradient & nebula
+      if (bgCanvasRef.current) {
+        ctx.drawImage(bgCanvasRef.current, 0, 0);
+      }
 
       // Draw warm twinkling stars
-      t += 0.016;
-      stars.forEach((star) => {
+      t += 0.024;
+      starsRef.current.forEach((star) => {
         const twinkle = Math.sin(t * star.speed * 60 + star.phase);
         const currentAlpha = Math.max(0.08, Math.min(0.65, star.alpha + twinkle * 0.18));
 
@@ -112,7 +180,6 @@ export const StarField: React.FC = () => {
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Subtle antique gold tint for select stars
         if (star.size > 1.2 && star.phase > 4) {
           ctx.fillStyle = `rgba(198, 163, 107, ${currentAlpha * 0.7})`;
           ctx.beginPath();
@@ -152,13 +219,17 @@ export const StarField: React.FC = () => {
       animId = requestAnimationFrame(render);
     };
 
-    render();
+    animId = requestAnimationFrame(render);
 
     return () => {
-      cancelAnimationFrame(animId);
+      if (animId) cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [pathname, isUniverse, isHome]);
+
+  if (isUniverse) {
+    return null;
+  }
 
   return (
     <canvas

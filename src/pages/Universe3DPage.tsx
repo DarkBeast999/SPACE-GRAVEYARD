@@ -94,6 +94,20 @@ interface CameraTransition {
   onComplete?: () => void;
 }
 
+// Pure spherical coordinate conversion utility
+const latLonToVector3 = (lat: number, lon: number, radius = 12.1): THREE.Vector3 => {
+  const normLon = normalizeLongitude(lon);
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (normLon + 180) * (Math.PI / 180);
+  const x = -(radius * Math.sin(phi) * Math.cos(theta));
+  const z = radius * Math.sin(phi) * Math.sin(theta);
+  const y = radius * Math.cos(phi);
+  return new THREE.Vector3(x, y, z);
+};
+
+// Constant vectors for proximity calculations (prevents per-frame heap allocations)
+const JEZERO_POS = latLonToVector3(18.38, 77.58, 12.1);
+const GALE_POS = latLonToVector3(-4.59, 137.44, 12.1);
 
 export const Universe3DPage: React.FC = () => {
   const navigate = useNavigate();
@@ -136,6 +150,7 @@ export const Universe3DPage: React.FC = () => {
   const controlsRef = useRef<OrbitControls | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const transitionRef = useRef<CameraTransition | null>(null);
+  const isInteractingRef = useRef(false);
   const isContextLostRef = useRef(false);
 
   // Mars mesh and texture refs
@@ -202,17 +217,6 @@ export const Universe3DPage: React.FC = () => {
     []
   );
 
-  // Helper: Spherical coordinate conversion with normalized longitude
-  const latLonToVector3 = useCallback((lat: number, lon: number, radius = 12.1): THREE.Vector3 => {
-    const normLon = normalizeLongitude(lon);
-    const phi = (90 - lat) * (Math.PI / 180);
-    const theta = (normLon + 180) * (Math.PI / 180);
-    const x = -(radius * Math.sin(phi) * Math.cos(theta));
-    const z = radius * Math.sin(phi) * Math.sin(theta);
-    const y = radius * Math.cos(phi);
-    return new THREE.Vector3(x, y, z);
-  }, []);
-
   // Helper to focus camera on a landing site pin or landmark
   const focusLandingSite = useCallback(
     (lat: number, lon: number, smooth = true, distance = 28) => {
@@ -229,7 +233,7 @@ export const Universe3DPage: React.FC = () => {
         controlsRef.current.update();
       }
     },
-    [latLonToVector3, glideCamera]
+    [glideCamera]
   );
 
   // Handle switching view mode (visibility + camera target)
@@ -478,6 +482,7 @@ export const Universe3DPage: React.FC = () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     rendererRef.current = renderer;
+    (window as unknown as { __THREE_RENDERER__?: THREE.WebGLRenderer }).__THREE_RENDERER__ = renderer;
     mountEl.appendChild(renderer.domElement);
 
     // 3. OrbitControls
@@ -486,6 +491,8 @@ export const Universe3DPage: React.FC = () => {
     controls.dampingFactor = 0.05;
     controls.maxDistance = 600;
     controls.minDistance = 25;
+    controls.addEventListener('start', () => { isInteractingRef.current = true; });
+    controls.addEventListener('end', () => { isInteractingRef.current = false; });
     controlsRef.current = controls;
 
     // 4. Lights
@@ -799,6 +806,12 @@ export const Universe3DPage: React.FC = () => {
     );
     marsGroup.add(marsAtmo);
 
+    // Interactive Raycast Target Collections (Pre-computed to eliminate group.traverse allocations)
+    const marsLandingTargets: THREE.Object3D[] = [];
+    const marsInteractiveTargets: THREE.Object3D[] = [];
+    const moonInteractiveTargets: THREE.Object3D[] = [];
+    const saturnInteractiveTargets: THREE.Object3D[] = [];
+
     // Mars Landmarks Group (Olympus Mons, Valles Marineris, Hellas, etc.)
     const marsLandmarksGroup = new THREE.Group();
     marsLandmarksGroupRef.current = marsLandmarksGroup;
@@ -817,6 +830,7 @@ export const Universe3DPage: React.FC = () => {
         landmarkData: lm,
       };
       marsLandmarksGroup.add(beacon);
+      marsInteractiveTargets.push(beacon);
     });
 
     // 7f. Jupiter
@@ -858,6 +872,7 @@ export const Universe3DPage: React.FC = () => {
       siteData: cassiniData,
     };
     saturn.group.add(cassiniEventGroup);
+    saturnInteractiveTargets.push(cassiniEventGroup);
 
     // 7h. Deep Space Group
     const deepSpaceGroup = new THREE.Group();
@@ -908,6 +923,12 @@ export const Universe3DPage: React.FC = () => {
             subLocation: subLoc,
           };
           targetGroup.add(prism);
+          if (isMars) {
+            marsLandingTargets.push(prism);
+            marsInteractiveTargets.push(prism);
+          } else {
+            moonInteractiveTargets.push(prism);
+          }
         });
         return;
       }
@@ -941,70 +962,87 @@ export const Universe3DPage: React.FC = () => {
       };
 
       targetGroup.add(stem);
+      if (isMars) {
+        marsLandingTargets.push(stem);
+        marsInteractiveTargets.push(stem);
+      } else {
+        moonInteractiveTargets.push(stem);
+      }
     });
 
-    // 9. RAYCASTER & INTERACTION
+    // 9. RAYCASTER & INTERACTION (Optimized with pre-computed targets & throttled raycasting)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+    let lastRaycastTime = 0;
+    let cachedRect: DOMRect | null = null;
+    let lastHoveredName: string | null = null;
+
+    const getActiveTargets = (): THREE.Object3D[] => {
+      if (marsGlobeGroupRef.current?.visible) {
+        return showLandmarks ? marsInteractiveTargets : marsLandingTargets;
+      }
+      if (moonGlobeGroupRef.current?.visible) {
+        return moonInteractiveTargets;
+      }
+      if (saturnGlobeGroupRef.current?.visible) {
+        return saturnInteractiveTargets;
+      }
+      return [];
+    };
 
     const handlePointerMove = (event: MouseEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      const now = performance.now();
+      if (now - lastRaycastTime < 35) return;
+      lastRaycastTime = now;
+
+      if (!cachedRect) {
+        cachedRect = renderer.domElement.getBoundingClientRect();
+      }
+
+      mouse.x = ((event.clientX - cachedRect.left) / cachedRect.width) * 2 - 1;
+      mouse.y = -((event.clientY - cachedRect.top) / cachedRect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
+
+      let newHovered: string | null = null;
 
       if (solarSystemGroup.visible) {
         const intersects = raycaster.intersectObjects(solarMeshes, true);
         if (intersects.length > 0) {
           const obj = intersects[0].object;
-          setHoveredObject(obj.userData?.name || null);
-          mountEl.style.cursor = 'pointer';
-        } else {
-          setHoveredObject(null);
-          mountEl.style.cursor = 'default';
+          newHovered = obj.userData?.name || null;
         }
-      } else if (
-        marsGlobeGroupRef.current?.visible ||
-        moonGlobeGroupRef.current?.visible ||
-        saturnGlobeGroupRef.current?.visible
-      ) {
-        const group = marsGlobeGroupRef.current?.visible
-          ? marsGlobeGroupRef.current
-          : (moonGlobeGroupRef.current?.visible ? moonGlobeGroupRef.current! : saturnGlobeGroupRef.current!);
-
-        const targets: THREE.Object3D[] = [];
-        group.traverse((c) => {
-          if (c.userData?.isLandingSite || (c.userData?.isLandmark && showLandmarks)) {
-            targets.push(c);
-          }
-        });
-
-        const intersects = raycaster.intersectObjects(targets, true);
-        if (intersects.length > 0) {
-          let root = intersects[0].object;
-          while (root.parent && !root.userData?.isLandingSite && !root.userData?.isLandmark) {
-            root = root.parent;
-          }
-          if (root.userData?.siteData) {
-            setHoveredObject(root.userData.siteData.name);
-            mountEl.style.cursor = 'pointer';
-            return;
-          } else if (root.userData?.landmarkData) {
-            setHoveredObject(`🏔️ ${root.userData.landmarkData.name}`);
-            mountEl.style.cursor = 'pointer';
-            return;
+      } else {
+        const targets = getActiveTargets();
+        if (targets.length > 0) {
+          const intersects = raycaster.intersectObjects(targets, true);
+          if (intersects.length > 0) {
+            let root = intersects[0].object;
+            while (root.parent && !root.userData?.isLandingSite && !root.userData?.isLandmark) {
+              root = root.parent;
+            }
+            if (root.userData?.siteData) {
+              newHovered = root.userData.siteData.name;
+            } else if (root.userData?.landmarkData) {
+              newHovered = `🏔️ ${root.userData.landmarkData.name}`;
+            }
           }
         }
-        setHoveredObject(null);
-        mountEl.style.cursor = 'default';
+      }
+
+      if (newHovered !== lastHoveredName) {
+        lastHoveredName = newHovered;
+        setHoveredObject(newHovered);
+        mountEl.style.cursor = newHovered ? 'pointer' : 'default';
       }
     };
 
     const handleClick = (event: MouseEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      if (!cachedRect) {
+        cachedRect = renderer.domElement.getBoundingClientRect();
+      }
+      mouse.x = ((event.clientX - cachedRect.left) / cachedRect.width) * 2 - 1;
+      mouse.y = -((event.clientY - cachedRect.top) / cachedRect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
 
@@ -1022,41 +1060,29 @@ export const Universe3DPage: React.FC = () => {
             handleSelectViewMode(targetMode);
           }
         }
-      } else if (
-        marsGlobeGroupRef.current?.visible ||
-        moonGlobeGroupRef.current?.visible ||
-        saturnGlobeGroupRef.current?.visible
-      ) {
-        const group = marsGlobeGroupRef.current?.visible
-          ? marsGlobeGroupRef.current
-          : (moonGlobeGroupRef.current?.visible ? moonGlobeGroupRef.current! : saturnGlobeGroupRef.current!);
-
-        const targets: THREE.Object3D[] = [];
-        group.traverse((c) => {
-          if (c.userData?.isLandingSite || (c.userData?.isLandmark && showLandmarks)) {
-            targets.push(c);
-          }
-        });
-
-        const intersects = raycaster.intersectObjects(targets, true);
-        if (intersects.length > 0) {
-          let root = intersects[0].object;
-          while (root.parent && !root.userData?.isLandingSite && !root.userData?.isLandmark) {
-            root = root.parent;
-          }
-          if (root.userData?.siteData) {
-            const site = root.userData.siteData as LandingSite3D;
-            playSignalPing(720);
-            setSelectedLandmark(null);
-            setSelectedSite(site);
-            focusLandingSite(site.lat, site.lon, true);
-            setSearchParams({ planet: site.body, target: site.id });
-          } else if (root.userData?.landmarkData) {
-            const lm = root.userData.landmarkData as MarsLandmark;
-            playSignalPing(500);
-            setSelectedSite(null);
-            setSelectedLandmark(lm);
-            focusLandingSite(lm.lat, lm.lon, true, 30);
+      } else {
+        const targets = getActiveTargets();
+        if (targets.length > 0) {
+          const intersects = raycaster.intersectObjects(targets, true);
+          if (intersects.length > 0) {
+            let root = intersects[0].object;
+            while (root.parent && !root.userData?.isLandingSite && !root.userData?.isLandmark) {
+              root = root.parent;
+            }
+            if (root.userData?.siteData) {
+              const site = root.userData.siteData as LandingSite3D;
+              playSignalPing(720);
+              setSelectedLandmark(null);
+              setSelectedSite(site);
+              focusLandingSite(site.lat, site.lon, true);
+              setSearchParams({ planet: site.body, target: site.id });
+            } else if (root.userData?.landmarkData) {
+              const lm = root.userData.landmarkData as MarsLandmark;
+              playSignalPing(500);
+              setSelectedSite(null);
+              setSelectedLandmark(lm);
+              focusLandingSite(lm.lat, lm.lon, true, 30);
+            }
           }
         }
       }
@@ -1086,10 +1112,25 @@ export const Universe3DPage: React.FC = () => {
     domEl.addEventListener('webglcontextlost', handleContextLost, false);
     domEl.addEventListener('webglcontextrestored', handleContextRestored, false);
 
-    // 10. ANIMATION TICK LOOP
+    // 10. ANIMATION TICK LOOP (Optimized: zero per-frame vector allocations & idle frame-budgeting)
+    let lastAnimateTime = performance.now();
+
     const animate = () => {
       if (isContextLostRef.current) return;
       animFrameRef.current = requestAnimationFrame(animate);
+
+      if (document.hidden) return;
+
+      const now = performance.now();
+      const isGliding = !!transitionRef.current;
+      const isInteracting = isInteractingRef.current;
+      const isActive = isGliding || isInteracting;
+
+      // When settled & idle, pace frame-budget to ~35 FPS to conserve CPU/GPU
+      if (!isActive && now - lastAnimateTime < 28) {
+        return;
+      }
+      lastAnimateTime = now;
 
       // Rotate sun and active globes smoothly
       sunMesh.rotation.y += 0.002;
@@ -1128,21 +1169,23 @@ export const Universe3DPage: React.FC = () => {
         const camPos = camera.position;
 
         if (jezeroPatchMeshRef.current) {
-          const jezeroPos = latLonToVector3(18.38, 77.58, 12.1);
-          const distToJezero = camPos.distanceTo(jezeroPos);
+          const distToJezero = camPos.distanceTo(JEZERO_POS);
           const targetOpacity = distToJezero < 36 ? Math.min(1.0, Math.max(0, (36 - distToJezero) / 12)) : 0.0;
           const mat = jezeroPatchMeshRef.current.material as THREE.MeshStandardMaterial;
-          mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.1);
-          mat.visible = mat.opacity > 0.01;
+          if (Math.abs(mat.opacity - targetOpacity) > 0.005) {
+            mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.1);
+            mat.visible = mat.opacity > 0.01;
+          }
         }
 
         if (galePatchMeshRef.current) {
-          const galePos = latLonToVector3(-4.59, 137.44, 12.1);
-          const distToGale = camPos.distanceTo(galePos);
+          const distToGale = camPos.distanceTo(GALE_POS);
           const targetOpacity = distToGale < 36 ? Math.min(1.0, Math.max(0, (36 - distToGale) / 12)) : 0.0;
           const mat = galePatchMeshRef.current.material as THREE.MeshStandardMaterial;
-          mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.1);
-          mat.visible = mat.opacity > 0.01;
+          if (Math.abs(mat.opacity - targetOpacity) > 0.005) {
+            mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.1);
+            mat.visible = mat.opacity > 0.01;
+          }
         }
       }
 
@@ -1158,8 +1201,12 @@ export const Universe3DPage: React.FC = () => {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      cachedRect = renderer.domElement.getBoundingClientRect();
     };
     window.addEventListener('resize', handleResize);
+    domEl.addEventListener('pointerenter', () => {
+      cachedRect = renderer.domElement.getBoundingClientRect();
+    });
 
     // Initial view mode activation
     applyViewMode(viewMode, searchParams.get('target'));
@@ -1223,6 +1270,7 @@ export const Universe3DPage: React.FC = () => {
 
       controls.dispose();
       renderer.dispose();
+      delete (window as unknown as { __THREE_RENDERER__?: THREE.WebGLRenderer }).__THREE_RENDERER__;
       if (mountEl.contains(domEl)) {
         mountEl.removeChild(domEl);
       }
