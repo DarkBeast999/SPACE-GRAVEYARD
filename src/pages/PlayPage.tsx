@@ -169,49 +169,49 @@ export const PlayPage: React.FC = () => {
   return (
     <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen flex flex-col">
       {/* Editorial Header */}
-      <header className="relative mb-12 p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-[#101A29]/95 via-[#080D16]/95 to-[#080D16]/98 border border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#C6A36B]/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-[#38bdf8]/5 rounded-full blur-3xl pointer-events-none" />
+      <header className="relative mb-12 p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-[#111A35]/95 via-[#080B1D]/95 to-[#080B1D]/98 border border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFC66D]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-[#58D9FF]/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl">
           <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-[#C6A36B] animate-pulse" />
-            <span className="font-mono text-xs text-[#C6A36B] tracking-widest uppercase font-semibold">
+            <span className="w-2 h-2 rounded-full bg-[#FFC66D] animate-pulse" />
+            <span className="font-mono text-xs text-[#FFC66D] tracking-widest uppercase font-semibold">
               INTERACTIVE ARCADE // FOUR EXPEDITION SIMULATIONS
             </span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-6xl font-normal text-[#F0E8D9] tracking-tight mb-4">
+          <h1 className="font-display text-4xl sm:text-6xl font-normal text-[#F5F0E8] tracking-tight mb-4">
             The Play Hub
           </h1>
 
-          <p className="text-sm sm:text-base text-[#B6C0CC] font-sans font-light leading-relaxed mb-8">
+          <p className="text-sm sm:text-base text-[#C8D8EA] font-sans font-light leading-relaxed mb-8">
             Experience the challenges, physics, and knowledge of space exploration through four fully playable mini-games.
             Test your planetary trivia, navigate deep-space asteroid belts, execute spacecraft engineering repairs, or master a 2D lunar descent.
           </p>
 
           {/* Player Personal Bests Summary */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-white/10 text-left">
-            <div className="bg-black/30 p-3.5 rounded-xl border border-white/5">
-              <span className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider block mb-0.5">TRIVIA BEST</span>
-              <span className="font-display text-lg sm:text-xl text-[#C6A36B]">
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider block mb-0.5">TRIVIA BEST</span>
+              <span className="font-display text-lg sm:text-xl text-[#FFC66D]">
                 {quizScore > 0 ? `${quizScore} PTS` : 'Unplayed'}
               </span>
             </div>
-            <div className="bg-black/30 p-3.5 rounded-xl border border-white/5">
-              <span className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider block mb-0.5">DEFENDER RECORD</span>
-              <span className="font-display text-lg sm:text-xl text-[#38bdf8]">
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider block mb-0.5">DEFENDER RECORD</span>
+              <span className="font-display text-lg sm:text-xl text-[#58D9FF]">
                 {defenderScore > 0 ? `${defenderScore} PTS` : 'Unplayed'}
               </span>
             </div>
-            <div className="bg-black/30 p-3.5 rounded-xl border border-white/5">
-              <span className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider block mb-0.5">ENGINEERING REPAIR</span>
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider block mb-0.5">ENGINEERING REPAIR</span>
               <span className="font-display text-lg sm:text-xl text-emerald-400">
                 {repairPassed ? '✓ Complete' : 'Pending'}
               </span>
             </div>
-            <div className="bg-black/30 p-3.5 rounded-xl border border-white/5">
-              <span className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider block mb-0.5">LUNAR LANDINGS</span>
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider block mb-0.5">LUNAR LANDINGS</span>
               <span className="font-display text-lg sm:text-xl text-amber-400">
                 {landerStages > 0 ? `${landerStages}/3 Stages` : 'Unplayed'}
               </span>

@@ -177,22 +177,22 @@ export const TimelinePage: React.FC = () => {
       {/* 1. CINEMATIC HERO SECTION */}
       <header className="relative mb-12 p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-[#101A29]/95 via-[#080D16]/95 to-[#080D16]/98 border border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden">
         {/* Subtle decorative orbit glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#C6A36B]/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-[#38bdf8]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFC66D]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-[#58D9FF]/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl">
           <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-[#C6A36B] animate-pulse" />
-            <span className="font-mono text-xs text-[#C6A36B] tracking-widest uppercase font-semibold">
+            <span className="w-2 h-2 rounded-full bg-[#FFC66D] animate-pulse" />
+            <span className="font-mono text-xs text-[#FFC66D] tracking-widest uppercase font-semibold">
               CHRONICLES OF EXPLORATION // 1957 — PRESENT
             </span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-6xl font-normal text-[#F0E8D9] tracking-tight mb-4">
+          <h1 className="font-display text-4xl sm:text-6xl font-normal text-[#F5F0E8] tracking-tight mb-4">
             The Cosmic Timeline
           </h1>
 
-          <p className="text-sm sm:text-base text-[#B6C0CC] font-sans font-light leading-relaxed mb-8">
+          <p className="text-sm sm:text-base text-[#C8D8EA] font-sans font-light leading-relaxed mb-8">
             Humanity’s outward reach across nearly seven decades. Traverse fifty defining moments of planetary discovery,
             from the faint beeps of Sputnik 1 to interstellar crossings and active rovers traversing alien basins,
             interwoven with cultural and terrestrial milestones.
@@ -200,21 +200,21 @@ export const TimelinePage: React.FC = () => {
 
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-white/10 text-left">
-            <div className="bg-black/30 p-3.5 rounded-xl border border-white/5">
-              <span className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider block mb-0.5">TIME HORIZON</span>
-              <span className="font-display text-xl sm:text-2xl text-[#F0E8D9]">69 Years</span>
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider block mb-0.5">TIME HORIZON</span>
+              <span className="font-display text-xl sm:text-2xl text-[#F5F0E8]">69 Years</span>
             </div>
-            <div className="bg-black/30 p-3.5 rounded-xl border border-white/5">
-              <span className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider block mb-0.5">CHRONICLED EVENTS</span>
-              <span className="font-display text-xl sm:text-2xl text-[#C6A36B]">{timelineEvents.length} Milestones</span>
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider block mb-0.5">CHRONICLED EVENTS</span>
+              <span className="font-display text-xl sm:text-2xl text-[#FFC66D]">{timelineEvents.length} Milestones</span>
             </div>
-            <div className="bg-black/30 p-3.5 rounded-xl border border-white/5">
-              <span className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider block mb-0.5">HISTORIC ERAS</span>
-              <span className="font-display text-xl sm:text-2xl text-[#F0E8D9]">4 Epochs</span>
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider block mb-0.5">HISTORIC ERAS</span>
+              <span className="font-display text-xl sm:text-2xl text-[#F5F0E8]">4 Epochs</span>
             </div>
-            <div className="bg-black/30 p-3.5 rounded-xl border border-white/5">
-              <span className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider block mb-0.5">FILTERED EVENTS</span>
-              <span className="font-display text-xl sm:text-2xl text-[#38bdf8]">{filteredEvents.length} Active</span>
+            <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+              <span className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider block mb-0.5">FILTERED EVENTS</span>
+              <span className="font-display text-xl sm:text-2xl text-[#58D9FF]">{filteredEvents.length} Active</span>
             </div>
           </div>
         </div>
@@ -235,13 +235,13 @@ export const TimelinePage: React.FC = () => {
                 }}
                 className={`px-4 py-2.5 rounded-xl text-xs font-sans transition-all flex items-center gap-2.5 cursor-pointer ${
                   isActive
-                    ? 'bg-[#C6A36B] text-[#080D16] font-semibold shadow-lg shadow-[#C6A36B]/20'
-                    : 'bg-[#101A29]/90 text-[#B6C0CC] hover:text-white border border-white/10 hover:border-[#C6A36B]/40'
+                    ? 'bg-[#FFC66D] text-[#080B1D] font-semibold shadow-lg shadow-[#FFC66D]/20'
+                    : 'bg-[#111A35]/90 text-[#C8D8EA] hover:text-white border border-white/10 hover:border-[#FFC66D]/40'
                 }`}
               >
                 <span>{era.label}</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                  isActive ? 'bg-[#080D16]/20 text-[#080D16]' : 'bg-white/10 text-[#C6A36B]'
+                  isActive ? 'bg-[#080B1D]/20 text-[#080B1D]' : 'bg-white/10 text-[#FFC66D]'
                 }`}>
                   {eraCounts[era.key]}
                 </span>

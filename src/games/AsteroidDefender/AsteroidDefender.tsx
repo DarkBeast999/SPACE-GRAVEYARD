@@ -534,13 +534,15 @@ export const AsteroidDefender: React.FC<AsteroidDefenderProps> = ({ onBackToHub,
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const keys = stateRef.current.keys;
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'].includes(e.key) || e.code === 'Space') {
+        e.preventDefault();
+      }
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         keys.left = true;
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
         keys.right = true;
-      } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.code === 'Space') {
         keys.fire = true;
-        if (e.key === ' ') e.preventDefault();
       } else if (e.key === 'p' || e.key === 'P') {
         handlePauseToggle();
       }
@@ -548,11 +550,14 @@ export const AsteroidDefender: React.FC<AsteroidDefenderProps> = ({ onBackToHub,
 
     const handleKeyUp = (e: KeyboardEvent) => {
       const keys = stateRef.current.keys;
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'].includes(e.key) || e.code === 'Space') {
+        e.preventDefault();
+      }
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         keys.left = false;
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
         keys.right = false;
-      } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      } else if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.code === 'Space') {
         keys.fire = false;
       }
     };
@@ -577,75 +582,84 @@ export const AsteroidDefender: React.FC<AsteroidDefenderProps> = ({ onBackToHub,
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Top Header & Navigation */}
-      <div className="flex items-center justify-between pb-6 mb-6 border-b border-white/10">
-        <button
-          onClick={onBackToHub}
-          className="inline-flex items-center gap-2 font-mono text-xs text-[#C6A36B] hover:text-[#F0E8D9] transition-colors uppercase tracking-wider cursor-pointer"
-        >
-          <span>←</span>
-          <span>RETURN TO PLAY HUB</span>
-        </button>
-
-        {gameState === 'playing' && (
+    <div className="w-full max-w-5xl mx-auto px-2 sm:px-4 py-2 h-[calc(100vh-68px)] max-h-[860px] flex flex-col justify-between overflow-hidden select-none">
+      {/* Integrated Compact Top HUD Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-2xl bg-[#111A35]/90 border border-[#58D9FF]/20 backdrop-blur-md shadow-lg shrink-0 mb-1">
+        <div className="flex items-center gap-2">
           <button
-            onClick={handlePauseToggle}
-            className="px-4 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-mono text-[#F0E8D9] uppercase tracking-wider cursor-pointer"
+            onClick={onBackToHub}
+            className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#FFC66D] hover:text-[#F5F0E8] transition-colors uppercase tracking-wider cursor-pointer px-2.5 py-1 rounded-lg bg-black/40 border border-white/10 hover:border-[#FFC66D]/40"
           >
-            PAUSE (P)
+            <span>←</span>
+            <span>PLAY HUB</span>
           </button>
-        )}
-      </div>
 
-      {/* Game HUD Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 font-mono text-xs">
-        <div className="bg-[#101A29]/90 p-3 rounded-2xl border border-white/10">
-          <span className="text-[10px] text-[#B6C0CC] block uppercase mb-0.5">SHIELD INTEGRITY</span>
+          {gameState === 'playing' && (
+            <button
+              onClick={handlePauseToggle}
+              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-[11px] font-mono text-[#F5F0E8] uppercase tracking-wider cursor-pointer"
+            >
+              PAUSE (P)
+            </button>
+          )}
+        </div>
+
+        {/* Live Vitals HUD Strip */}
+        <div className="flex items-center gap-3 sm:gap-5 font-mono text-xs">
+          {/* Shield */}
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
+            <span className="text-[10px] text-[#C8D8EA] uppercase hidden sm:inline">SHIELD</span>
+            <div className="w-20 sm:w-24 h-2 bg-black/60 rounded-full overflow-hidden border border-white/15">
               <div
                 className={`h-full transition-all duration-200 ${
-                  shield > 50 ? 'bg-emerald-400' : shield > 25 ? 'bg-amber-400' : 'bg-red-500'
+                  shield > 50 ? 'bg-[#64E5C0]' : shield > 25 ? 'bg-[#FFC66D]' : 'bg-[#FF8D7B]'
                 }`}
                 style={{ width: `${Math.max(0, shield)}%` }}
               />
             </div>
-            <span className="font-bold text-[#F0E8D9]">{shield}%</span>
+            <span className={`font-bold ${shield > 50 ? 'text-[#64E5C0]' : shield > 25 ? 'text-[#FFC66D]' : 'text-[#FF8D7B]'}`}>
+              {shield}%
+            </span>
           </div>
-        </div>
 
-        <div className="bg-[#101A29]/90 p-3 rounded-2xl border border-white/10">
-          <span className="text-[10px] text-[#B6C0CC] block uppercase mb-0.5">MISSION SCORE</span>
-          <span className="font-display text-lg text-[#C6A36B] leading-none font-medium">
-            {score.toLocaleString()}
-          </span>
-        </div>
+          {/* Wave */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#C8D8EA] uppercase hidden sm:inline">WAVE</span>
+            <span className="px-2 py-0.5 rounded-full bg-[#58D9FF]/15 text-[#58D9FF] font-bold text-[11px] border border-[#58D9FF]/30">
+              {wave}
+            </span>
+          </div>
 
-        <div className="bg-[#101A29]/90 p-3 rounded-2xl border border-white/10">
-          <span className="text-[10px] text-[#B6C0CC] block uppercase mb-0.5">ASTEROID WAVE</span>
-          <span className="font-display text-lg text-[#F0E8D9] leading-none font-medium">
-            Wave {wave}
-          </span>
-        </div>
+          {/* Weapon / Combo */}
+          <div className="hidden md:flex items-center gap-1.5 text-[11px] text-[#58D9FF]">
+            <span>{activePowerUp}</span>
+            {combo > 1 && (
+              <span className="px-1.5 py-0.5 rounded bg-[#FFC66D]/20 text-[#FFC66D] font-bold text-[10px] animate-pulse">
+                {combo}x
+              </span>
+            )}
+          </div>
 
-        <div className="bg-[#101A29]/90 p-3 rounded-2xl border border-white/10">
-          <span className="text-[10px] text-[#B6C0CC] block uppercase mb-0.5">WEAPONS SYSTEM</span>
-          <span className="font-sans text-xs text-[#38bdf8] truncate block font-medium">
-            {activePowerUp} {combo > 1 && `(${combo}x Combo)`}
-          </span>
+          {/* Score */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#C8D8EA] uppercase hidden sm:inline">SCORE</span>
+            <span className="font-display text-lg text-[#FFC66D] font-medium leading-none">
+              {score.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Main Game Screen Canvas Container */}
-      <div className="relative rounded-3xl overflow-hidden border border-white/15 bg-black shadow-2xl aspect-[4/3] max-h-[580px] mx-auto flex items-center justify-center">
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={600}
-          onPointerMove={handlePointerMove}
-          className="w-full h-full block cursor-crosshair touch-none"
-        />
+      {/* Main Game Screen Canvas Container (Fits Viewport Height Exactly) */}
+      <div className="flex-1 min-h-0 relative flex items-center justify-center p-1">
+        <div className="relative h-full w-auto aspect-[4/3] max-h-full max-w-full rounded-2xl overflow-hidden border border-[#58D9FF]/25 bg-black shadow-[0_0_35px_rgba(8,11,29,0.9)] flex items-center justify-center">
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            onPointerMove={handlePointerMove}
+            className="w-full h-full block cursor-crosshair touch-none"
+          />
 
         {/* Menu / Start Overlay */}
         {gameState === 'menu' && (
@@ -728,22 +742,23 @@ export const AsteroidDefender: React.FC<AsteroidDefenderProps> = ({ onBackToHub,
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* On-Screen Touch Controls for Mobile */}
-      <div className="mt-4 flex sm:hidden items-center justify-between gap-3">
+      <div className="mt-1 flex sm:hidden items-center justify-between gap-2 shrink-0">
         <div className="flex gap-2">
           <button
             onPointerDown={() => { stateRef.current.keys.left = true; }}
             onPointerUp={() => { stateRef.current.keys.left = false; }}
-            className="w-14 h-14 rounded-2xl bg-[#101A29] border border-white/20 active:bg-[#C6A36B] active:text-[#080D16] text-xl font-bold flex items-center justify-center"
+            className="w-12 h-10 rounded-xl bg-[#111A35] border border-white/20 active:bg-[#58D9FF] active:text-[#080B1D] text-lg font-bold flex items-center justify-center"
           >
             ◀
           </button>
           <button
             onPointerDown={() => { stateRef.current.keys.right = true; }}
             onPointerUp={() => { stateRef.current.keys.right = false; }}
-            className="w-14 h-14 rounded-2xl bg-[#101A29] border border-white/20 active:bg-[#C6A36B] active:text-[#080D16] text-xl font-bold flex items-center justify-center"
+            className="w-12 h-10 rounded-xl bg-[#111A35] border border-white/20 active:bg-[#58D9FF] active:text-[#080B1D] text-lg font-bold flex items-center justify-center"
           >
             ▶
           </button>
@@ -755,7 +770,7 @@ export const AsteroidDefender: React.FC<AsteroidDefenderProps> = ({ onBackToHub,
             shootLasers();
           }}
           onPointerUp={() => { stateRef.current.keys.fire = false; }}
-          className="flex-1 h-14 rounded-2xl bg-[#C6A36B] text-[#080D16] font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center shadow-lg active:scale-95"
+          className="flex-1 h-10 rounded-xl bg-gradient-to-r from-[#58D9FF] to-[#64E5C0] text-[#080B1D] font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center shadow-lg active:scale-95"
         >
           FIRE LASERS 🔥
         </button>

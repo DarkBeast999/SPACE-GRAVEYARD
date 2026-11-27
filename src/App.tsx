@@ -90,17 +90,17 @@ export const App: React.FC = () => {
         </div>
 
         {/* Global Museum Colophon Footer */}
-        <footer className="relative z-10 bg-[#080D16]/95 border-t border-[#F0E8D9]/10 py-12 px-4 sm:px-8 text-xs text-[#B6C0CC] mt-24">
+        <footer className="relative z-10 bg-[#080B1D]/95 border-t border-[#58D9FF]/15 py-12 px-4 sm:px-8 text-xs text-[#C8D8EA] mt-24">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
             {/* Identity */}
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-center md:justify-start gap-2">
-                <span className="text-[#C6A36B]">✦</span>
-                <span className="font-display text-base font-semibold tracking-[0.2em] text-[#F0E8D9]">
+                <span className="text-[#58D9FF]">✦</span>
+                <span className="font-display text-base font-semibold tracking-[0.2em] text-[#F5F0E8]">
                   SPACE GRAVEYARD
                 </span>
               </div>
-              <span className="font-serif italic text-xs text-[#C6A36B]">They Never Came Home.</span>
+              <span className="font-serif italic text-xs text-[#FFC66D]">They Never Came Home.</span>
             </div>
 
             {/* Secondary Footer Destinations */}
@@ -108,7 +108,7 @@ export const App: React.FC = () => {
               <Link
                 to="/knowledge"
                 onClick={() => playSignalPing(600)}
-                className="hover:text-[#F0E8D9] transition-colors"
+                className="hover:text-[#58D9FF] transition-colors"
               >
                 FOR EDUCATORS / KNOWLEDGE CENTRE
               </Link>
@@ -118,22 +118,24 @@ export const App: React.FC = () => {
                   playSignalPing(600);
                   setIsAboutOpen(true);
                 }}
-                className="hover:text-[#F0E8D9] transition-colors uppercase"
+                className="hover:text-[#58D9FF] transition-colors uppercase cursor-pointer"
               >
                 ABOUT THE PROJECT
               </button>
 
               <button
                 onClick={handleSoundToggle}
-                className="hover:text-[#F0E8D9] transition-colors flex items-center gap-1.5 uppercase"
+                className="hover:text-[#58D9FF] transition-colors flex items-center gap-1.5 uppercase cursor-pointer"
               >
                 <span>{soundEnabled ? '🔊' : '🔇'}</span>
-                <span>{soundEnabled ? 'AUDIO: ENABLED' : 'AUDIO: MUTED'}</span>
+                <span className={soundEnabled ? 'text-[#64E5C0]' : 'text-[#C8D8EA]'}>
+                  {soundEnabled ? 'AUDIO: ENABLED' : 'AUDIO: MUTED'}
+                </span>
               </button>
             </div>
 
             {/* Provenance */}
-            <div className="flex flex-col gap-1 text-[11px] mono text-[#B6C0CC]/80">
+            <div className="flex flex-col gap-1 text-[11px] mono text-[#C8D8EA]/75">
               <div>28 CURATED LANDMARK MONUMENTS</div>
               <div>PUBLIC DATA: NASA NSSDCA · JPL HORIZONS · UNOOSA</div>
             </div>

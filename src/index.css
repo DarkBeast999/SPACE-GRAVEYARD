@@ -2,7 +2,7 @@
 @font-face {
   font-family: 'Cormorant Garamond';
   font-style: normal;
-  font-weight: 400 700;
+  font-weight: 400;
   font-display: swap;
   src: url('./assets/fonts/cormorant-garamond-regular.woff2') format('woff2'),
        local('Cormorant Garamond'),
@@ -12,7 +12,7 @@
 @font-face {
   font-family: 'Inter';
   font-style: normal;
-  font-weight: 300 700;
+  font-weight: 400;
   font-display: swap;
   src: url('./assets/fonts/inter-regular.woff2') format('woff2'),
        local('Inter'),
@@ -24,7 +24,7 @@
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 400;
   font-display: swap;
   src: url('./assets/fonts/jetbrains-mono-regular.woff2') format('woff2'),
        local('JetBrains Mono'),
@@ -37,31 +37,47 @@
 @tailwind utilities;
 
 :root {
-  /* Cinematic & Editorial Palette */
-  --near-black: #080D16;
-  --midnight-navy: #101A29;
-  --deep-slate: #26374C;
-  --warm-ivory: #F0E8D9;
-  --mist-grey: #B6C0CC;
-  --antique-gold: #C6A36B;
-  --muted-blue: #789CB8;
-  --nebula-lavender: #A896C5;
+  /* Luminous Cosmic Observatory Palette */
+  --cosmic-ink: #080B1D;
+  --deep-indigo: #111A35;
+  --elevated-blue: #1B284A;
+  --electric-cyan: #58D9FF;
+  --nebula-violet: #A18BFF;
+  --aurora-mint: #64E5C0;
+  --solar-amber: #FFC66D;
+  --coral-rust: #FF8D7B;
+  --warm-ivory: #F5F0E8;
+  --lunar-silver: #C8D8EA;
+
+  /* Destination Accent Identifiers */
+  --mars-accent: #FF8D7B;
+  --mars-border: rgba(255, 141, 123, 0.35);
+  --moon-accent: #C8D8EA;
+  --moon-border: rgba(200, 216, 234, 0.3);
+  --saturn-accent: #FFC66D;
+  --saturn-border: rgba(255, 198, 109, 0.35);
+  --deepspace-accent: #58D9FF;
+  --deepspace-border: rgba(88, 217, 255, 0.35);
 
   /* Restrained Neutral Surfaces */
-  --surface-overlay: rgba(16, 26, 41, 0.78);
-  --surface-border: rgba(240, 232, 217, 0.09);
-  --surface-border-gold: rgba(198, 163, 107, 0.3);
+  --surface-overlay: rgba(17, 26, 53, 0.82);
+  --surface-elevated: rgba(27, 40, 74, 0.88);
+  --surface-border: rgba(245, 240, 232, 0.1);
+  --surface-border-cyan: rgba(88, 217, 255, 0.3);
+  --surface-border-gold: rgba(255, 198, 109, 0.3);
 
-  /* Harmonized aliases for backward-compatibility */
-  --void: #080D16;
-  --nebula-purple: #101A29;
-  --signal-cyan: #789CB8;
-  --ghost-amber: #C6A36B;
-  --mars-rust: #A34E36;
-  --lunar-silver: #D0D7DE;
-  --deep-gold: #C6A36B;
-  --text-primary: #F0E8D9;
-  --text-ghost: #B6C0CC;
+  /* Preserved aliases for backward-compatibility */
+  --near-black: #080B1D;
+  --midnight-navy: #111A35;
+  --deep-slate: #1B284A;
+  --warm-ivory-legacy: #F0E8D9;
+  --mist-grey: #C8D8EA;
+  --antique-gold: #FFC66D;
+  --muted-blue: #58D9FF;
+  --nebula-lavender: #A18BFF;
+  --void: #080B1D;
+  --text-primary: #F5F0E8;
+  --text-ghost: #C8D8EA;
 }
 
 * {
@@ -72,11 +88,11 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: var(--near-black);
+  background-color: var(--cosmic-ink);
 }
 
 body {
-  background-color: var(--near-black);
+  background-color: var(--cosmic-ink);
   color: var(--warm-ivory);
   font-family: 'Inter', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;

@@ -76,6 +76,63 @@ export const GhostProfilePage: React.FC = () => {
   const formattedCoords = formatCoordinates(artifact.coordinates);
   const coordSemanticLabel = getCoordinateSemanticLabel(artifact.destination, Boolean(artifact.coordinates));
 
+  // Destination visual theme
+  const getDestinationTheme = (dest: string) => {
+    switch (dest) {
+      case 'mars':
+        return {
+          accent: '#FF8D7B',
+          accentBorder: 'border-[#FF8D7B]/40',
+          accentBorderHover: 'hover:border-[#FF8D7B]/60',
+          accentBg: 'bg-[#FF8D7B]/15',
+          accentText: 'text-[#FF8D7B]',
+          badgeBorder: 'border-[#FF8D7B]/50',
+          glow: 'shadow-[0_0_30px_rgba(255,141,123,0.18)]',
+          heroGradient: 'from-[#2A161E]/90 via-[#111A35]/85 to-[#080B1D]/95',
+          bannerBg: 'from-[#FF8D7B]/20 via-[#1B284A]/70 to-[#111A35]/90',
+        };
+      case 'moon':
+        return {
+          accent: '#C8D8EA',
+          accentBorder: 'border-[#C8D8EA]/40',
+          accentBorderHover: 'hover:border-[#C8D8EA]/60',
+          accentBg: 'bg-[#C8D8EA]/15',
+          accentText: 'text-[#C8D8EA]',
+          badgeBorder: 'border-[#C8D8EA]/50',
+          glow: 'shadow-[0_0_30px_rgba(200,216,234,0.18)]',
+          heroGradient: 'from-[#1B284A]/90 via-[#111A35]/85 to-[#080B1D]/95',
+          bannerBg: 'from-[#C8D8EA]/20 via-[#1B284A]/70 to-[#111A35]/90',
+        };
+      case 'saturn':
+        return {
+          accent: '#FFC66D',
+          accentBorder: 'border-[#FFC66D]/40',
+          accentBorderHover: 'hover:border-[#FFC66D]/60',
+          accentBg: 'bg-[#FFC66D]/15',
+          accentText: 'text-[#FFC66D]',
+          badgeBorder: 'border-[#FFC66D]/50',
+          glow: 'shadow-[0_0_30px_rgba(255,198,109,0.18)]',
+          heroGradient: 'from-[#2A2318]/90 via-[#111A35]/85 to-[#080B1D]/95',
+          bannerBg: 'from-[#FFC66D]/20 via-[#1B284A]/70 to-[#111A35]/90',
+        };
+      case 'deep-space':
+      default:
+        return {
+          accent: '#58D9FF',
+          accentBorder: 'border-[#58D9FF]/40',
+          accentBorderHover: 'hover:border-[#58D9FF]/60',
+          accentBg: 'bg-[#58D9FF]/15',
+          accentText: 'text-[#58D9FF]',
+          badgeBorder: 'border-[#58D9FF]/50',
+          glow: 'shadow-[0_0_30px_rgba(88,217,255,0.18)]',
+          heroGradient: 'from-[#0E2A3A]/90 via-[#111A35]/85 to-[#080B1D]/95',
+          bannerBg: 'from-[#58D9FF]/20 via-[#1B284A]/70 to-[#111A35]/90',
+        };
+    }
+  };
+
+  const theme = getDestinationTheme(artifact.destination);
+
   // Full curated historical story
   const missionStory = getMissionStory(artifact.id);
 
@@ -286,7 +343,7 @@ export const GhostProfilePage: React.FC = () => {
         <Link
           to="/explore"
           onClick={() => playSignalPing(500)}
-          className="inline-flex items-center gap-2 font-mono text-xs text-[#C6A36B] hover:text-[#F0E8D9] transition-colors tracking-wider"
+          className={`inline-flex items-center gap-2 font-mono text-xs ${theme.accentText} hover:text-[#F5F0E8] transition-colors tracking-wider`}
         >
           <span>←</span>
           <span>RETURN TO PERMANENT COLLECTION</span>
@@ -296,52 +353,58 @@ export const GhostProfilePage: React.FC = () => {
             playWhooshSound();
             navigate(`/universe?planet=${artifact.destination}&target=${artifact.id}`);
           }}
-          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C6A36B]/15 text-[#C6A36B] hover:bg-[#C6A36B] hover:text-[#080D16] border border-[#C6A36B]/40 transition-all font-mono text-[11px] font-semibold"
+          className={`hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full ${theme.accentBg} ${theme.accentText} hover:bg-white/20 hover:text-[#F5F0E8] border ${theme.badgeBorder} transition-all font-mono text-[11px] font-semibold`}
         >
           <span>🌐 VIEW IN 3D UNIVERSE</span>
           <span>↗</span>
         </button>
       </div>
 
-      {/* 1. WHAT IS THIS MACHINE? (HERO SECTION) */}
-      <div className="p-8 sm:p-12 rounded-3xl border border-white/10 mb-10 relative overflow-hidden bg-gradient-to-b from-[#101A29]/90 to-[#080D16]/95 shadow-2xl backdrop-blur-xl">
+      {/* 1. WHAT IS THIS MACHINE? (HERO SECTION WITH DESTINATION VISUAL IDENTITY) */}
+      <div className={`p-8 sm:p-12 rounded-3xl border ${theme.accentBorder} mb-10 relative overflow-hidden bg-gradient-to-b ${theme.heroGradient} ${theme.glow} shadow-2xl backdrop-blur-xl`}>
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 relative z-10">
           <div className="max-w-3xl">
             <div className="flex items-center gap-2.5 mb-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#C6A36B] animate-pulse" />
-              <span className="font-mono text-xs text-[#C6A36B] uppercase tracking-widest font-semibold">
+              <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: theme.accent }} />
+              <span className={`font-mono text-xs ${theme.accentText} uppercase tracking-widest font-semibold`}>
                 CURATED MISSION DOSSIER // {artifact.destination.toUpperCase()}
               </span>
             </div>
 
-            <h1 className="font-display text-4xl sm:text-6xl font-normal text-[#F0E8D9] tracking-tight mb-4">
+            <h1 className="font-display text-4xl sm:text-6xl font-normal text-[#F5F0E8] tracking-tight mb-4">
               {artifact.name}
             </h1>
 
-            <div className="text-xs sm:text-sm text-[#B6C0CC] flex flex-wrap items-center gap-3 font-sans">
-              <span className="text-[#F0E8D9] font-medium">{artifact.designation}</span>
+            <div className="text-xs sm:text-sm text-[#C8D8EA] flex flex-wrap items-center gap-3 font-sans">
+              <span className="text-[#F5F0E8] font-medium">{artifact.designation}</span>
               <span>•</span>
               <span>📍 {artifact.location}</span>
+              {formattedCoords && (
+                <>
+                  <span>•</span>
+                  <span className="font-mono text-[11px] text-[#C8D8EA]/80">{coordSemanticLabel}: {formattedCoords}</span>
+                </>
+              )}
             </div>
 
             {/* 1-Line Punchy Accessible Summary */}
-            <p className="mt-4 text-base sm:text-lg font-serif italic text-[#F0E8D9]/90 leading-relaxed max-w-2xl">
+            <p className="mt-4 text-base sm:text-lg font-serif italic text-[#F5F0E8]/95 leading-relaxed max-w-2xl">
               "{artifact.funFact}"
             </p>
           </div>
 
           {/* Status Badge & Silence Duration */}
           <div className="flex flex-col items-start lg:items-end gap-3 flex-shrink-0">
-            <span className="px-4 py-1.5 rounded-full text-xs font-mono font-semibold tracking-wider border border-[#C6A36B]/60 bg-[#C6A36B]/15 text-[#F0E8D9]">
+            <span className={`px-4 py-1.5 rounded-full text-xs font-mono font-semibold tracking-wider border ${theme.badgeBorder} ${theme.accentBg} text-[#F5F0E8]`}>
               ● {getNaturalStatus()}
             </span>
 
             {silenceDuration && (
-              <div className="bg-black/40 px-5 py-3 rounded-2xl border border-white/10 text-left lg:text-right">
-                <div className="font-mono text-[10px] text-[#B6C0CC] uppercase tracking-wider mb-0.5">
+              <div className="bg-black/50 px-5 py-3 rounded-2xl border border-white/10 text-left lg:text-right">
+                <div className="font-mono text-[10px] text-[#C8D8EA] uppercase tracking-wider mb-0.5">
                   TIME ON SITE
                 </div>
-                <div className="font-display text-lg sm:text-xl text-[#C6A36B]">
+                <div className="font-display text-lg sm:text-xl" style={{ color: theme.accent }}>
                   {silenceDuration.days.toLocaleString()} Days
                 </div>
               </div>
@@ -357,14 +420,14 @@ export const GhostProfilePage: React.FC = () => {
             {/* Chronicle Header & Title Banner */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-white/10">
               <div>
-                <div className="font-mono text-xs text-[#C6A36B] uppercase tracking-widest flex items-center gap-2 mb-2 font-semibold">
+                <div className={`font-mono text-xs ${theme.accentText} uppercase tracking-widest flex items-center gap-2 mb-2 font-semibold`}>
                   <span>📜</span>
                   <span>HISTORICAL MISSION CHRONICLE</span>
                 </div>
-                <h2 className="font-display text-3xl sm:text-5xl text-[#F0E8D9] font-normal leading-tight">
+                <h2 className="font-display text-3xl sm:text-5xl text-[#F5F0E8] font-normal leading-tight">
                   {missionStory.title}
                 </h2>
-                <div className="font-mono text-xs text-[#C6A36B]/90 tracking-wider uppercase mt-1">
+                <div className={`font-mono text-xs ${theme.accentText}/90 tracking-wider uppercase mt-1`}>
                   {missionStory.subtitle}
                 </div>
               </div>
@@ -374,7 +437,7 @@ export const GhostProfilePage: React.FC = () => {
                   playTypewriterClick();
                   playSignalPing(750);
                 }}
-                className="font-mono text-[11px] text-[#B6C0CC] hover:text-white transition-colors flex items-center gap-1.5 self-start sm:self-end bg-white/5 px-3 py-1.5 rounded-lg border border-white/10"
+                className="font-mono text-[11px] text-[#C8D8EA] hover:text-white transition-colors flex items-center gap-1.5 self-start sm:self-end bg-white/5 px-3.5 py-1.5 rounded-lg border border-white/10"
                 title="Simulate carrier frequency"
               >
                 <span>🔊</span>
@@ -383,52 +446,190 @@ export const GhostProfilePage: React.FC = () => {
             </div>
 
             {/* Opening Lead Passage */}
-            <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-[#C6A36B]/15 via-[#101A29]/80 to-[#101A29]/60 border-l-4 border-[#C6A36B] border-y border-r border-white/10 shadow-xl">
-              <p className="font-serif italic text-lg sm:text-2xl text-[#F0E8D9] leading-relaxed">
-                "{missionStory.lead}"
-              </p>
+            <div
+              className={`p-6 sm:p-8 rounded-2xl bg-gradient-to-r ${theme.bannerBg} border-l-4 shadow-xl border-y border-r border-white/10`}
+              style={{ borderLeftColor: theme.accent }}
+            >
+              <div className="font-serif italic text-lg sm:text-2xl text-[#F5F0E8] leading-relaxed">
+                <span className="text-3xl leading-none select-none opacity-40 mr-1">“</span>
+                {missionStory.lead}
+                <span className="text-3xl leading-none select-none opacity-40 ml-1">”</span>
+              </div>
             </div>
 
-            {/* Narrative Chapters */}
-            <div className="space-y-6">
-              {[
-                missionStory.chapters.origin,
-                missionStory.chapters.journey,
-                missionStory.chapters.keyMoments,
-                missionStory.chapters.discoveries,
-                missionStory.chapters.legacy,
-              ].map((chapter, idx) => (
-                <div
-                  key={idx}
-                  className="p-6 sm:p-8 rounded-3xl bg-[#101A29]/75 border border-white/10 backdrop-blur-md shadow-lg transition-all hover:border-[#C6A36B]/30"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-3">
-                    <h3 className="font-display text-xl sm:text-2xl text-[#F0E8D9] font-medium tracking-tight">
-                      {chapter.title}
+            {/* Narrative Chapters (Visually Varied Progression) */}
+            <div className="space-y-7">
+              {/* CHAPTER 1: ORIGIN & LAUNCH */}
+              {missionStory.chapters.origin && (
+                <div className="p-6 sm:p-8 rounded-3xl bg-[#111A35]/80 border border-white/10 backdrop-blur-md shadow-lg transition-all hover:border-white/20 relative overflow-hidden">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-md bg-white/5 border border-white/10 font-mono text-[10px] font-bold flex items-center justify-center text-[#58D9FF]">
+                        01
+                      </span>
+                      <span className="font-mono text-[10px] text-[#58D9FF] uppercase tracking-widest font-semibold">
+                        CHAPTER I // ORIGIN &amp; MISSION GENESIS
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 font-mono text-[10px] text-[#C8D8EA]/80">
+                      <span className="bg-black/40 px-2.5 py-0.5 rounded border border-white/5">ARCHIVAL DESIGNATION: {artifact.designation}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+                    <h3 className="font-display text-xl sm:text-2xl text-[#F5F0E8] font-medium tracking-tight">
+                      {missionStory.chapters.origin.title}
                     </h3>
-                    {chapter.subtitle && (
-                      <span className="font-mono text-[11px] text-[#C6A36B] uppercase tracking-wider">
-                        {chapter.subtitle}
+                    {missionStory.chapters.origin.subtitle && (
+                      <span className={`font-mono text-[11px] ${theme.accentText} uppercase tracking-wider`}>
+                        {missionStory.chapters.origin.subtitle}
                       </span>
                     )}
                   </div>
-                  <div className="w-12 h-0.5 bg-[#C6A36B]/40 mb-4" />
-                  <p className="text-sm sm:text-base text-[#F0E8D9]/90 leading-relaxed font-sans font-light">
-                    {chapter.content}
+
+                  <p className="text-sm sm:text-base text-[#F5F0E8]/90 leading-relaxed font-sans font-light mt-3">
+                    {missionStory.chapters.origin.content}
                   </p>
                 </div>
-              ))}
+              )}
+
+              {/* CHAPTER 2: THE JOURNEY THROUGH THE VOID */}
+              {missionStory.chapters.journey && (
+                <div className="p-6 sm:p-8 rounded-3xl bg-[#111A35]/70 border border-white/10 backdrop-blur-md shadow-lg transition-all hover:border-white/20 relative">
+                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
+                    <span className="w-5 h-5 rounded-md bg-white/5 border border-white/10 font-mono text-[10px] font-bold flex items-center justify-center text-[#A18BFF]">
+                      02
+                    </span>
+                    <span className="font-mono text-[10px] text-[#A18BFF] uppercase tracking-widest font-semibold">
+                      CHAPTER II // THE JOURNEY &amp; DEEP SPACE TRANSIT
+                    </span>
+                  </div>
+
+                  <div className="pl-4 sm:pl-6 border-l-2 border-[#A18BFF]/40 relative">
+                    <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-[#A18BFF]" />
+                    <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+                      <h3 className="font-display text-xl sm:text-2xl text-[#F5F0E8] font-medium tracking-tight">
+                        {missionStory.chapters.journey.title}
+                      </h3>
+                      {missionStory.chapters.journey.subtitle && (
+                        <span className="font-mono text-[11px] text-[#A18BFF] uppercase tracking-wider">
+                          {missionStory.chapters.journey.subtitle}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-sm sm:text-base text-[#F5F0E8]/90 leading-relaxed font-sans font-light mt-3">
+                      {missionStory.chapters.journey.content}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* CHAPTER 3: PIVOTAL MOMENTS & HIGH-STAKES OPERATIONS */}
+              {missionStory.chapters.keyMoments && (
+                <div
+                  className={`p-6 sm:p-8 rounded-3xl bg-[#1B284A]/60 border ${theme.accentBorder} backdrop-blur-md shadow-xl transition-all relative overflow-hidden`}
+                >
+                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
+                    <span className="w-5 h-5 rounded-md bg-white/5 border border-white/10 font-mono text-[10px] font-bold flex items-center justify-center" style={{ color: theme.accent }}>
+                      03
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-widest font-semibold" style={{ color: theme.accent }}>
+                      CHAPTER III // PIVOTAL MOMENTS &amp; CRUCIAL OPERATIONS
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+                    <h3 className="font-display text-xl sm:text-2xl text-[#F5F0E8] font-medium tracking-tight">
+                      {missionStory.chapters.keyMoments.title}
+                    </h3>
+                    {missionStory.chapters.keyMoments.subtitle && (
+                      <span className="font-mono text-[11px] uppercase tracking-wider" style={{ color: theme.accent }}>
+                        {missionStory.chapters.keyMoments.subtitle}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm sm:text-base text-[#F5F0E8]/90 leading-relaxed font-sans font-light mt-3">
+                    {missionStory.chapters.keyMoments.content}
+                  </p>
+                </div>
+              )}
+
+              {/* CHAPTER 4: SCIENTIFIC DISCOVERIES & RETURN */}
+              {missionStory.chapters.discoveries && (
+                <div className="p-6 sm:p-8 rounded-3xl bg-[#111A35]/80 border border-white/10 backdrop-blur-md shadow-lg transition-all hover:border-white/20">
+                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
+                    <span className="w-5 h-5 rounded-md bg-white/5 border border-white/10 font-mono text-[10px] font-bold flex items-center justify-center text-[#64E5C0]">
+                      04
+                    </span>
+                    <span className="font-mono text-[10px] text-[#64E5C0] uppercase tracking-widest font-semibold">
+                      CHAPTER IV // DISCOVERIES &amp; SCIENTIFIC RETURN
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+                    <h3 className="font-display text-xl sm:text-2xl text-[#F5F0E8] font-medium tracking-tight">
+                      {missionStory.chapters.discoveries.title}
+                    </h3>
+                    {missionStory.chapters.discoveries.subtitle && (
+                      <span className="font-mono text-[11px] text-[#64E5C0] uppercase tracking-wider">
+                        {missionStory.chapters.discoveries.subtitle}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm sm:text-base text-[#F5F0E8]/90 leading-relaxed font-sans font-light mt-3">
+                    {missionStory.chapters.discoveries.content}
+                  </p>
+                </div>
+              )}
+
+              {/* CHAPTER 5: PERMANENT RESTING PLACE & ETERNAL LEGACY */}
+              {missionStory.chapters.legacy && (
+                <div className="p-6 sm:p-8 rounded-3xl bg-[#080B1D]/90 border border-white/15 backdrop-blur-md shadow-xl relative">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-md bg-white/5 border border-white/10 font-mono text-[10px] font-bold flex items-center justify-center text-[#FFC66D]">
+                        05
+                      </span>
+                      <span className="font-mono text-[10px] text-[#FFC66D] uppercase tracking-widest font-semibold">
+                        CHAPTER V // PERMANENT RESTING PLACE &amp; ETERNAL LEGACY
+                      </span>
+                    </div>
+
+                    <div className="font-mono text-[10px] text-[#C8D8EA] bg-black/60 px-2.5 py-0.5 rounded border border-white/5">
+                      SITE: {artifact.location}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-2">
+                    <h3 className="font-display text-xl sm:text-2xl text-[#F5F0E8] font-medium tracking-tight">
+                      {missionStory.chapters.legacy.title}
+                    </h3>
+                    {missionStory.chapters.legacy.subtitle && (
+                      <span className="font-mono text-[11px] text-[#FFC66D] uppercase tracking-wider">
+                        {missionStory.chapters.legacy.subtitle}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm sm:text-base text-[#F5F0E8]/90 leading-relaxed font-sans font-light mt-3">
+                    {missionStory.chapters.legacy.content}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Highlight Quote Block */}
             {missionStory.highlightQuote && (
-              <div className="p-6 sm:p-8 rounded-2xl bg-[#080D16]/90 border border-[#C6A36B]/40 relative overflow-hidden shadow-xl">
-                <div className="text-3xl text-[#C6A36B]/40 font-display select-none mb-1">“</div>
-                <blockquote className="font-serif italic text-lg sm:text-xl text-[#F0E8D9] leading-relaxed mb-3">
+              <div className={`p-6 sm:p-8 rounded-2xl bg-[#080B1D]/95 border ${theme.accentBorder} relative overflow-hidden shadow-xl`}>
+                <div className="text-3xl font-display select-none mb-1 opacity-50" style={{ color: theme.accent }}>“</div>
+                <blockquote className="font-serif italic text-lg sm:text-xl text-[#F5F0E8] leading-relaxed mb-3">
                   {missionStory.highlightQuote}
                 </blockquote>
                 {missionStory.quoteAuthor && (
-                  <div className="font-mono text-xs text-[#C6A36B] uppercase tracking-wider text-right">
+                  <div className={`font-mono text-xs ${theme.accentText} uppercase tracking-wider text-right`}>
                     — {missionStory.quoteAuthor}
                   </div>
                 )}
@@ -436,24 +637,24 @@ export const GhostProfilePage: React.FC = () => {
             )}
 
             {/* Interpretive First-Person Reflection (Clearly Demarcated) */}
-            <div className="p-6 rounded-2xl border border-white/10 bg-[#080D16]/80 backdrop-blur-sm">
-              <div className="mb-3 bg-black/40 border border-[#C6A36B]/30 rounded-xl p-3 text-xs text-[#B6C0CC] flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
-                <div className="flex items-center gap-1.5 text-[#C6A36B] font-mono font-semibold tracking-wider uppercase text-[11px] flex-shrink-0">
+            <div className="p-6 rounded-2xl border border-white/10 bg-[#080B1D]/85 backdrop-blur-sm">
+              <div className="mb-3 bg-black/50 border border-[#FFC66D]/30 rounded-xl p-3.5 text-xs text-[#C8D8EA] flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+                <div className="flex items-center gap-1.5 text-[#FFC66D] font-mono font-semibold tracking-wider uppercase text-[11px] flex-shrink-0">
                   <span>✦</span>
                   <span>CREATIVE RECONSTRUCTION DISCLOSURE:</span>
                 </div>
-                <p className="font-sans font-light text-[11px] text-[#B6C0CC] leading-relaxed">
+                <p className="font-sans font-light text-[11px] text-[#C8D8EA] leading-relaxed">
                   The passage below is an artistic interpretive reflection based on historical flight logs. It is not an actual spacecraft transmission, recovered recording, or verbatim transcript.
                 </p>
               </div>
 
-              <p className="font-serif italic text-base sm:text-lg text-[#F0E8D9]/80 leading-relaxed pl-3 border-l-2 border-[#C6A36B]/30">
+              <p className="font-serif italic text-base sm:text-lg text-[#F5F0E8]/85 leading-relaxed pl-3 border-l-2" style={{ borderLeftColor: theme.accent }}>
                 "{artifact.lastTransmission || artifact.narrativeIntro}"
               </p>
 
-              <div className="flex flex-wrap items-center justify-between pt-4 mt-4 border-t border-white/10 text-xs font-mono text-[#B6C0CC]">
-                <div>RESTING SITE: <span className="text-[#F0E8D9]">{artifact.location}</span></div>
-                <div>VERIFIED STATUS: <span className="text-[#C6A36B]">{missionStory.verifiedStatus}</span></div>
+              <div className="flex flex-wrap items-center justify-between pt-4 mt-4 border-t border-white/10 text-xs font-mono text-[#C8D8EA]">
+                <div>RESTING SITE: <span className="text-[#F5F0E8]">{artifact.location}</span></div>
+                <div>VERIFIED STATUS: <span style={{ color: theme.accent }}>{missionStory.verifiedStatus}</span></div>
               </div>
             </div>
           </div>
@@ -483,7 +684,7 @@ export const GhostProfilePage: React.FC = () => {
 
       {/* 3. WHAT DID IT DISCOVER? (VISUAL DISCOVERY CARDS) */}
       <section className="mb-12">
-        <div className="font-mono text-xs text-[#C6A36B] uppercase tracking-widest mb-4 flex items-center gap-2">
+        <div className={`font-mono text-xs ${theme.accentText} uppercase tracking-widest mb-4 flex items-center gap-2 font-semibold`}>
           <span>🔬</span>
           <span>EXTRAORDINARY DISCOVERIES MADE BY THIS MISSION</span>
         </div>
@@ -493,23 +694,23 @@ export const GhostProfilePage: React.FC = () => {
             <motion.div
               key={idx}
               whileHover={{ y: -4 }}
-              className="p-6 sm:p-7 rounded-2xl border border-white/10 hover:border-[#C6A36B]/50 transition-all flex flex-col justify-between bg-[#101A29]/60 shadow-lg backdrop-blur-sm"
+              className={`p-6 sm:p-7 rounded-2xl border border-white/10 ${theme.accentBorderHover} transition-all flex flex-col justify-between bg-[#111A35]/70 shadow-lg backdrop-blur-sm`}
             >
               <div>
                 <div className="text-3xl mb-4">{discovery.emoji}</div>
-                <h3 className="font-display text-lg font-medium text-[#F0E8D9] mb-2 leading-snug">
+                <h3 className="font-display text-lg font-medium text-[#F5F0E8] mb-2 leading-snug">
                   {discovery.title}
                 </h3>
                 <span
                   className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-mono uppercase font-semibold mb-3 ${
                     discovery.significance === 'critical'
-                      ? 'bg-[#C6A36B]/20 text-[#C6A36B] border border-[#C6A36B]/40'
-                      : 'bg-white/5 text-[#B6C0CC] border border-white/10'
+                      ? `${theme.accentBg} ${theme.accentText} border ${theme.badgeBorder}`
+                      : 'bg-white/5 text-[#C8D8EA] border border-white/10'
                   }`}
                 >
                   {discovery.significance} BREAKTHROUGH
                 </span>
-                <p className="text-xs sm:text-sm text-[#B6C0CC] leading-relaxed font-sans font-light">
+                <p className="text-xs sm:text-sm text-[#C8D8EA] leading-relaxed font-sans font-light">
                   {discovery.description}
                 </p>
               </div>
@@ -519,16 +720,16 @@ export const GhostProfilePage: React.FC = () => {
       </section>
 
       {/* 4. WHERE IS IT NOW? + 3D UNIVERSE CONNECTION */}
-      <section className="p-8 sm:p-10 rounded-3xl border border-[#C6A36B]/40 bg-[#101A29]/80 mb-12 shadow-2xl backdrop-blur-md">
+      <section className={`p-8 sm:p-10 rounded-3xl border ${theme.accentBorder} bg-[#111A35]/80 mb-12 shadow-2xl backdrop-blur-md`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="max-w-xl">
-            <span className="font-mono text-xs text-[#C6A36B] uppercase tracking-widest block mb-2 font-semibold">
+            <span className={`font-mono text-xs ${theme.accentText} uppercase tracking-widest block mb-2 font-semibold`}>
               📍 LOCATION &amp; 3D EXPLORATION
             </span>
-            <h2 className="font-display text-2xl sm:text-3xl text-[#F0E8D9] font-medium leading-tight mb-2">
+            <h2 className="font-display text-2xl sm:text-3xl text-[#F5F0E8] font-medium leading-tight mb-2">
               Explore {artifact.name} on the 3D Globe
             </h2>
-            <p className="text-sm text-[#B6C0CC] leading-relaxed font-light">
+            <p className="text-sm text-[#C8D8EA] leading-relaxed font-light">
               This explorer rests at {artifact.location}. Open our interactive 3D Solar System to glide straight to its resting site, inspect the terrain, and explore nearby historic landmarks.
             </p>
           </div>
@@ -539,7 +740,7 @@ export const GhostProfilePage: React.FC = () => {
                 playWhooshSound();
                 navigate(`/universe?planet=${artifact.destination}&target=${artifact.id}`);
               }}
-              className="px-6 py-3 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-xl flex items-center justify-center gap-2"
+              className="px-6 py-3 rounded-xl bg-[#FFC66D] hover:bg-[#ffe09e] text-[#080B1D] font-sans text-xs font-bold tracking-[0.2em] uppercase transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>🌐 FIND IT IN 3D UNIVERSE</span>
               <span>→</span>
@@ -549,31 +750,31 @@ export const GhostProfilePage: React.FC = () => {
       </section>
 
       {/* 5. CAN YOU REACH IT? (LIGHT-SPEED DELAY CALCULATOR) */}
-      <section className="p-8 sm:p-10 rounded-3xl border border-white/10 bg-[#080D16]/90 mb-12 shadow-xl">
+      <section className="p-8 sm:p-10 rounded-3xl border border-white/10 bg-[#080B1D]/90 mb-12 shadow-xl">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">📡</span>
-          <span className="font-mono text-xs text-[#38bdf8] uppercase tracking-widest font-semibold">
+          <span className="font-mono text-xs text-[#58D9FF] uppercase tracking-widest font-semibold">
             SPEED-OF-LIGHT DELAY // HOW LONG DOES A SIGNAL TAKE?
           </span>
         </div>
 
-        <h3 className="font-display text-2xl text-[#F0E8D9] font-medium mb-3">
+        <h3 className="font-display text-2xl text-[#F5F0E8] font-medium mb-3">
           Communicating Across the Void
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
           <div className="md:col-span-2">
-            <p className="text-sm text-[#B6C0CC] leading-relaxed font-light">
-              Radio waves travel at the speed of light (<span className="text-[#38bdf8] font-mono font-medium">~299,792 km/s</span>). 
+            <p className="text-sm text-[#C8D8EA] leading-relaxed font-light">
+              Radio waves travel at the speed of light (<span className="text-[#58D9FF] font-mono font-medium">~299,792 km/s</span>). 
               Because {artifact.name} is situated in {artifact.location}, any message beamed from Earth takes{' '}
-              <span className="text-[#F0E8D9] font-semibold font-mono">
+              <span className="text-[#F5F0E8] font-semibold font-mono">
                 {travelDelay.hours > 0 ? `${travelDelay.hours} hours ` : ''}
                 {travelDelay.minutes > 0 ? `${travelDelay.minutes} minutes ` : ''}
                 {travelDelay.seconds} seconds
               </span>{' '}
               to reach it in one direction.
             </p>
-            <p className="text-xs text-[#B6C0CC]/70 mt-3 font-serif italic">
+            <p className="text-xs text-[#C8D8EA]/70 mt-3 font-serif italic">
               NASA uses giant 70-meter dish antennas of the Deep Space Network located in California, Spain, and Australia to send and listen for these faint signals.
             </p>
           </div>

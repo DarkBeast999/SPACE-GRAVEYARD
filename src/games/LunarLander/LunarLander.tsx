@@ -154,9 +154,11 @@ export const LunarLander: React.FC<LunarLanderProps> = ({ onBackToHub, onStageCl
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const keys = stateRef.current.keys;
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'].includes(e.key) || e.code === 'Space') {
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.code === 'Space') {
         keys.thrust = true;
-        if (e.key === ' ' || e.key === 'ArrowUp') e.preventDefault();
       } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         keys.left = true;
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
@@ -166,7 +168,10 @@ export const LunarLander: React.FC<LunarLanderProps> = ({ onBackToHub, onStageCl
 
     const handleKeyUp = (e: KeyboardEvent) => {
       const keys = stateRef.current.keys;
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'].includes(e.key) || e.code === 'Space') {
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.code === 'Space') {
         keys.thrust = false;
       } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         keys.left = false;
@@ -419,78 +424,95 @@ export const LunarLander: React.FC<LunarLanderProps> = ({ onBackToHub, onStageCl
   }, [currentStageIdx]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Top Header & Navigation */}
-      <div className="flex items-center justify-between pb-6 mb-6 border-b border-white/10">
-        <button
-          onClick={onBackToHub}
-          className="inline-flex items-center gap-2 font-mono text-xs text-[#C6A36B] hover:text-[#F0E8D9] transition-colors uppercase tracking-wider cursor-pointer"
-        >
-          <span>←</span>
-          <span>RETURN TO PLAY HUB</span>
-        </button>
+    <div className="w-full max-w-5xl mx-auto px-2 sm:px-4 py-2 h-[calc(100vh-68px)] max-h-[860px] flex flex-col justify-between overflow-hidden select-none">
+      {/* Integrated Compact Top Telemetry HUD */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-2xl bg-[#111A35]/90 border border-[#C8D8EA]/20 backdrop-blur-md shadow-lg shrink-0 mb-1">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={onBackToHub}
+            className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#FFC66D] hover:text-[#F5F0E8] transition-colors uppercase tracking-wider cursor-pointer px-2.5 py-1 rounded-lg bg-black/40 border border-white/10 hover:border-[#FFC66D]/40"
+          >
+            <span>←</span>
+            <span>PLAY HUB</span>
+          </button>
 
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-[#B6C0CC]">STAGE {currentStageIdx + 1} OF 3:</span>
-          <span className="font-mono text-xs text-[#F0E8D9] font-bold">
-            {currentStage.location.toUpperCase()}
-          </span>
-        </div>
-      </div>
-
-      {/* Flight Telemetry HUD Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 font-mono text-xs">
-        <div className="bg-[#101A29]/90 p-3 rounded-2xl border border-white/10">
-          <span className="text-[10px] text-[#B6C0CC] block uppercase mb-0.5">HYPERGOLIC FUEL</span>
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
+            <span className="font-mono text-[10px] text-[#C8D8EA]/70 hidden sm:inline">STAGE {currentStageIdx + 1}/3:</span>
+            <span className="font-mono text-xs text-[#F5F0E8] font-bold">
+              {currentStage.location.toUpperCase()}
+            </span>
+          </div>
+        </div>
+
+        {/* Live Flight Telemetry Strip */}
+        <div className="flex items-center gap-3 sm:gap-5 font-mono text-xs">
+          {/* Fuel */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-[#C8D8EA] uppercase hidden sm:inline">FUEL</span>
+            <div className="w-18 sm:w-22 h-2 bg-black/60 rounded-full overflow-hidden border border-white/15">
               <div
                 className={`h-full transition-all duration-150 ${
-                  fuel > 40 ? 'bg-emerald-400' : fuel > 20 ? 'bg-amber-400' : 'bg-red-500'
+                  fuel > 40 ? 'bg-[#64E5C0]' : fuel > 20 ? 'bg-[#FFC66D]' : 'bg-[#FF8D7B]'
                 }`}
                 style={{ width: `${Math.max(0, fuel)}%` }}
               />
             </div>
-            <span className="font-bold text-[#F0E8D9]">{fuel}%</span>
+            <span className={`font-bold ${fuel > 40 ? 'text-[#64E5C0]' : fuel > 20 ? 'text-[#FFC66D]' : 'text-[#FF8D7B]'}`}>
+              {fuel}%
+            </span>
           </div>
-        </div>
 
-        <div className="bg-[#101A29]/90 p-3 rounded-2xl border border-white/10">
-          <span className="text-[10px] text-[#B6C0CC] block uppercase mb-0.5">VERTICAL SPEED</span>
-          <span className={`font-display text-lg leading-none font-bold ${
-            verticalSpeed <= 2.2 ? 'text-emerald-400' : 'text-red-400 animate-pulse'
-          }`}>
-            {verticalSpeed} <span className="text-xs font-mono font-normal text-[#B6C0CC]">m/s (Limit: 2.2)</span>
-          </span>
-        </div>
+          {/* Vertical Speed */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#C8D8EA] uppercase hidden sm:inline">V-SPD</span>
+            <span className={`font-display text-base leading-none font-bold ${
+              verticalSpeed <= 2.2 ? 'text-[#64E5C0]' : 'text-[#FF8D7B] animate-pulse'
+            }`}>
+              {verticalSpeed} <span className="text-[10px] font-mono text-[#C8D8EA]/70">m/s</span>
+            </span>
+          </div>
 
-        <div className="bg-[#101A29]/90 p-3 rounded-2xl border border-white/10">
-          <span className="text-[10px] text-[#B6C0CC] block uppercase mb-0.5">HORIZONTAL DRIFT</span>
-          <span className={`font-display text-lg leading-none font-bold ${
-            Math.abs(horizontalSpeed) <= 1.4 ? 'text-emerald-400' : 'text-amber-400'
-          }`}>
-            {horizontalSpeed} <span className="text-xs font-mono font-normal text-[#B6C0CC]">m/s</span>
-          </span>
-        </div>
+          {/* Horizontal Drift */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#C8D8EA] uppercase hidden sm:inline">DRIFT</span>
+            <span className={`font-display text-base leading-none font-bold ${
+              Math.abs(horizontalSpeed) <= 1.4 ? 'text-[#64E5C0]' : 'text-[#FFC66D]'
+            }`}>
+              {horizontalSpeed} <span className="text-[10px] font-mono text-[#C8D8EA]/70">m/s</span>
+            </span>
+          </div>
 
-        <div className="bg-[#101A29]/90 p-3 rounded-2xl border border-white/10">
-          <span className="text-[10px] text-[#B6C0CC] block uppercase mb-0.5">TILT ANGLE</span>
-          <span className={`font-display text-lg leading-none font-bold ${
-            Math.abs(tiltDegrees) <= 12 ? 'text-[#F0E8D9]' : 'text-red-400 animate-pulse'
-          }`}>
-            {tiltDegrees}° <span className="text-xs font-mono font-normal text-[#B6C0CC]">(Max: ±12°)</span>
-          </span>
+          {/* Tilt */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#C8D8EA] uppercase hidden sm:inline">TILT</span>
+            <span className={`font-display text-base leading-none font-bold ${
+              Math.abs(tiltDegrees) <= 12 ? 'text-[#F5F0E8]' : 'text-[#FF8D7B] animate-pulse'
+            }`}>
+              {tiltDegrees}°
+            </span>
+          </div>
+
+          {gameState === 'flying' && (
+            <button
+              onClick={() => resetLanderForStage(currentStageIdx)}
+              className="px-2 py-0.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-[10px] font-mono text-[#C8D8EA] uppercase tracking-wider cursor-pointer"
+              title="Reset descent stage"
+            >
+              RESET
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Main Lander Canvas Container */}
-      <div className="relative rounded-3xl overflow-hidden border border-white/15 bg-black shadow-2xl aspect-[4/3] max-h-[580px] mx-auto flex items-center justify-center">
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={600}
-          className="w-full h-full block"
-        />
+      {/* Main Lander Canvas Container (Fits Viewport Height Exactly) */}
+      <div className="flex-1 min-h-0 relative flex items-center justify-center p-1">
+        <div className="relative h-full w-auto aspect-[4/3] max-h-full max-w-full rounded-2xl overflow-hidden border border-[#C8D8EA]/25 bg-black shadow-[0_0_35px_rgba(8,11,29,0.9)] flex items-center justify-center">
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            className="w-full h-full block"
+          />
 
         {/* Stage Briefing Overlay */}
         {gameState === 'briefing' && (
@@ -634,22 +656,23 @@ export const LunarLander: React.FC<LunarLanderProps> = ({ onBackToHub, onStageCl
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* On-Screen Touch Controls for Mobile */}
-      <div className="mt-4 flex sm:hidden items-center justify-between gap-3">
+      <div className="mt-1 flex sm:hidden items-center justify-between gap-2 shrink-0">
         <div className="flex gap-2">
           <button
             onPointerDown={() => { stateRef.current.keys.left = true; }}
             onPointerUp={() => { stateRef.current.keys.left = false; }}
-            className="w-14 h-14 rounded-2xl bg-[#101A29] border border-white/20 active:bg-[#C6A36B] active:text-[#080D16] text-xl font-bold flex items-center justify-center"
+            className="w-12 h-10 rounded-xl bg-[#111A35] border border-white/20 active:bg-[#58D9FF] active:text-[#080B1D] text-lg font-bold flex items-center justify-center"
           >
             ↶
           </button>
           <button
             onPointerDown={() => { stateRef.current.keys.right = true; }}
             onPointerUp={() => { stateRef.current.keys.right = false; }}
-            className="w-14 h-14 rounded-2xl bg-[#101A29] border border-white/20 active:bg-[#C6A36B] active:text-[#080D16] text-xl font-bold flex items-center justify-center"
+            className="w-12 h-10 rounded-xl bg-[#111A35] border border-white/20 active:bg-[#58D9FF] active:text-[#080B1D] text-lg font-bold flex items-center justify-center"
           >
             ↷
           </button>
@@ -658,7 +681,7 @@ export const LunarLander: React.FC<LunarLanderProps> = ({ onBackToHub, onStageCl
         <button
           onPointerDown={() => { stateRef.current.keys.thrust = true; }}
           onPointerUp={() => { stateRef.current.keys.thrust = false; }}
-          className="flex-1 h-14 rounded-2xl bg-[#C6A36B] text-[#080D16] font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center shadow-lg active:scale-95"
+          className="flex-1 h-10 rounded-xl bg-gradient-to-r from-[#FFC66D] to-[#FF8D7B] text-[#080B1D] font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center shadow-lg active:scale-95"
         >
           FIRE THRUSTER 🚀
         </button>

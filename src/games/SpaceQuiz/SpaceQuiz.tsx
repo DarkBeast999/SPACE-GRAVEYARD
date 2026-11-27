@@ -422,30 +422,34 @@ export const SpaceQuiz: React.FC<SpaceQuizProps> = ({ onBackToHub, onUpdateScore
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-3 h-[calc(100vh-68px)] max-h-[860px] flex flex-col justify-between overflow-hidden">
       {/* Top Navigation & Status Bar */}
-      <div className="flex items-center justify-between pb-6 mb-8 border-b border-white/10">
-        <button
-          onClick={onBackToHub}
-          className="inline-flex items-center gap-2 font-mono text-xs text-[#C6A36B] hover:text-[#F0E8D9] transition-colors uppercase tracking-wider cursor-pointer"
-        >
-          <span>←</span>
-          <span>RETURN TO PLAY HUB</span>
-        </button>
+      <div className="shrink-0 flex items-center justify-between gap-3 pb-2.5 mb-2 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBackToHub}
+            className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#FFC66D] hover:text-[#F5F0E8] transition-colors uppercase tracking-wider cursor-pointer"
+          >
+            <span>←</span>
+            <span>PLAY HUB</span>
+          </button>
+          <span className="text-white/20 hidden sm:inline">|</span>
+          <span className="font-mono text-[11px] text-[#C8D8EA] hidden sm:inline">SPACE TRIVIA CHALLENGE</span>
+        </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Streak Indicator */}
           {streak > 1 && (
-            <div className="px-3 py-1 rounded-full bg-[#C6A36B]/20 border border-[#C6A36B]/50 font-mono text-xs text-[#C6A36B] font-bold flex items-center gap-1.5 animate-pulse">
+            <div className="px-2.5 py-0.5 rounded-full bg-[#FFC66D]/20 border border-[#FFC66D]/50 font-mono text-[10px] text-[#FFC66D] font-bold flex items-center gap-1 animate-pulse">
               <span>🔥</span>
               <span>{streak} STREAK (+{streak * 25} PTS)</span>
             </div>
           )}
 
           {/* Current Score */}
-          <div className="bg-black/40 px-4 py-1.5 rounded-xl border border-white/10 text-right">
-            <span className="text-[10px] font-mono text-[#B6C0CC] block uppercase">SCORE</span>
-            <span className="font-display text-lg text-[#F0E8D9] font-medium leading-none">
+          <div className="bg-black/50 px-3 py-1 rounded-xl border border-white/10 text-right">
+            <span className="text-[9px] font-mono text-[#C8D8EA] block uppercase leading-none">SCORE</span>
+            <span className="font-display text-base text-[#F5F0E8] font-medium leading-none">
               {score.toLocaleString()}
             </span>
           </div>
@@ -453,48 +457,48 @@ export const SpaceQuiz: React.FC<SpaceQuizProps> = ({ onBackToHub, onUpdateScore
       </div>
 
       {!isCompleted ? (
-        <div className="space-y-6">
+        <div className="flex-1 min-h-0 flex flex-col justify-between p-4 sm:p-6 rounded-2xl bg-[#111A35]/90 border border-white/10 shadow-2xl backdrop-blur-xl overflow-y-auto">
           {/* Progress Header */}
-          <div className="flex items-center justify-between text-xs font-mono text-[#B6C0CC]">
+          <div className="shrink-0 flex items-center justify-between text-xs font-mono text-[#C8D8EA] mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-[#C6A36B] font-bold">QUESTION {currentIndex + 1} OF {roundQuestions.length}</span>
+              <span className="text-[#FFC66D] font-bold">QUESTION {currentIndex + 1} OF {roundQuestions.length}</span>
               <span>•</span>
-              <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-[#F0E8D9]">
+              <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-[#58D9FF] font-semibold">
                 {currentQ.original.category.toUpperCase()}
               </span>
             </div>
 
-            <span>{Math.round(((currentIndex) / roundQuestions.length) * 100)}% COMPLETE</span>
+            <span className="text-[11px]">{Math.round(((currentIndex) / roundQuestions.length) * 100)}% COMPLETE</span>
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+          <div className="shrink-0 w-full h-1 bg-black/50 rounded-full overflow-hidden border border-white/5 mb-4">
             <div
-              className="h-full bg-gradient-to-r from-[#C6A36B] to-[#e0be88] transition-all duration-300"
+              className="h-full bg-gradient-to-r from-[#FFC66D] via-[#58D9FF] to-[#64E5C0] transition-all duration-300"
               style={{ width: `${((currentIndex + 1) / roundQuestions.length) * 100}%` }}
             />
           </div>
 
-          {/* Question Card */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-[#101A29]/90 border border-white/10 shadow-2xl backdrop-blur-xl">
-            <h2 className="font-display text-xl sm:text-2xl text-[#F0E8D9] font-normal leading-relaxed mb-8">
+          {/* Question Card Body */}
+          <div className="my-auto space-y-4">
+            <h2 className="font-display text-lg sm:text-2xl text-[#F5F0E8] font-normal leading-snug">
               {currentQ.original.question}
             </h2>
 
             {/* Answer Options Grid */}
-            <div className="space-y-3.5 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {currentQ.shuffledOptions.map((option, idx) => {
                 const isSelected = selectedOption === idx;
                 const isCorrect = idx === currentQ.newCorrectIndex;
-                let optionClass = 'bg-black/30 border-white/10 text-[#F0E8D9] hover:bg-white/5 hover:border-[#C6A36B]/40';
+                let optionClass = 'bg-black/40 border-white/10 text-[#F5F0E8] hover:bg-white/5 hover:border-[#58D9FF]/40';
 
                 if (selectedOption !== null) {
                   if (isCorrect) {
-                    optionClass = 'bg-emerald-950/60 border-emerald-500 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+                    optionClass = 'bg-emerald-950/70 border-emerald-400 text-emerald-200 shadow-[0_0_15px_rgba(100,229,192,0.25)]';
                   } else if (isSelected) {
-                    optionClass = 'bg-red-950/60 border-red-500 text-red-200';
+                    optionClass = 'bg-red-950/70 border-red-400 text-red-200';
                   } else {
-                    optionClass = 'bg-black/20 border-white/5 text-[#B6C0CC]/50';
+                    optionClass = 'bg-black/20 border-white/5 text-[#C8D8EA]/40';
                   }
                 }
 
@@ -503,17 +507,17 @@ export const SpaceQuiz: React.FC<SpaceQuizProps> = ({ onBackToHub, onUpdateScore
                     key={idx}
                     onClick={() => handleSelectOption(idx)}
                     disabled={selectedOption !== null}
-                    className={`w-full p-4 rounded-2xl border text-left font-sans text-sm sm:text-base transition-all flex items-center justify-between cursor-pointer disabled:cursor-default ${optionClass}`}
+                    className={`p-3 rounded-xl border text-left font-sans text-xs sm:text-sm transition-all flex items-center justify-between cursor-pointer disabled:cursor-default ${optionClass}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 font-mono text-xs font-semibold flex items-center justify-center shrink-0">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-6 h-6 rounded-md bg-white/5 border border-white/10 font-mono text-[11px] font-semibold flex items-center justify-center shrink-0">
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      <span>{option}</span>
+                      <span className="leading-snug">{option}</span>
                     </div>
 
                     {selectedOption !== null && (
-                      <span className="text-lg">
+                      <span className="text-base font-bold ml-2">
                         {isCorrect ? '✓' : isSelected ? '✕' : ''}
                       </span>
                     )}
@@ -521,49 +525,53 @@ export const SpaceQuiz: React.FC<SpaceQuizProps> = ({ onBackToHub, onUpdateScore
                 );
               })}
             </div>
-
-            {/* Explanation & Next Button */}
-            {showExplanation && (
-              <div className="pt-6 border-t border-white/10 space-y-4 animate-fadeIn">
-                <div className="p-4 rounded-2xl bg-black/40 border border-white/10 text-xs text-[#B6C0CC] leading-relaxed">
-                  <span className="text-[#C6A36B] font-mono font-bold uppercase tracking-wider block mb-1">
-                    💡 HISTORICAL CONTEXT:
-                  </span>
-                  <p className="font-sans font-light text-sm text-[#F0E8D9]/95">
-                    {currentQ.original.explanation}
-                  </p>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleNextQuestion}
-                    className="px-6 py-3 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold tracking-widest uppercase transition-all shadow-lg flex items-center gap-2 cursor-pointer"
-                  >
-                    <span>{currentIndex + 1 < roundQuestions.length ? 'NEXT QUESTION ➔' : 'VIEW FINAL RESULTS ➔'}</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Explanation & Next Button */}
+          {showExplanation ? (
+            <div className="shrink-0 pt-3 mt-3 border-t border-white/10 space-y-2.5 animate-fadeIn">
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs text-[#C8D8EA] leading-relaxed">
+                <span className="text-[#FFC66D] font-mono font-bold uppercase tracking-wider block mb-0.5 text-[10px]">
+                  💡 HISTORICAL CONTEXT:
+                </span>
+                <p className="font-sans font-light text-xs sm:text-sm text-[#F5F0E8]/95 leading-snug">
+                  {currentQ.original.explanation}
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleNextQuestion}
+                  className="px-5 py-2 rounded-xl bg-[#FFC66D] hover:bg-[#ffe09e] text-[#080B1D] font-sans text-xs font-bold tracking-widest uppercase transition-all shadow-lg flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>{currentIndex + 1 < roundQuestions.length ? 'NEXT QUESTION ➔' : 'VIEW FINAL RESULTS ➔'}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="shrink-0 pt-2 text-center text-[10px] font-mono text-[#C8D8EA]/50">
+              SELECT AN ANSWER TO REVEAL HISTORICAL CONTEXT
+            </div>
+          )}
         </div>
       ) : (
         /* Results Screen */
-        <div className="p-10 sm:p-14 rounded-3xl bg-[#101A29]/95 border border-[#C6A36B]/50 shadow-2xl backdrop-blur-xl text-center space-y-8 animate-fadeIn">
-          <div className="w-20 h-20 rounded-full bg-[#C6A36B]/20 border border-[#C6A36B] flex items-center justify-center text-4xl mx-auto shadow-xl">
+        <div className="flex-1 min-h-0 flex flex-col justify-center items-center p-6 sm:p-10 rounded-2xl bg-[#111A35]/95 border border-[#FFC66D]/50 shadow-2xl backdrop-blur-xl text-center space-y-4 my-auto animate-fadeIn">
+          <div className="w-16 h-16 rounded-full bg-[#FFC66D]/20 border border-[#FFC66D] flex items-center justify-center text-3xl mx-auto shadow-xl">
             🏆
           </div>
 
           <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-[#C6A36B] font-semibold block mb-2">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#FFC66D] font-semibold block mb-1">
               MISSION TRIVIA COMPLETE
             </span>
-            <h2 className="font-display text-3xl sm:text-4xl text-[#F0E8D9] font-normal">
+            <h2 className="font-display text-2xl sm:text-3xl text-[#F5F0E8] font-normal">
               Cosmic Knowledge Score
             </h2>
-            <div className="font-display text-5xl sm:text-6xl text-[#C6A36B] font-medium my-4">
-              {score.toLocaleString()} <span className="text-2xl text-[#B6C0CC]">PTS</span>
+            <div className="font-display text-4xl sm:text-5xl text-[#FFC66D] font-medium my-2">
+              {score.toLocaleString()} <span className="text-xl text-[#C8D8EA]">PTS</span>
             </div>
-            <p className="text-sm text-[#B6C0CC] max-w-md mx-auto font-light leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#C8D8EA] max-w-md mx-auto font-light leading-relaxed">
               {score >= 800
                 ? 'Outstanding performance! You possess master-level knowledge of humanity’s planetary explorers and cosmic history.'
                 : score >= 500
@@ -572,27 +580,27 @@ export const SpaceQuiz: React.FC<SpaceQuizProps> = ({ onBackToHub, onUpdateScore
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
-            <div className="bg-black/40 p-4 rounded-xl border border-white/5">
-              <span className="text-[10px] font-mono text-[#B6C0CC] block uppercase">LONGEST STREAK</span>
-              <span className="font-display text-xl text-[#F0E8D9]">{maxStreak} In A Row</span>
+          <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto w-full">
+            <div className="bg-black/50 p-3 rounded-xl border border-white/5">
+              <span className="text-[9px] font-mono text-[#C8D8EA] block uppercase">LONGEST STREAK</span>
+              <span className="font-display text-lg text-[#F5F0E8]">{maxStreak} In A Row</span>
             </div>
-            <div className="bg-black/40 p-4 rounded-xl border border-white/5">
-              <span className="text-[10px] font-mono text-[#B6C0CC] block uppercase">QUESTIONS</span>
-              <span className="font-display text-xl text-[#F0E8D9]">{roundQuestions.length} Answered</span>
+            <div className="bg-black/50 p-3 rounded-xl border border-white/5">
+              <span className="text-[9px] font-mono text-[#C8D8EA] block uppercase">QUESTIONS</span>
+              <span className="font-display text-lg text-[#F5F0E8]">{roundQuestions.length} Answered</span>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-white/10">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-3 border-t border-white/10">
             <button
               onClick={handleRestart}
-              className="px-6 py-3 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold tracking-widest uppercase transition-all shadow-lg cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[#FFC66D] hover:bg-[#ffe09e] text-[#080B1D] font-sans text-xs font-bold tracking-widest uppercase transition-all shadow-lg cursor-pointer"
             >
-              PLAY AGAIN WITH 10 NEW QUESTIONS ➔
+              PLAY AGAIN (10 NEW QUESTIONS) ➔
             </button>
             <button
               onClick={onBackToHub}
-              className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/10 transition-all font-sans text-xs font-medium uppercase tracking-wider cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F5F0E8] border border-white/10 transition-all font-sans text-xs font-medium uppercase tracking-wider cursor-pointer"
             >
               RETURN TO ARCADE HUB
             </button>

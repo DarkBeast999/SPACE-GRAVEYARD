@@ -320,415 +320,407 @@ export const MissionRepair: React.FC<MissionRepairProps> = ({ onBackToHub, onCom
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Top Header */}
-      <div className="flex items-center justify-between pb-6 mb-8 border-b border-white/10">
-        <button
-          onClick={onBackToHub}
-          className="inline-flex items-center gap-2 font-mono text-xs text-[#C6A36B] hover:text-[#F0E8D9] transition-colors uppercase tracking-wider cursor-pointer"
-        >
-          <span>←</span>
-          <span>RETURN TO PLAY HUB</span>
-        </button>
-
+    <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 py-2 sm:py-3 h-[calc(100vh-68px)] max-h-[860px] flex flex-col justify-between overflow-hidden">
+      {/* Top Header & Stage Tabs */}
+      <div className="shrink-0 flex items-center justify-between gap-3 pb-2.5 mb-2 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-[#B6C0CC]">SYSTEM STATUS:</span>
-          <span className={`px-3 py-1 rounded-full text-xs font-mono font-bold ${
+          <button
+            onClick={onBackToHub}
+            className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#FFC66D] hover:text-[#F5F0E8] transition-colors uppercase tracking-wider cursor-pointer"
+          >
+            <span>←</span>
+            <span>PLAY HUB</span>
+          </button>
+          <span className="text-white/20 hidden sm:inline">|</span>
+          <span className="font-mono text-[11px] text-[#C8D8EA] hidden sm:inline">MISSION REPAIR CONSOLE</span>
+        </div>
+
+        {/* Stage Progress Pills */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {[
+            { num: 1, title: 'Power Circuit' },
+            { num: 2, title: 'Comms Carrier' },
+            { num: 3, title: 'Solar Array' },
+          ].map((s) => (
+            <div
+              key={s.num}
+              className={`px-2.5 py-1 rounded-lg border text-center transition-all ${
+                stage === s.num
+                  ? 'bg-[#1B284A] border-[#FFC66D] text-[#F5F0E8] shadow-md'
+                  : stage > s.num
+                  ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+                  : 'bg-black/30 border-white/5 text-[#C8D8EA]/40'
+              }`}
+            >
+              <div className="font-mono text-[9px] uppercase font-bold tracking-wider">
+                {stage > s.num ? `✓ 0${s.num}` : `0${s.num}`}
+                <span className="hidden md:inline ml-1 font-normal font-sans text-[10px]">{s.title}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
             missionComplete
               ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500'
-              : 'bg-[#C6A36B]/20 text-[#C6A36B] border border-[#C6A36B]/50'
+              : 'bg-[#FFC66D]/20 text-[#FFC66D] border border-[#FFC66D]/50'
           }`}>
-            {missionComplete ? '● ALL SYSTEMS NOMINAL' : `● REPAIR IN PROGRESS (STAGE ${stage}/3)`}
+            {missionComplete ? '● NOMINAL' : `● STAGE ${stage}/3`}
           </span>
         </div>
       </div>
 
       {!missionComplete ? (
-        <div className="space-y-6">
-          {/* Stage Progress Tabs */}
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { num: 1, title: 'Power Circuit Routing' },
-              { num: 2, title: 'Comms Carrier Lock' },
-              { num: 3, title: 'Solar Array Dust Sweep' },
-            ].map((s) => (
-              <div
-                key={s.num}
-                className={`p-3.5 rounded-2xl border text-center transition-all ${
-                  stage === s.num
-                    ? 'bg-[#101A29] border-[#C6A36B] text-[#F0E8D9] shadow-lg'
-                    : stage > s.num
-                    ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
-                    : 'bg-black/20 border-white/5 text-[#B6C0CC]/50'
-                }`}
-              >
-                <div className="font-mono text-[10px] uppercase font-bold">
-                  {stage > s.num ? '✓ PASSED' : `STAGE 0${s.num}`}
+        <div className="flex-1 min-h-0 flex flex-col justify-center p-4 sm:p-6 rounded-2xl bg-[#111A35]/90 border border-white/10 shadow-2xl backdrop-blur-xl overflow-y-auto">
+          {/* ------------------------------------------------------------- */}
+          {/* STAGE 1: CIRCUIT ROTATION PUZZLE */}
+          {/* ------------------------------------------------------------- */}
+          {stage === 1 && (
+            <div className="max-w-2xl mx-auto w-full flex flex-col justify-between h-full">
+              <div className="flex items-center justify-between gap-2 shrink-0 mb-2">
+                <div>
+                  <span className="font-mono text-[10px] text-[#FFC66D] uppercase tracking-widest font-bold">
+                    STAGE 1 // ELECTRICAL ENGINEERING
+                  </span>
+                  <h2 className="font-display text-xl sm:text-2xl text-[#F5F0E8] leading-tight">Restore the Power Circuit</h2>
+                  <p className="text-xs text-[#C8D8EA] font-light mt-0.5">
+                    Rotate tiles to connect the <strong>Inlet (Top-Left)</strong> to the <strong>Computer Bus (Bottom-Right)</strong>.
+                  </p>
                 </div>
-                <div className="font-sans text-xs sm:text-sm font-medium mt-0.5">{s.title}</div>
+
+                <button
+                  onClick={() => setShowHint(!showHint)}
+                  className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono text-[#FFC66D] cursor-pointer shrink-0"
+                >
+                  💡 {showHint ? 'Hide' : 'Hint'}
+                </button>
               </div>
-            ))}
-          </div>
 
-          {/* Active Stage Box */}
-          <div className="p-8 sm:p-10 rounded-3xl bg-[#101A29]/90 border border-white/10 shadow-2xl backdrop-blur-xl">
-            {/* ------------------------------------------------------------- */}
-            {/* STAGE 1: CIRCUIT ROTATION PUZZLE */}
-            {/* ------------------------------------------------------------- */}
-            {stage === 1 && (
-              <div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-                  <div>
-                    <span className="font-mono text-[10px] text-[#C6A36B] uppercase tracking-widest font-bold">
-                      STAGE 1 // ELECTRICAL ENGINEERING
-                    </span>
-                    <h2 className="font-display text-2xl text-[#F0E8D9]">Restore the Power Circuit</h2>
-                    <p className="text-xs text-[#B6C0CC] font-light mt-1">
-                      Click or tap the tiles to rotate junction conduits. Connect the <strong>Solar Generator (Top-Left)</strong> to the <strong>Main Computer Bus (Bottom-Right)</strong>.
-                    </p>
-                  </div>
+              {showHint && (
+                <div className="mb-2 p-2.5 rounded-xl bg-[#FFC66D]/10 border border-[#FFC66D]/30 text-[11px] text-[#F5F0E8] font-light leading-snug shrink-0">
+                  <strong>Engineering Hint:</strong> Current enters tile 0 from the left. Route through adjacent junctions until wires connect to tile 8’s right bus output.
+                </div>
+              )}
 
-                  <button
-                    onClick={() => setShowHint(!showHint)}
-                    className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-[#C6A36B] cursor-pointer"
-                  >
-                    💡 {showHint ? 'Hide Hint' : 'Show Hint'}
-                  </button>
+              {/* 3x3 Tile Grid */}
+              <div className="relative max-w-[270px] sm:max-w-[300px] mx-auto p-3.5 rounded-2xl bg-black/70 border border-white/15 shadow-inner my-auto">
+                <div className="absolute -left-5 top-6 px-1.5 py-0.5 bg-[#FFC66D] text-[#080B1D] font-mono text-[8px] font-bold rounded uppercase">
+                  IN ➔
+                </div>
+                <div className="absolute -right-5 bottom-6 px-1.5 py-0.5 bg-emerald-400 text-[#080B1D] font-mono text-[8px] font-bold rounded uppercase">
+                  BUS ➔
                 </div>
 
-                {showHint && (
-                  <div className="mb-6 p-4 rounded-2xl bg-[#C6A36B]/10 border border-[#C6A36B]/30 text-xs text-[#F0E8D9] font-light leading-relaxed">
-                    <strong>Engineering Hint:</strong> Current enters tile 0 from the left (West). Trace the pathway through the outer perimeter or center tee junction until wire lines seamlessly connect to tile 8’s right exit.
-                  </div>
-                )}
+                <div className="grid grid-cols-3 gap-2 aspect-square">
+                  {tiles.map((tile, idx) => {
+                    const isActive = activeCircuitPath.includes(tile.id);
+                    const ports = getActivePorts(tile);
 
-                {/* 3x3 Tile Grid */}
-                <div className="relative max-w-sm mx-auto p-4 rounded-3xl bg-black/60 border border-white/15 shadow-inner">
-                  {/* Power Inlet Indicator */}
-                  <div className="absolute -left-6 top-8 px-2 py-1 bg-[#C6A36B] text-[#080D16] font-mono text-[9px] font-bold rounded uppercase">
-                    INLET ➔
-                  </div>
-                  {/* Bus Outlet Indicator */}
-                  <div className="absolute -right-6 bottom-8 px-2 py-1 bg-emerald-500 text-[#080D16] font-mono text-[9px] font-bold rounded uppercase">
-                    BUS ➔
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2.5 aspect-square">
-                    {tiles.map((tile, idx) => {
-                      const isActive = activeCircuitPath.includes(tile.id);
-                      const ports = getActivePorts(tile);
-
-                      return (
-                        <button
-                          key={tile.id}
-                          onClick={() => handleRotateTile(idx)}
-                          className={`relative rounded-2xl border flex items-center justify-center p-2 transition-all cursor-pointer aspect-square ${
-                            isActive
-                              ? 'bg-[#C6A36B]/20 border-[#C6A36B] shadow-[0_0_15px_rgba(198,163,107,0.3)]'
-                              : 'bg-black/50 border-white/10 hover:border-white/30'
-                          }`}
-                        >
-                          <svg className="w-full h-full" viewBox="0 0 100 100">
-                            {/* Base center hub */}
-                            <circle
-                              cx="50"
-                              cy="50"
-                              r="12"
-                              fill={isActive ? '#C6A36B' : '#475569'}
-                            />
-                            {/* North Wire */}
-                            {ports[0] && (
-                              <rect
-                                x="44"
-                                y="0"
-                                width="12"
-                                height="50"
-                                fill={isActive ? '#C6A36B' : '#475569'}
-                              />
-                            )}
-                            {/* East Wire */}
-                            {ports[1] && (
-                              <rect
-                                x="50"
-                                y="44"
-                                width="50"
-                                height="12"
-                                fill={isActive ? '#C6A36B' : '#475569'}
-                              />
-                            )}
-                            {/* South Wire */}
-                            {ports[2] && (
-                              <rect
-                                x="44"
-                                y="50"
-                                width="12"
-                                height="50"
-                                fill={isActive ? '#C6A36B' : '#475569'}
-                              />
-                            )}
-                            {/* West Wire */}
-                            {ports[3] && (
-                              <rect
-                                x="0"
-                                y="44"
-                                width="50"
-                                height="12"
-                                fill={isActive ? '#C6A36B' : '#475569'}
-                              />
-                            )}
-                          </svg>
-
-                          <span className="absolute bottom-1 right-1.5 text-[9px] font-mono text-[#B6C0CC]/40">
-                            ↻
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mt-8 text-center">
-                  {stagePassed ? (
-                    <div className="space-y-3 animate-fadeIn">
-                      <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-200 text-xs font-mono">
-                        ⚡ POWER CONTINUITY ESTABLISHED // MAIN COMPUTER ONLINE
-                      </div>
+                    return (
                       <button
-                        onClick={handleNextStage}
-                        className="px-6 py-3 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold uppercase tracking-wider shadow-lg cursor-pointer"
+                        key={tile.id}
+                        onClick={() => handleRotateTile(idx)}
+                        className={`relative rounded-xl border flex items-center justify-center p-1.5 transition-all cursor-pointer aspect-square ${
+                          isActive
+                            ? 'bg-[#FFC66D]/20 border-[#FFC66D] shadow-[0_0_12px_rgba(255,198,109,0.35)]'
+                            : 'bg-black/50 border-white/10 hover:border-white/30'
+                        }`}
                       >
-                        ADVANCE TO STAGE 2: COMMS LOCK ➔
+                        <svg className="w-full h-full" viewBox="0 0 100 100">
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="12"
+                            fill={isActive ? '#FFC66D' : '#475569'}
+                          />
+                          {ports[0] && (
+                            <rect
+                              x="44"
+                              y="0"
+                              width="12"
+                              height="50"
+                              fill={isActive ? '#FFC66D' : '#475569'}
+                            />
+                          )}
+                          {ports[1] && (
+                            <rect
+                              x="50"
+                              y="44"
+                              width="50"
+                              height="12"
+                              fill={isActive ? '#FFC66D' : '#475569'}
+                            />
+                          )}
+                          {ports[2] && (
+                            <rect
+                              x="44"
+                              y="50"
+                              width="12"
+                              height="50"
+                              fill={isActive ? '#FFC66D' : '#475569'}
+                            />
+                          )}
+                          {ports[3] && (
+                            <rect
+                              x="0"
+                              y="44"
+                              width="50"
+                              height="12"
+                              fill={isActive ? '#FFC66D' : '#475569'}
+                            />
+                          )}
+                        </svg>
+
+                        <span className="absolute bottom-0.5 right-1 text-[8px] font-mono text-[#C8D8EA]/40">
+                          ↻
+                        </span>
                       </button>
-                    </div>
-                  ) : (
-                    <div className="text-xs font-mono text-[#B6C0CC]">
-                      ACTIVE CONDUIT NODES: <span className="text-[#C6A36B] font-bold">{activeCircuitPath.length}/9</span>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
               </div>
-            )}
 
-            {/* ------------------------------------------------------------- */}
-            {/* STAGE 2: ANTENNA ALIGNMENT CHALLENGE */}
-            {/* ------------------------------------------------------------- */}
-            {stage === 2 && (
-              <div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-                  <div>
-                    <span className="font-mono text-[10px] text-[#38bdf8] uppercase tracking-widest font-bold">
-                      STAGE 2 // TELECOMMUNICATIONS
-                    </span>
-                    <h2 className="font-display text-2xl text-[#F0E8D9]">Align the Radio Antenna</h2>
-                    <p className="text-xs text-[#B6C0CC] font-light mt-1">
-                      Adjust <strong>Azimuth</strong> and <strong>Elevation</strong> to calibrate the parabolic high-gain dish onto NASA’s Deep Space Network carrier wave.
-                    </p>
+              <div className="mt-2 text-center shrink-0">
+                {stagePassed ? (
+                  <div className="space-y-1.5 animate-fadeIn">
+                    <div className="p-2 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-200 text-xs font-mono">
+                      ⚡ POWER CONTINUITY ESTABLISHED // MAIN COMPUTER ONLINE
+                    </div>
+                    <button
+                      onClick={handleNextStage}
+                      className="px-5 py-2 rounded-xl bg-[#FFC66D] hover:bg-[#ffe09e] text-[#080B1D] font-sans text-xs font-bold uppercase tracking-wider shadow-lg cursor-pointer"
+                    >
+                      ADVANCE TO STAGE 2: COMMS LOCK ➔
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => setShowHint(!showHint)}
-                    className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-[#38bdf8] cursor-pointer"
-                  >
-                    💡 {showHint ? 'Hide Coordinates' : 'Show Ephemeris Target'}
-                  </button>
-                </div>
-
-                {showHint && (
-                  <div className="mb-6 p-4 rounded-2xl bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-xs text-[#F0E8D9] font-light leading-relaxed">
-                    <strong>DSN Goldstone Ephemeris:</strong> Target Azimuth is approximately <strong>214°</strong>, Elevation is approximately <strong>46°</strong>. Tune dials until signal lock exceeds 95%.
+                ) : (
+                  <div className="text-xs font-mono text-[#C8D8EA]">
+                    ACTIVE CONDUIT NODES: <span className="text-[#FFC66D] font-bold">{activeCircuitPath.length}/9</span>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                  {/* Signal Oscilloscope & Lock Meter */}
-                  <div className="p-6 rounded-3xl bg-black/60 border border-white/10 space-y-4 text-center">
-                    <span className="font-mono text-[10px] uppercase text-[#38bdf8] block tracking-wider font-bold">
-                      CARRIER WAVE OSCILLOSCOPE
+          {/* ------------------------------------------------------------- */}
+          {/* STAGE 2: ANTENNA ALIGNMENT CHALLENGE */}
+          {/* ------------------------------------------------------------- */}
+          {stage === 2 && (
+            <div className="max-w-3xl mx-auto w-full flex flex-col justify-between h-full">
+              <div className="flex items-center justify-between gap-2 shrink-0 mb-2">
+                <div>
+                  <span className="font-mono text-[10px] text-[#58D9FF] uppercase tracking-widest font-bold">
+                    STAGE 2 // TELECOMMUNICATIONS
+                  </span>
+                  <h2 className="font-display text-xl sm:text-2xl text-[#F5F0E8] leading-tight">Align the Radio Antenna</h2>
+                  <p className="text-xs text-[#C8D8EA] font-light mt-0.5">
+                    Adjust <strong>Azimuth</strong> and <strong>Elevation</strong> to calibrate dish lock onto Deep Space Network carrier wave.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowHint(!showHint)}
+                  className="px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-mono text-[#58D9FF] cursor-pointer shrink-0"
+                >
+                  💡 {showHint ? 'Hide' : 'Target'}
+                </button>
+              </div>
+
+              {showHint && (
+                <div className="mb-2 p-2.5 rounded-xl bg-[#58D9FF]/10 border border-[#58D9FF]/30 text-[11px] text-[#F5F0E8] font-light leading-snug shrink-0">
+                  <strong>DSN Ephemeris:</strong> Target Azimuth is ~<strong>214°</strong>, Elevation is ~<strong>46°</strong>. Hold lock &gt;95%.
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center my-auto">
+                {/* Oscilloscope */}
+                <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-2 text-center">
+                  <span className="font-mono text-[9px] uppercase text-[#58D9FF] block tracking-wider font-bold">
+                    CARRIER WAVE OSCILLOSCOPE
+                  </span>
+
+                  <div className="h-20 rounded-xl bg-black border border-emerald-500/30 flex items-center justify-center p-2 relative overflow-hidden">
+                    <svg className="w-full h-full" viewBox="0 0 200 60">
+                      <path
+                        d={`M 0 30 Q 25 ${30 - signalStrength * 0.25}, 50 30 T 100 30 T 150 30 T 200 30`}
+                        fill="none"
+                        stroke={signalStrength > 90 ? '#64E5C0' : signalStrength > 50 ? '#58D9FF' : '#475569'}
+                        strokeWidth="2.5"
+                      />
+                    </svg>
+                    <span className="absolute bottom-1.5 right-2 font-mono text-[9px] text-emerald-400">
+                      {signalStrength}% SYNC
                     </span>
+                  </div>
 
-                    {/* Simulated Waveform Box */}
-                    <div className="h-28 rounded-2xl bg-black border border-emerald-500/30 flex items-center justify-center p-3 relative overflow-hidden">
-                      <svg className="w-full h-full" viewBox="0 0 200 60">
-                        <path
-                          d={`M 0 30 Q 25 ${30 - signalStrength * 0.25}, 50 30 T 100 30 T 150 30 T 200 30`}
-                          fill="none"
-                          stroke={signalStrength > 90 ? '#10b981' : signalStrength > 50 ? '#38bdf8' : '#64748b'}
-                          strokeWidth="2.5"
-                        />
-                      </svg>
-                      <span className="absolute bottom-2 right-3 font-mono text-[10px] text-emerald-400">
-                        {signalStrength}% CARRIER SYNC
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-mono text-[11px] text-[#C8D8EA]">
+                      <span>SIGNAL LOCK:</span>
+                      <span className={`font-bold ${signalStrength > 90 ? 'text-emerald-400' : 'text-[#58D9FF]'}`}>
+                        {signalStrength}%
                       </span>
                     </div>
-
-                    <div className="space-y-1">
-                      <div className="flex justify-between font-mono text-xs text-[#B6C0CC]">
-                        <span>SIGNAL LOCK:</span>
-                        <span className={`font-bold ${signalStrength > 90 ? 'text-emerald-400' : 'text-[#38bdf8]'}`}>
-                          {signalStrength}%
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
-                        <div
-                          className={`h-full transition-all duration-150 ${
-                            signalStrength > 90 ? 'bg-emerald-400' : 'bg-[#38bdf8]'
-                          }`}
-                          style={{ width: `${signalStrength}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dual Sliders / Dials */}
-                  <div className="space-y-5 p-6 rounded-3xl bg-black/40 border border-white/10">
-                    <div>
-                      <div className="flex justify-between font-mono text-xs text-[#F0E8D9] mb-1.5">
-                        <span>AZIMUTH ANGLE (0° – 360°)</span>
-                        <span className="text-[#38bdf8] font-bold">{azimuth}°</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="360"
-                        value={azimuth}
-                        onChange={(e) => setAzimuth(Number(e.target.value))}
-                        disabled={stagePassed}
-                        className="w-full accent-[#38bdf8] cursor-pointer"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex justify-between font-mono text-xs text-[#F0E8D9] mb-1.5">
-                        <span>ELEVATION ANGLE (0° – 90°)</span>
-                        <span className="text-[#38bdf8] font-bold">{elevation}°</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="90"
-                        value={elevation}
-                        onChange={(e) => setElevation(Number(e.target.value))}
-                        disabled={stagePassed}
-                        className="w-full accent-[#38bdf8] cursor-pointer"
+                    <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
+                      <div
+                        className={`h-full transition-all duration-150 ${
+                          signalStrength > 90 ? 'bg-emerald-400' : 'bg-[#58D9FF]'
+                        }`}
+                        style={{ width: `${signalStrength}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-8 text-center">
-                  {stagePassed ? (
-                    <div className="space-y-3 animate-fadeIn">
-                      <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-200 text-xs font-mono">
-                        📡 DSN CARRIER SYNCHRONIZED // DOWNLINK TELEMETRY SECURED
-                      </div>
-                      <button
-                        onClick={handleNextStage}
-                        className="px-6 py-3 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold uppercase tracking-wider shadow-lg cursor-pointer"
-                      >
-                        ADVANCE TO STAGE 3: SOLAR SWEEP ➔
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-xs font-mono text-[#B6C0CC]">
-                      LOCK HOLD TIME: <span className="text-[#38bdf8] font-bold">{Math.min(100, Math.round((lockedTime / 15) * 100))}%</span> (Hold at 95%+ to complete)
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ------------------------------------------------------------- */}
-            {/* STAGE 3: SOLAR PANEL DUST SWEEP */}
-            {/* ------------------------------------------------------------- */}
-            {stage === 3 && (
-              <div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                {/* Sliders */}
+                <div className="space-y-4 p-4 rounded-2xl bg-black/40 border border-white/10">
                   <div>
-                    <span className="font-mono text-[10px] text-[#f59e0b] uppercase tracking-widest font-bold">
-                      STAGE 3 // SURFACE OPERATIONS
-                    </span>
-                    <h2 className="font-display text-2xl text-[#F0E8D9]">Sweep the Solar Array</h2>
-                    <p className="text-xs text-[#B6C0CC] font-light mt-1">
-                      A global Martian dust storm covered the photovoltaic panels in red iron oxide. <strong>Click, drag, or swipe</strong> across the canvas to clear the dust and restore solar power.
-                    </p>
-                  </div>
-
-                  <div className="bg-black/40 px-4 py-2 rounded-xl border border-white/10 text-right">
-                    <span className="text-[10px] font-mono text-[#B6C0CC] uppercase block">CLEARED AREA</span>
-                    <span className="font-display text-xl text-[#C6A36B] leading-none font-bold">
-                      {cleanPercentage}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Dust Canvas */}
-                <div className="max-w-md mx-auto rounded-3xl overflow-hidden border border-white/20 shadow-2xl bg-black relative touch-none select-none">
-                  <canvas
-                    ref={dustCanvasRef}
-                    width={400}
-                    height={280}
-                    onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
-                    className="w-full h-auto block cursor-crosshair"
-                  />
-                  <div className="absolute top-3 left-3 bg-black/60 px-2.5 py-1 rounded-md text-[10px] font-mono text-[#B6C0CC] pointer-events-none">
-                    🧹 Drag across to wipe away dust
-                  </div>
-                </div>
-
-                <div className="mt-8 text-center">
-                  {stagePassed ? (
-                    <div className="space-y-3 animate-fadeIn">
-                      <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-200 text-xs font-mono">
-                        ☀️ SOLAR PANELS UNCOVERED // POWER CHARGED TO 100%
-                      </div>
-                      <button
-                        onClick={handleNextStage}
-                        className="px-6 py-3 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold uppercase tracking-wider shadow-lg cursor-pointer"
-                      >
-                        CONCLUDE MISSION REPAIR ➔
-                      </button>
+                    <div className="flex justify-between font-mono text-xs text-[#F5F0E8] mb-1">
+                      <span>AZIMUTH (0° – 360°)</span>
+                      <span className="text-[#58D9FF] font-bold">{azimuth}°</span>
                     </div>
-                  ) : (
-                    <div className="text-xs font-mono text-[#B6C0CC]">
-                      RESTORATION THRESHOLD: <span className="text-[#C6A36B] font-bold">85% Required</span> ({cleanPercentage}% Cleared)
+                    <input
+                      type="range"
+                      min="0"
+                      max="360"
+                      value={azimuth}
+                      onChange={(e) => setAzimuth(Number(e.target.value))}
+                      disabled={stagePassed}
+                      className="w-full accent-[#58D9FF] cursor-pointer"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between font-mono text-xs text-[#F5F0E8] mb-1">
+                      <span>ELEVATION (0° – 90°)</span>
+                      <span className="text-[#58D9FF] font-bold">{elevation}°</span>
                     </div>
-                  )}
+                    <input
+                      type="range"
+                      min="0"
+                      max="90"
+                      value={elevation}
+                      onChange={(e) => setElevation(Number(e.target.value))}
+                      disabled={stagePassed}
+                      className="w-full accent-[#58D9FF] cursor-pointer"
+                    />
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+
+              <div className="mt-2 text-center shrink-0">
+                {stagePassed ? (
+                  <div className="space-y-1.5 animate-fadeIn">
+                    <div className="p-2 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-200 text-xs font-mono">
+                      📡 DSN CARRIER SYNCHRONIZED // DOWNLINK TELEMETRY SECURED
+                    </div>
+                    <button
+                      onClick={handleNextStage}
+                      className="px-5 py-2 rounded-xl bg-[#FFC66D] hover:bg-[#ffe09e] text-[#080B1D] font-sans text-xs font-bold uppercase tracking-wider shadow-lg cursor-pointer"
+                    >
+                      ADVANCE TO STAGE 3: SOLAR SWEEP ➔
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-xs font-mono text-[#C8D8EA]">
+                    LOCK HOLD TIME: <span className="text-[#58D9FF] font-bold">{Math.min(100, Math.round((lockedTime / 15) * 100))}%</span> (Hold at 95%+ to complete)
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ------------------------------------------------------------- */}
+          {/* STAGE 3: SOLAR PANEL DUST SWEEP */}
+          {/* ------------------------------------------------------------- */}
+          {stage === 3 && (
+            <div className="max-w-2xl mx-auto w-full flex flex-col justify-between h-full">
+              <div className="flex items-center justify-between gap-2 shrink-0 mb-2">
+                <div>
+                  <span className="font-mono text-[10px] text-[#FF8D7B] uppercase tracking-widest font-bold">
+                    STAGE 3 // SURFACE OPERATIONS
+                  </span>
+                  <h2 className="font-display text-xl sm:text-2xl text-[#F5F0E8] leading-tight">Sweep the Solar Array</h2>
+                  <p className="text-xs text-[#C8D8EA] font-light mt-0.5">
+                    Drag across the canvas to clear iron oxide dust and restore photovoltaic current.
+                  </p>
+                </div>
+
+                <div className="bg-black/50 px-3 py-1 rounded-xl border border-white/10 text-right shrink-0">
+                  <span className="text-[9px] font-mono text-[#C8D8EA] uppercase block">CLEARED</span>
+                  <span className="font-display text-lg text-[#FFC66D] leading-none font-bold">
+                    {cleanPercentage}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Dust Canvas */}
+              <div className="max-w-[340px] sm:max-w-[380px] mx-auto rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black relative touch-none select-none my-auto">
+                <canvas
+                  ref={dustCanvasRef}
+                  width={400}
+                  height={260}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  className="w-full h-auto block cursor-crosshair"
+                />
+                <div className="absolute top-2 left-2 bg-black/70 px-2 py-0.5 rounded text-[9px] font-mono text-[#C8D8EA] pointer-events-none">
+                  🧹 Drag across to wipe away dust
+                </div>
+              </div>
+
+              <div className="mt-2 text-center shrink-0">
+                {stagePassed ? (
+                  <div className="space-y-1.5 animate-fadeIn">
+                    <div className="p-2 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-200 text-xs font-mono">
+                      ☀️ SOLAR PANELS UNCOVERED // POWER CHARGED TO 100%
+                    </div>
+                    <button
+                      onClick={handleNextStage}
+                      className="px-5 py-2 rounded-xl bg-[#FFC66D] hover:bg-[#ffe09e] text-[#080B1D] font-sans text-xs font-bold uppercase tracking-wider shadow-lg cursor-pointer"
+                    >
+                      CONCLUDE MISSION REPAIR ➔
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-xs font-mono text-[#C8D8EA]">
+                    RESTORATION THRESHOLD: <span className="text-[#FFC66D] font-bold">85% Required</span> ({cleanPercentage}% Cleared)
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         /* Final Victory Screen */
-        <div className="p-10 sm:p-14 rounded-3xl bg-[#101A29]/95 border border-emerald-500/50 shadow-2xl backdrop-blur-xl text-center space-y-8 animate-fadeIn">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-4xl mx-auto shadow-xl">
+        <div className="flex-1 min-h-0 flex flex-col justify-center items-center p-6 sm:p-10 rounded-2xl bg-[#111A35]/95 border border-emerald-500/50 shadow-2xl backdrop-blur-xl text-center space-y-4 my-auto animate-fadeIn">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-3xl mx-auto shadow-xl">
             🛠️
           </div>
 
           <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-semibold block mb-2">
+            <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-semibold block mb-1">
               ALL THREE ENGINEERING REPAIRS VERIFIED
             </span>
-            <h2 className="font-display text-3xl sm:text-4xl text-[#F0E8D9]">
+            <h2 className="font-display text-2xl sm:text-3xl text-[#F5F0E8]">
               Spacecraft Fully Restored
             </h2>
-            <p className="text-sm text-[#B6C0CC] max-w-lg mx-auto font-light leading-relaxed mt-3">
+            <p className="text-xs sm:text-sm text-[#C8D8EA] max-w-md mx-auto font-light leading-relaxed mt-2">
               Congratulations! You successfully re-routed the circuit bus, locked telemetry onto the Deep Space Network carrier wave, and wiped clean the photovoltaic array. The explorer is once again transmitting active science data back to Earth.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-white/10">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-3 border-t border-white/10">
             <button
               onClick={handleRestartMission}
-              className="px-6 py-3 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold tracking-widest uppercase transition-all shadow-lg cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[#FFC66D] hover:bg-[#ffe09e] text-[#080B1D] font-sans text-xs font-bold tracking-widest uppercase transition-all shadow-lg cursor-pointer"
             >
               PLAY REPAIR CHALLENGE AGAIN ➔
             </button>
             <button
               onClick={onBackToHub}
-              className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/10 transition-all font-sans text-xs font-medium uppercase tracking-wider cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F5F0E8] border border-white/10 transition-all font-sans text-xs font-medium uppercase tracking-wider cursor-pointer"
             >
               RETURN TO ARCADE HUB
             </button>

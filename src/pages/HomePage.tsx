@@ -137,13 +137,13 @@ export const HomePage: React.FC = () => {
       {/* ================= 2. CHOOSE A DESTINATION (3D DIRECT PORTALS) ================= */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-white/10">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-[11px] font-mono uppercase tracking-[0.25em] text-[#C6A36B] block mb-2 font-semibold">
+          <span className="text-[11px] font-mono uppercase tracking-[0.25em] text-[#FFC66D] block mb-2 font-semibold">
             SELECT A DESTINATION IN 3D
           </span>
-          <h2 className="font-display text-3xl sm:text-4xl text-[#F0E8D9] font-medium">
+          <h2 className="font-display text-3xl sm:text-4xl text-[#F5F0E8] font-medium">
             Where Would You Like to Go?
           </h2>
-          <p className="text-xs sm:text-sm text-[#B6C0CC] mt-2 font-light">
+          <p className="text-xs sm:text-sm text-[#C8D8EA] mt-2 font-light">
             Step directly onto interactive 3D planetary globes to discover historical landing sites and rover trails.
           </p>
         </div>
@@ -156,6 +156,8 @@ export const HomePage: React.FC = () => {
               icon: '🌕',
               desc: 'Tranquility Base, Ocean of Storms, and Apollo lunar monuments.',
               tag: '12 Historical Landmarks',
+              accent: '#C8D8EA',
+              border: 'hover:border-[#C8D8EA]/60 hover:shadow-[0_0_25px_rgba(200,216,234,0.15)]',
             },
             {
               planet: 'mars',
@@ -163,13 +165,17 @@ export const HomePage: React.FC = () => {
               icon: '🔴',
               desc: 'Meridiani Planum, Gale Crater, and 15 years of rover discoveries.',
               tag: '10 Surface Explorers',
+              accent: '#FF8D7B',
+              border: 'hover:border-[#FF8D7B]/60 hover:shadow-[0_0_25px_rgba(255,141,123,0.15)]',
             },
             {
-              planet: 'venus',
-              name: 'Venus',
-              icon: '🟡',
-              desc: 'Volcanic plains beneath crushing sulfuric acid atmospheres.',
-              tag: 'Venera Landing Sites',
+              planet: 'saturn',
+              name: 'Saturn',
+              icon: '🪐',
+              desc: 'Majestic rings, Enceladus geysers, and Cassini’s Grand Finale plunge.',
+              tag: 'Cassini & Rings',
+              accent: '#FFC66D',
+              border: 'hover:border-[#FFC66D]/60 hover:shadow-[0_0_25px_rgba(255,198,109,0.15)]',
             },
             {
               planet: 'deep-space',
@@ -177,6 +183,8 @@ export const HomePage: React.FC = () => {
               icon: '🌌',
               desc: 'Voyagers escaping the solar wind into the true interstellar ocean.',
               tag: 'Interstellar Pioneers',
+              accent: '#58D9FF',
+              border: 'hover:border-[#58D9FF]/60 hover:shadow-[0_0_25px_rgba(88,217,255,0.15)]',
             },
           ].map((dest) => (
             <div
@@ -185,19 +193,19 @@ export const HomePage: React.FC = () => {
                 playWhooshSound();
                 navigate(`/universe?planet=${dest.planet}`);
               }}
-              className="p-6 rounded-3xl bg-[#101A29]/75 border border-white/10 hover:border-[#C6A36B] cursor-pointer transition-all duration-300 flex flex-col justify-between group hover:shadow-2xl backdrop-blur-sm"
+              className={`p-6 rounded-3xl bg-[#111A35]/80 border border-white/10 ${dest.border} cursor-pointer transition-all duration-300 flex flex-col justify-between group backdrop-blur-sm`}
             >
               <div>
                 <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{dest.icon}</div>
-                <h3 className="font-display text-2xl text-[#F0E8D9] group-hover:text-[#C6A36B] transition-colors mb-2">
+                <h3 className="font-display text-2xl text-[#F5F0E8] group-hover:text-white transition-colors mb-2">
                   {dest.name}
                 </h3>
-                <p className="text-xs text-[#B6C0CC] leading-relaxed mb-4 font-light">
+                <p className="text-xs text-[#C8D8EA] leading-relaxed mb-4 font-light">
                   {dest.desc}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-[#C6A36B]">
+              <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] font-mono" style={{ color: dest.accent }}>
                 <span>{dest.tag}</span>
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </div>

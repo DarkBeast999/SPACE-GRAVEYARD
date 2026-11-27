@@ -19,14 +19,14 @@ export const KnowledgeCentrePage: React.FC = () => {
     <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen">
       {/* Top Breadcrumb & Header */}
       <div className="mb-10 pb-8 border-b border-white/10">
-        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#C6A36B] mb-2 font-semibold">
+        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#FFC66D] mb-2 font-semibold">
           <span>✦</span>
           <span>COMPREHENSIVE SPACE KNOWLEDGE CENTRE // FOR EDUCATORS &amp; CURIOUS MINDS</span>
         </div>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-[#F0E8D9] font-normal tracking-tight">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-[#F5F0E8] font-normal tracking-tight">
           How Space Exploration Works
         </h1>
-        <p className="text-sm sm:text-base text-[#B6C0CC] mt-3 font-light max-w-3xl leading-relaxed">
+        <p className="text-sm sm:text-base text-[#C8D8EA] mt-3 font-light max-w-3xl leading-relaxed">
           A structured educational guide exploring how robotic spacecraft survive the vacuum of space, how rovers navigate off-world terrain, why communication takes hours, and what humanity has discovered across the Solar System.
         </p>
       </div>
@@ -40,10 +40,10 @@ export const KnowledgeCentrePage: React.FC = () => {
               playSignalPing(700);
               setActiveCategory(cat.id);
             }}
-            className={`px-4 py-2.5 rounded-xl text-xs font-sans font-medium transition-all flex items-center gap-2 shadow-sm ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-sans font-medium transition-all flex items-center gap-2 shadow-sm cursor-pointer ${
               activeCategory === cat.id
-                ? 'bg-[#C6A36B] text-[#080D16] font-bold shadow-md'
-                : 'bg-[#101A29] text-[#B6C0CC] hover:text-[#F0E8D9] border border-white/10'
+                ? 'bg-[#FFC66D] text-[#080B1D] font-bold shadow-md'
+                : 'bg-[#111A35] text-[#C8D8EA] hover:text-[#F5F0E8] border border-white/10'
             }`}
           >
             <span className="text-sm">{cat.icon}</span>
@@ -420,13 +420,13 @@ export const KnowledgeCentrePage: React.FC = () => {
 
       {/* Footer Navigation Back to 3D Universe */}
       <div className="mt-14 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono">
-        <Link to="/explore" className="text-[#B6C0CC] hover:text-white transition-colors">
+        <Link to="/explore" className="text-[#C8D8EA] hover:text-white transition-colors">
           ← VIEW ALL 28 MONUMENTS
         </Link>
         <Link
           to="/universe"
           onClick={() => playWhooshSound()}
-          className="text-[#C6A36B] hover:underline flex items-center gap-1 font-semibold"
+          className="text-[#FFC66D] hover:underline flex items-center gap-1 font-semibold"
         >
           <span>ENTER THE 3D UNIVERSE</span>
           <span>→</span>

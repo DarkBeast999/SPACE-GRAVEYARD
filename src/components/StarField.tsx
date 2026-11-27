@@ -8,6 +8,7 @@ interface Star {
   alpha: number;
   speed: number;
   phase: number;
+  color: 'white' | 'cyan' | 'amber' | 'violet';
 }
 
 interface ShootingStar {
@@ -57,64 +58,92 @@ export const StarField: React.FC = () => {
       const offCtx = offscreen.getContext('2d');
       if (!offCtx) return;
 
-      // Deep space background gradient
+      // Luminous cosmic observatory background gradient
       const bgGradient = offCtx.createRadialGradient(
-        width * 0.35,
-        height * 0.4,
-        80,
+        width * 0.38,
+        height * 0.35,
+        100,
         width * 0.5,
         height * 0.5,
-        Math.max(width, height)
+        Math.max(width, height) * 0.95
       );
-      bgGradient.addColorStop(0, '#101A29');
-      bgGradient.addColorStop(0.55, '#0C1320');
-      bgGradient.addColorStop(1, '#080D16');
+      bgGradient.addColorStop(0, '#111A35');   // Deep indigo core
+      bgGradient.addColorStop(0.48, '#0C1328'); // Cosmic navy transition
+      bgGradient.addColorStop(1, '#080B1D');    // Cosmic ink void
       offCtx.fillStyle = bgGradient;
       offCtx.fillRect(0, 0, width, height);
 
-      // Draw faint, elegant nebula clouds
-      const nebula = offCtx.createRadialGradient(
+      // Nebula Cloud 1: Upper-Right Nebula Violet
+      const nebulaViolet = offCtx.createRadialGradient(
         width * 0.8,
-        height * 0.25,
-        30,
+        height * 0.22,
+        40,
         width * 0.8,
-        height * 0.25,
-        Math.min(width, height) * 0.6
+        height * 0.22,
+        Math.min(width, height) * 0.65
       );
-      nebula.addColorStop(0, 'rgba(168, 150, 197, 0.05)');
-      nebula.addColorStop(0.5, 'rgba(120, 156, 184, 0.02)');
-      nebula.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      offCtx.fillStyle = nebula;
+      nebulaViolet.addColorStop(0, 'rgba(161, 139, 255, 0.08)');
+      nebulaViolet.addColorStop(0.5, 'rgba(88, 217, 255, 0.03)');
+      nebulaViolet.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      offCtx.fillStyle = nebulaViolet;
       offCtx.fillRect(0, 0, width, height);
 
-      // Create static stars with warm, restrained values
-      const starCount = Math.min(200, Math.floor((width * height) / 6000));
+      // Nebula Cloud 2: Lower-Left Electric Cyan & Mint
+      const nebulaCyan = offCtx.createRadialGradient(
+        width * 0.2,
+        height * 0.78,
+        50,
+        width * 0.2,
+        height * 0.78,
+        Math.min(width, height) * 0.55
+      );
+      nebulaCyan.addColorStop(0, 'rgba(88, 217, 255, 0.07)');
+      nebulaCyan.addColorStop(0.5, 'rgba(100, 229, 192, 0.025)');
+      nebulaCyan.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      offCtx.fillStyle = nebulaCyan;
+      offCtx.fillRect(0, 0, width, height);
+
+      // Create static stars with rich, restrained celestial tints
+      const starColors: ('white' | 'cyan' | 'amber' | 'violet')[] = [
+        'white', 'white', 'white', 'cyan', 'amber', 'violet'
+      ];
+      const starCount = Math.min(220, Math.floor((width * height) / 5500));
       starsRef.current = Array.from({ length: starCount }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
-        size: Math.random() * 1.3 + 0.3,
-        alpha: Math.random() * 0.45 + 0.15,
+        size: Math.random() * 1.35 + 0.35,
+        alpha: Math.random() * 0.5 + 0.18,
         speed: Math.random() * 0.012 + 0.003,
         phase: Math.random() * Math.PI * 2,
+        color: starColors[Math.floor(Math.random() * starColors.length)],
       }));
     };
 
     generateCache();
+
+    const getStarRgba = (color: 'white' | 'cyan' | 'amber' | 'violet', alpha: number) => {
+      switch (color) {
+        case 'cyan': return `rgba(88, 217, 255, ${alpha})`;
+        case 'amber': return `rgba(255, 198, 109, ${alpha})`;
+        case 'violet': return `rgba(161, 139, 255, ${alpha})`;
+        default: return `rgba(245, 240, 232, ${alpha})`;
+      }
+    };
 
     const drawStatic = () => {
       if (!ctx || !bgCanvasRef.current) return;
       ctx.drawImage(bgCanvasRef.current, 0, 0);
 
       starsRef.current.forEach((star) => {
-        ctx.fillStyle = `rgba(240, 232, 217, ${star.alpha})`;
+        ctx.fillStyle = getStarRgba(star.color, star.alpha);
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
 
-        if (star.size > 1.2 && star.phase > 4) {
-          ctx.fillStyle = `rgba(198, 163, 107, ${star.alpha * 0.7})`;
+        if (star.size > 1.25 && star.phase > 4) {
+          ctx.fillStyle = getStarRgba(star.color, star.alpha * 0.4);
           ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * 1.1, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, star.size * 1.6, 0, Math.PI * 2);
           ctx.fill();
         }
       });
@@ -169,21 +198,21 @@ export const StarField: React.FC = () => {
         ctx.drawImage(bgCanvasRef.current, 0, 0);
       }
 
-      // Draw warm twinkling stars
+      // Draw warm twinkling stars with celestial palette
       t += 0.024;
       starsRef.current.forEach((star) => {
         const twinkle = Math.sin(t * star.speed * 60 + star.phase);
-        const currentAlpha = Math.max(0.08, Math.min(0.65, star.alpha + twinkle * 0.18));
+        const currentAlpha = Math.max(0.08, Math.min(0.7, star.alpha + twinkle * 0.2));
 
-        ctx.fillStyle = `rgba(240, 232, 217, ${currentAlpha})`;
+        ctx.fillStyle = getStarRgba(star.color, currentAlpha);
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
 
-        if (star.size > 1.2 && star.phase > 4) {
-          ctx.fillStyle = `rgba(198, 163, 107, ${currentAlpha * 0.7})`;
+        if (star.size > 1.25 && star.phase > 4) {
+          ctx.fillStyle = getStarRgba(star.color, currentAlpha * 0.4);
           ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * 1.1, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, star.size * 1.6, 0, Math.PI * 2);
           ctx.fill();
         }
       });
@@ -195,17 +224,18 @@ export const StarField: React.FC = () => {
         ss.x += Math.cos(ss.angle) * ss.speed;
         ss.y += Math.sin(ss.angle) * ss.speed;
         ss.life += 1;
-        ss.opacity = Math.max(0, 0.6 - ss.life / 50);
+        ss.opacity = Math.max(0, 0.65 - ss.life / 50);
 
         const tailX = ss.x - Math.cos(ss.angle) * ss.length;
         const tailY = ss.y - Math.sin(ss.angle) * ss.length;
 
         const grad = ctx.createLinearGradient(tailX, tailY, ss.x, ss.y);
-        grad.addColorStop(0, 'rgba(198, 163, 107, 0)');
-        grad.addColorStop(1, `rgba(240, 232, 217, ${ss.opacity * 0.6})`);
+        grad.addColorStop(0, 'rgba(88, 217, 255, 0)');
+        grad.addColorStop(0.7, `rgba(88, 217, 255, ${ss.opacity * 0.4})`);
+        grad.addColorStop(1, `rgba(245, 240, 232, ${ss.opacity * 0.8})`);
 
         ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
         ctx.moveTo(tailX, tailY);
         ctx.lineTo(ss.x, ss.y);

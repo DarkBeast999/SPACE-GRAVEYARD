@@ -95,10 +95,10 @@ export const ExplorePage: React.FC = () => {
                 setSelectedDest(cat.id as any);
                 playSignalPing(600);
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-sans tracking-wide transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-sans tracking-wide transition-all cursor-pointer ${
                 selectedDest === cat.id
-                  ? 'bg-[#C6A36B] text-[#080D16] font-semibold shadow-md'
-                  : 'bg-black/20 text-[#B6C0CC] hover:text-white border border-white/5'
+                  ? 'bg-[#FFC66D] text-[#080B1D] font-semibold shadow-md'
+                  : 'bg-black/30 text-[#C8D8EA] hover:text-white border border-white/10'
               }`}
             >
               {cat.label}
@@ -143,13 +143,23 @@ export const ExplorePage: React.FC = () => {
           const isVisited = visitedArtifacts.includes(artifact.id);
           const statusInfo = getHumanStatus(artifact.status, artifact.destination);
 
+          const isSaturn = artifact.id === 'cassini' || artifact.location.toLowerCase().includes('saturn');
+          const destAccent =
+            artifact.destination === 'mars'
+              ? { border: 'hover:border-[#FF8D7B]/60', accent: '#FF8D7B', tagBg: 'bg-[#FF8D7B]/15 text-[#FF8D7B] border-[#FF8D7B]/40' }
+              : artifact.destination === 'moon'
+              ? { border: 'hover:border-[#C8D8EA]/60', accent: '#C8D8EA', tagBg: 'bg-[#C8D8EA]/15 text-[#C8D8EA] border-[#C8D8EA]/40' }
+              : isSaturn
+              ? { border: 'hover:border-[#FFC66D]/60', accent: '#FFC66D', tagBg: 'bg-[#FFC66D]/15 text-[#FFC66D] border-[#FFC66D]/40' }
+              : { border: 'hover:border-[#58D9FF]/60', accent: '#58D9FF', tagBg: 'bg-[#58D9FF]/15 text-[#58D9FF] border-[#58D9FF]/40' };
+
           return (
             <motion.div
               key={artifact.id}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="group relative rounded-3xl bg-[#101A29]/75 border border-[#F0E8D9]/10 hover:border-[#C6A36B]/50 p-6 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-sm"
+              className={`group relative rounded-3xl bg-[#111A35]/80 border border-white/10 ${destAccent.border} p-6 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-sm`}
             >
               <div>
                 {/* Header Badge Row */}
@@ -160,28 +170,28 @@ export const ExplorePage: React.FC = () => {
                     ● {statusInfo.label}
                   </span>
 
-                  <span className="mono text-[10px] text-[#B6C0CC]/75 flex items-center gap-1.5">
+                  <span className="mono text-[10px] text-[#C8D8EA]/75 flex items-center gap-1.5">
                     {isVisited ? '✓ EXPLORED' : '○ UNVIEWED'}
                   </span>
                 </div>
 
                 {/* Name & Destination */}
-                <h3 className="font-display text-2xl text-[#F0E8D9] group-hover:text-white transition-colors mb-1 font-medium leading-snug">
+                <h3 className="font-display text-2xl text-[#F5F0E8] group-hover:text-white transition-colors mb-1 font-medium leading-snug">
                   {artifact.name}
                 </h3>
-                <div className="text-xs text-[#C6A36B] font-mono mb-4 flex items-center gap-1.5">
+                <div className="text-xs font-mono mb-4 flex items-center gap-1.5" style={{ color: destAccent.accent }}>
                   <span>📍</span>
                   <span>{artifact.location}</span>
                 </div>
 
                 {/* Engaging 1-Minute Narrative Excerpt */}
-                <p className="font-serif italic text-sm text-[#F0E8D9]/90 leading-relaxed mb-6 border-l-2 border-[#C6A36B]/40 pl-3.5 py-1 line-clamp-3 font-light">
+                <p className="font-serif italic text-sm text-[#F5F0E8]/90 leading-relaxed mb-6 border-l-2 pl-3.5 py-1 line-clamp-3 font-light" style={{ borderLeftColor: destAccent.accent }}>
                   "{artifact.narrativeIntro}"
                 </p>
 
                 {/* Fascinating Fact Box */}
-                <div className="bg-black/30 rounded-xl p-3 border border-white/5 mb-6 text-xs text-[#B6C0CC] leading-relaxed">
-                  <span className="text-[#C6A36B] font-semibold block text-[10px] mono uppercase mb-0.5">
+                <div className="bg-black/40 rounded-xl p-3 border border-white/5 mb-6 text-xs text-[#C8D8EA] leading-relaxed">
+                  <span className="font-semibold block text-[10px] mono uppercase mb-0.5" style={{ color: destAccent.accent }}>
                     💡 DID YOU KNOW?
                   </span>
                   {artifact.funFact}
@@ -189,11 +199,11 @@ export const ExplorePage: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-4 border-t border-[#F0E8D9]/10 flex flex-col gap-2">
+              <div className="pt-4 border-t border-white/10 flex flex-col gap-2">
                 <Link
                   to={`/ghost/${artifact.id}`}
                   onClick={() => playSignalPing(800)}
-                  className="w-full py-2.5 rounded-xl text-center font-sans text-xs tracking-[0.2em] uppercase font-semibold bg-[#F0E8D9]/5 group-hover:bg-[#C6A36B] group-hover:text-[#080D16] border border-[#F0E8D9]/15 group-hover:border-transparent transition-all block text-[#F0E8D9] shadow-sm"
+                  className="w-full py-2.5 rounded-xl text-center font-sans text-xs tracking-[0.2em] uppercase font-semibold bg-white/5 group-hover:bg-[#FFC66D] group-hover:text-[#080B1D] border border-white/15 group-hover:border-transparent transition-all block text-[#F5F0E8] shadow-sm cursor-pointer"
                 >
                   DISCOVER ITS STORY →
                 </Link>
@@ -205,7 +215,7 @@ export const ExplorePage: React.FC = () => {
                       playWhooshSound();
                       navigate(`/universe?planet=${artifact.destination}&target=${artifact.id}`);
                     }}
-                    className="w-full py-1.5 text-center font-mono text-[11px] text-[#B6C0CC]/70 hover:text-[#C6A36B] transition-colors flex items-center justify-center gap-1"
+                    className="w-full py-1.5 text-center font-mono text-[11px] text-[#C8D8EA]/70 hover:text-[#58D9FF] transition-colors flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <span>🌐 Find in 3D Universe</span>
                     <span>↗</span>

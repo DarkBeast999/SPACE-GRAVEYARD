@@ -27,7 +27,7 @@ export const Navigation: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#080D16]/90 backdrop-blur-md border-b border-[#F0E8D9]/10 px-4 sm:px-8 py-3.5 transition-all">
+    <header className="sticky top-0 z-40 w-full bg-[#080B1D]/90 backdrop-blur-md border-b border-[#58D9FF]/15 px-4 sm:px-8 py-3.5 transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Brand */}
         <Link
@@ -35,14 +35,14 @@ export const Navigation: React.FC = () => {
           onClick={() => playSignalPing(900)}
           className="flex items-center gap-3 group text-decoration-none"
         >
-          <div className="w-9 h-9 rounded-full bg-[#101A29] border border-[#C6A36B]/40 flex items-center justify-center group-hover:border-[#C6A36B] transition-colors shadow-[0_0_15px_rgba(198,163,107,0.15)]">
-            <span className="text-sm text-[#C6A36B]">✦</span>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#111A35] to-[#1B284A] border border-[#58D9FF]/40 flex items-center justify-center group-hover:border-[#58D9FF] transition-all shadow-[0_0_15px_rgba(88,217,255,0.2)]">
+            <span className="text-sm text-[#58D9FF] group-hover:scale-110 transition-transform">✦</span>
           </div>
           <div className="flex flex-col">
-            <span className="font-display text-lg tracking-[0.2em] font-medium text-[#F0E8D9] group-hover:text-white transition-colors">
+            <span className="font-display text-lg tracking-[0.2em] font-medium text-[#F5F0E8] group-hover:text-white transition-colors">
               SPACE GRAVEYARD
             </span>
-            <span className="text-[10px] italic font-serif text-[#C6A36B] tracking-wider">
+            <span className="text-[10px] italic font-serif text-[#FFC66D] tracking-wider">
               They Never Came Home.
             </span>
           </div>
@@ -57,23 +57,23 @@ export const Navigation: React.FC = () => {
               onClick={() => playSignalPing(750)}
               className={({ isActive }) => {
                 if (link.isPrimary) {
-                  return `relative px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.24em] transition-all duration-300 flex items-center gap-2 ${
+                  return `relative px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.22em] transition-all duration-300 flex items-center gap-2 ${
                     isActive
-                      ? 'bg-[#C6A36B] text-[#080D16] shadow-[0_0_20px_rgba(198,163,107,0.4)]'
-                      : 'bg-[#C6A36B]/15 text-[#F0E8D9] border border-[#C6A36B]/50 hover:bg-[#C6A36B]/25 hover:border-[#C6A36B] shadow-[0_0_12px_rgba(198,163,107,0.2)]'
+                      ? 'bg-gradient-to-r from-[#58D9FF] to-[#64E5C0] text-[#080B1D] font-bold shadow-[0_0_20px_rgba(88,217,255,0.4)]'
+                      : 'bg-[#58D9FF]/15 text-[#F5F0E8] border border-[#58D9FF]/40 hover:bg-[#58D9FF]/25 hover:border-[#58D9FF] shadow-[0_0_12px_rgba(88,217,255,0.2)]'
                   }`;
                 }
-                return `text-[11px] font-medium tracking-[0.22em] transition-all duration-200 py-1.5 border-b ${
+                return `text-[11px] font-medium tracking-[0.2em] transition-all duration-200 py-1.5 border-b-2 ${
                   isActive
-                    ? 'text-[#F0E8D9] border-[#C6A36B]'
-                    : 'text-[#B6C0CC]/75 border-transparent hover:text-[#F0E8D9] hover:border-[#F0E8D9]/25'
+                    ? 'text-[#58D9FF] border-[#58D9FF] font-semibold shadow-[0_4px_12px_rgba(88,217,255,0.2)]'
+                    : 'text-[#C8D8EA]/75 border-transparent hover:text-white hover:border-[#58D9FF]/40'
                 }`;
               }}
             >
               {link.isPrimary && (
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C6A36B] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F0E8D9]"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#58D9FF] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#64E5C0]"></span>
                 </span>
               )}
               <span>{link.label}</span>
@@ -88,8 +88,8 @@ export const Navigation: React.FC = () => {
             onClick={handleAudioToggle}
             className={`px-3 py-1.5 rounded-full text-[10px] mono tracking-wider flex items-center gap-1.5 border transition-all ${
               soundEnabled
-                ? 'border-[#C6A36B] text-[#080D16] bg-[#C6A36B] font-semibold shadow-[0_0_12px_rgba(198,163,107,0.3)]'
-                : 'border-white/10 text-[#B6C0CC]/80 hover:border-white/30 hover:text-white bg-black/20'
+                ? 'border-[#64E5C0] text-[#080B1D] bg-[#64E5C0] font-semibold shadow-[0_0_12px_rgba(100,229,192,0.35)]'
+                : 'border-white/10 text-[#C8D8EA]/80 hover:border-white/30 hover:text-white bg-black/30'
             }`}
             title={soundEnabled ? 'Click to MUTE all sound' : 'Click to UNMUTE soundscape'}
             aria-label="Toggle Global Sound"
@@ -104,17 +104,17 @@ export const Navigation: React.FC = () => {
           <Link
             to="/explore"
             onClick={() => playSignalPing(600)}
-            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#101A29]/90 border border-[#F0E8D9]/15 hover:border-[#C6A36B]/50 transition-all text-[11px] mono text-[#B6C0CC]"
+            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111A35]/90 border border-white/15 hover:border-[#58D9FF]/50 transition-all text-[11px] mono text-[#C8D8EA]"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C6A36B]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FFC66D] shadow-[0_0_6px_#FFC66D]" />
             <span>COLLECTION:</span>
-            <span className="text-[#F0E8D9] font-semibold">{visitedArtifacts.length} / 28</span>
+            <span className="text-[#F5F0E8] font-semibold">{visitedArtifacts.length} / 28</span>
           </Link>
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg border border-white/10 text-[#F0E8D9]"
+            className="lg:hidden p-2 rounded-lg border border-white/10 text-[#F5F0E8]"
             aria-label="Toggle Navigation Menu"
           >
             {mobileMenuOpen ? '✕' : '☰'}

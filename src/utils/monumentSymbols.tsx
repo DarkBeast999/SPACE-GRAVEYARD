@@ -720,6 +720,7 @@ export function createMonumentSymbol(
 
   // Root data preserved for interactions
   group.userData = {
+    isMarkerRoot: true,
     id: item.id,
     name: item.name,
     monumentType: type,
@@ -742,7 +743,7 @@ export function createMonumentSymbol(
   sprite.name = 'monumentSprite';
   sprite.position.y = 0.55;
   sprite.scale.set(1.35, 1.35, 1.0);
-  sprite.userData = group.userData;
+  sprite.userData = { markerRole: 'monumentSprite' };
   group.add(sprite);
 
   // 2. Base Highlight Selection Ring (Lies flush on planetary ground)
@@ -754,6 +755,7 @@ export function createMonumentSymbol(
   selRing.rotation.x = -Math.PI / 2;
   selRing.position.y = 0.02;
   selRing.visible = false;
+  selRing.userData = { markerRole: 'selectionRing' };
   group.add(selRing);
 
   // 3. Billboard Selection Halo (For free-space and deep-space objects)
@@ -768,6 +770,7 @@ export function createMonumentSymbol(
   selHalo.position.y = 0.55;
   selHalo.scale.set(2.4, 2.4, 1.0);
   selHalo.visible = false;
+  selHalo.userData = { markerRole: 'selectionHalo' };
   group.add(selHalo);
 
   // 4. Optional Text Label Sprite (Near marker, no connecting lines)
@@ -787,7 +790,7 @@ export function createMonumentSymbol(
     labelSprite.name = 'labelSprite';
     labelSprite.position.set(0, labelOffsetY, 0);
     labelSprite.scale.set(labelScale[0], labelScale[1], labelScale[2]);
-    labelSprite.userData = { ...group.userData, originalScale: labelScale };
+    labelSprite.userData = { markerRole: 'labelSprite', originalScale: labelScale };
     group.add(labelSprite);
   }
 
@@ -798,7 +801,7 @@ export function createMonumentSymbol(
     invisibleHitMat
   );
   hitSphere.position.y = 0.55;
-  hitSphere.userData = group.userData;
+  hitSphere.userData = { markerRole: 'hitSphere' };
   group.add(hitSphere);
 
   return group;
@@ -814,8 +817,12 @@ export function updateMonumentSelection(
   groups.forEach((g) => {
     if (!g) return;
     g.traverse((obj) => {
-      const parentId = obj.parent?.userData?.id;
-      const isSelected = !!(selectedId && parentId === selectedId);
+      let markerRoot: THREE.Object3D | null = obj;
+      while (markerRoot && !markerRoot.userData?.isMarkerRoot && markerRoot.parent) {
+        markerRoot = markerRoot.parent;
+      }
+      const rootId = markerRoot?.userData?.id;
+      const isSelected = !!(selectedId && rootId === selectedId);
 
       if (obj.name === 'selectionRing') {
         obj.visible = isSelected;
@@ -826,17 +833,21 @@ export function updateMonumentSelection(
       if (obj.name === 'monumentSprite') {
         const sprite = obj as THREE.Sprite;
         if (isSelected) {
-          sprite.scale.set(1.7, 1.7, 1.0);
+          sprite.scale.set(1.65, 1.65, 1.0);
         } else {
           sprite.scale.set(1.35, 1.35, 1.0);
         }
       }
       if (obj.name === 'labelSprite') {
         const sprite = obj as THREE.Sprite;
+        const orig = sprite.userData?.originalScale as [number, number, number] | undefined;
+        const baseW = orig ? orig[0] : 4.2;
+        const baseH = orig ? orig[1] : 1.05;
+        const baseD = orig ? orig[2] : 1.0;
         if (isSelected) {
-          sprite.scale.set(4.8, 1.2, 1.0);
+          sprite.scale.set(baseW * 1.15, baseH * 1.15, baseD);
         } else {
-          sprite.scale.set(4.2, 1.05, 1.0);
+          sprite.scale.set(baseW, baseH, baseD);
         }
       }
     });
