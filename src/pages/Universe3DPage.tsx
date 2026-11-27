@@ -20,6 +20,7 @@ import {
   MarsLandmark,
   resolve3DArtifact,
 } from '../data/landingSites3D';
+import { getMissionStory } from '../data/missionStories';
 
 import {
   createMonumentSymbol,
@@ -1845,184 +1846,209 @@ export const Universe3DPage: React.FC = () => {
       )}
 
       {/* Site Inspector Drawer (When Landing Site is Clicked) */}
-      {selectedSite && !selectedLandmark && (
-        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
-          <div>
-            {/* Header info */}
-            <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
-              <div className="flex items-start gap-3">
-                <MonumentIcon type={getMonumentType(selectedSite)} className="w-9 h-9 shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-[10px] font-mono font-semibold tracking-widest text-[#C6A36B] uppercase block">
-                    {selectedSite.body.toUpperCase()} // {getMonumentTypeLabel(getMonumentType(selectedSite)).toUpperCase()}
-                  </span>
-                  <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-0.5">
-                    {selectedSite.name}
-                  </h2>
-                  <div className="text-xs text-[#B6C0CC]/80 font-mono mt-0.5">
-                    {selectedSite.designation}
+      {selectedSite && !selectedLandmark && (() => {
+        const story = getMissionStory(selectedSite.id);
+        const bodyAccent = selectedSite.body === 'mars'
+          ? { text: 'text-[#fbd38d]', bg: 'bg-[#d97736]/15', border: 'border-[#d97736]/40' }
+          : selectedSite.body === 'moon'
+          ? { text: 'text-slate-200', bg: 'bg-slate-700/30', border: 'border-slate-500/40' }
+          : selectedSite.body === 'saturn'
+          ? { text: 'text-[#f0e8d9]', bg: 'bg-[#c6a36b]/15', border: 'border-[#c6a36b]/40' }
+          : { text: 'text-[#38bdf8]', bg: 'bg-[#38bdf8]/15', border: 'border-[#38bdf8]/40' };
+
+        return (
+          <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[400px] sm:w-[400px] bg-[#080D16]/95 border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
+            <div>
+              {/* Header info */}
+              <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
+                <div className="flex items-start gap-3">
+                  <MonumentIcon type={getMonumentType(selectedSite)} className="w-10 h-10 shrink-0 mt-0.5" />
+                  <div>
+                    <span className={`text-[10px] font-mono font-semibold tracking-widest uppercase inline-block px-2.5 py-0.5 rounded-full border ${bodyAccent.bg} ${bodyAccent.border} ${bodyAccent.text} mb-1`}>
+                      {selectedSite.body.toUpperCase()} // {getMonumentTypeLabel(getMonumentType(selectedSite)).toUpperCase()}
+                    </span>
+                    <h2 className="font-display text-2xl sm:text-3xl text-[#F0E8D9] font-normal leading-tight">
+                      {selectedSite.name}
+                    </h2>
+                    <div className="text-xs text-[#B6C0CC] font-mono mt-0.5">
+                      {selectedSite.designation}
+                    </div>
                   </div>
                 </div>
+                <button
+                  onClick={handleCloseDrawer}
+                  className="text-xs p-1.5 rounded-full border border-white/15 text-[#B6C0CC] hover:text-white hover:border-white/40 transition-colors"
+                  aria-label="Close Inspector"
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={handleCloseDrawer}
-                className="text-xs p-1.5 rounded-full border border-white/15 text-[#B6C0CC] hover:text-white hover:border-white/40 transition-colors"
-                aria-label="Close Inspector"
-              >
-                ✕
-              </button>
-            </div>
 
-            {/* Plain Language Museum Dossier */}
-            <div className="bg-[#101A29]/80 rounded-2xl p-3.5 border border-white/5 mb-5 space-y-2 text-xs font-sans">
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-[#B6C0CC] font-mono text-[11px] whitespace-nowrap">LOCATION:</span>
-                <span className="text-[#F0E8D9] font-medium text-right">{selectedSite.locationName}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[#B6C0CC] font-mono text-[11px]">TIMELINE:</span>
-                <span className="text-[#F0E8D9] font-mono font-medium">
-                  {selectedSite.body === 'deep-space'
-                    ? `Launch: ${selectedSite.year}`
-                    : selectedSite.year
-                    ? `Touchdown: ${selectedSite.year}`
-                    : 'Historical Flight'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[#B6C0CC] font-mono text-[11px]">STATUS:</span>
-                <span className="text-[#C6A36B] font-mono font-semibold">
-                  {selectedSite.status}
-                </span>
-              </div>
-              {selectedSite.distanceFromEarth && (
+              {/* Plain Language Museum Dossier */}
+              <div className="bg-[#101A29]/90 rounded-2xl p-4 border border-white/10 mb-5 space-y-2.5 text-xs font-sans">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-[#B6C0CC] font-mono text-[11px] whitespace-nowrap">LOCATION:</span>
+                  <div className="text-right">
+                    <span className="text-[#F0E8D9] font-medium block">{selectedSite.locationName}</span>
+                    {selectedSite.lat !== undefined && selectedSite.lon !== undefined && (selectedSite.lat !== 0 || selectedSite.lon !== 0) && (
+                      <span className="text-[10px] font-mono text-[#C6A36B] block mt-0.5">
+                        {Math.abs(selectedSite.lat).toFixed(2)}°{selectedSite.lat >= 0 ? 'N' : 'S'}, {Math.abs(selectedSite.lon).toFixed(2)}°{selectedSite.lon >= 0 ? 'E' : 'W'}
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#B6C0CC] font-mono text-[11px]">DISTANCE FROM EARTH:</span>
-                  <span className="text-[#38bdf8] font-mono text-[11px] font-semibold">{selectedSite.distanceFromEarth}</span>
+                  <span className="text-[#B6C0CC] font-mono text-[11px]">TIMELINE:</span>
+                  <span className="text-[#F0E8D9] font-mono font-medium">
+                    {selectedSite.body === 'deep-space'
+                      ? `Launch: ${selectedSite.year}`
+                      : selectedSite.year
+                      ? `Touchdown: ${selectedSite.year}`
+                      : 'Historical Flight'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#B6C0CC] font-mono text-[11px]">STATUS:</span>
+                  <span className="text-[#C6A36B] font-mono font-semibold">
+                    ● {selectedSite.status}
+                  </span>
+                </div>
+                {selectedSite.distanceFromEarth && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#B6C0CC] font-mono text-[11px]">DISTANCE FROM EARTH:</span>
+                    <span className="text-[#38bdf8] font-mono text-[11px] font-semibold">{selectedSite.distanceFromEarth}</span>
+                  </div>
+                )}
+                {selectedSite.lightDelaySeconds && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#B6C0CC] font-mono text-[11px]">ONE-WAY LIGHT DELAY:</span>
+                    <span className="text-[#38bdf8] font-mono text-[11px] font-semibold">
+                      ~{Math.round(selectedSite.lightDelaySeconds / 3600)}h {Math.round((selectedSite.lightDelaySeconds % 3600) / 60)}m (Theoretical)
+                    </span>
+                  </div>
+                )}
+                {selectedSite.referenceEpoch && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#B6C0CC] font-mono text-[11px]">REFERENCE EPOCH:</span>
+                    <span className="text-[#B6C0CC] font-mono text-[10px]">{selectedSite.referenceEpoch}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Educational Deep Space Calculation Disclaimer */}
+              {selectedSite.body === 'deep-space' && (
+                <div className="mb-4 p-3.5 rounded-xl bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-xs font-sans text-[#B6C0CC]">
+                  <div className="font-semibold text-[#38bdf8] mb-0.5 flex items-center gap-1.5">
+                    <span>📡</span>
+                    <span>Theoretical Signal Travel Time</span>
+                  </div>
+                  Calculated based on speed of light and documented astronomical distances. This is a mathematical educational demonstration, not an active radio link.
                 </div>
               )}
-              {selectedSite.lightDelaySeconds && (
-                <div className="flex items-center justify-between">
-                  <span className="text-[#B6C0CC] font-mono text-[11px]">ONE-WAY LIGHT DELAY:</span>
-                  <span className="text-[#38bdf8] font-mono text-[11px] font-semibold">
-                    ~{Math.round(selectedSite.lightDelaySeconds / 3600)}h {Math.round((selectedSite.lightDelaySeconds % 3600) / 60)}m (Theoretical)
+
+              {/* Special Saturn / Cassini atmospheric plunge notice */}
+              {selectedSite.body === 'saturn' && (
+                <div className="mb-4 p-3.5 rounded-xl bg-purple-900/25 border border-purple-500/40 text-xs font-sans text-purple-200">
+                  <div className="font-semibold text-purple-300 mb-1 flex items-center gap-1.5">
+                    <span>🪐</span>
+                    <span>The Grand Finale Plunge</span>
+                  </div>
+                  Cassini completed 22 daring dives between Saturn and its rings before intentional atmospheric entry on September 15, 2017, transmitting atmospheric data until its final seconds.
+                </div>
+              )}
+
+              {/* Multi-Location Stations Listing (for Lunar Retroreflectors) */}
+              {selectedSite.isMultiLocation && selectedSite.subLocations && (
+                <div className="mb-4 p-3.5 rounded-xl bg-[#101A29]/90 border border-[#67e8f9]/30">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#67e8f9] font-bold block mb-2">
+                    📡 DISTRIBUTED REFLECTOR STATIONS ({selectedSite.subLocations.length})
+                  </span>
+                  <div className="space-y-1.5">
+                    {selectedSite.subLocations.map((sub, sIdx) => (
+                      <button
+                        key={sIdx}
+                        onClick={() => focusLandingSite(sub.lat, sub.lon, true)}
+                        className="w-full text-left p-2.5 rounded-lg bg-black/40 hover:bg-[#67e8f9]/20 border border-white/5 transition-all text-xs font-sans flex items-center justify-between"
+                      >
+                        <span className="text-[#F0E8D9] font-medium">{sub.name}</span>
+                        <span className="text-[#67e8f9] text-[10px] font-mono">View Site →</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Shared Location Notice (e.g. Ingenuity with Perseverance) */}
+              {selectedSite.sharedWith && (
+                <div className="mb-4 p-3.5 rounded-xl bg-[#C6A36B]/10 border border-[#C6A36B]/30 text-xs font-sans">
+                  <span className="text-[#C6A36B] font-bold block mb-0.5">🔗 SHARED EXPLORATION SITE</span>
+                  <span className="text-[#B6C0CC]">
+                    Operated in conjunction with {selectedSite.sharedWith.toUpperCase()} across the Jezero Crater ancient river delta.
                   </span>
                 </div>
               )}
-              {selectedSite.referenceEpoch && (
-                <div className="flex items-center justify-between">
-                  <span className="text-[#B6C0CC] font-mono text-[11px]">REFERENCE EPOCH:</span>
-                  <span className="text-[#B6C0CC] font-mono text-[10px]">{selectedSite.referenceEpoch}</span>
+
+              {/* Accessible Narrative Story (leveraging rich missionStories summary if available) */}
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-mono tracking-wider text-[#C6A36B] uppercase font-semibold">
+                    {story ? '📖 MISSION CHRONICLE PREVIEW' : 'THE STORY'}
+                  </h3>
+                  {story && (
+                    <span className="text-[10px] font-mono text-[#B6C0CC]/70">
+                      FULL STORY IN DOSSIER
+                    </span>
+                  )}
                 </div>
-              )}
+                <p className="text-sm font-sans text-[#F0E8D9]/95 leading-relaxed font-light">
+                  {story ? story.summary : selectedSite.description}
+                </p>
+              </div>
+
+              {/* Why It Matters / Fascinating Discovery */}
+              <div className="bg-[#C6A36B]/10 border-l-4 border-[#C6A36B] p-4 rounded-r-2xl mb-6 shadow-md">
+                <span className="text-[10px] font-mono font-bold text-[#C6A36B] tracking-wider uppercase block mb-1">
+                  💡 WHY IT MATTERS
+                </span>
+                <p className="text-xs sm:text-sm font-serif italic text-[#F0E8D9] leading-relaxed">
+                  "{selectedSite.fascinatingFact}"
+                </p>
+              </div>
             </div>
 
-            {/* Educational Deep Space Calculation Disclaimer */}
-            {selectedSite.body === 'deep-space' && (
-              <div className="mb-4 p-3 rounded-xl bg-[#38bdf8]/10 border border-[#38bdf8]/30 text-xs font-sans text-[#B6C0CC]">
-                <div className="font-semibold text-[#38bdf8] mb-0.5 flex items-center gap-1.5">
-                  <span>📡</span>
-                  <span>Theoretical Signal Travel Time</span>
-                </div>
-                Calculated based on speed of light and documented astronomical distances. This is a mathematical educational demonstration, not an active radio link.
-              </div>
-            )}
+            {/* Action Buttons */}
+            <div className="space-y-2.5 pt-4 border-t border-white/10">
+              <button
+                onClick={() => {
+                  playSignalPing(800);
+                  navigate(`/ghost/${selectedSite.id}`);
+                }}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C6A36B] to-[#d8b57d] hover:brightness-110 text-[#080D16] font-sans text-xs tracking-[0.16em] uppercase font-bold text-center block shadow-lg transition-all"
+              >
+                EXPLORE FULL MISSION STORY →
+              </button>
 
-            {/* Special Saturn / Cassini atmospheric plunge notice */}
-            {selectedSite.body === 'saturn' && (
-              <div className="mb-4 p-3 rounded-xl bg-purple-900/25 border border-purple-500/40 text-xs font-sans text-purple-200">
-                <div className="font-semibold text-purple-300 mb-1 flex items-center gap-1.5">
-                  <span>🪐</span>
-                  <span>The Grand Finale Plunge</span>
-                </div>
-                Cassini completed 22 daring dives between Saturn and its rings before intentional atmospheric entry on September 15, 2017, transmitting atmospheric data until its final seconds.
-              </div>
-            )}
-
-            {/* Multi-Location Stations Listing (for Lunar Retroreflectors) */}
-            {selectedSite.isMultiLocation && selectedSite.subLocations && (
-              <div className="mb-4 p-3 rounded-xl bg-[#101A29]/90 border border-[#67e8f9]/30">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#67e8f9] font-bold block mb-2">
-                  📡 DISTRIBUTED REFLECTOR STATIONS ({selectedSite.subLocations.length})
-                </span>
-                <div className="space-y-1.5">
-                  {selectedSite.subLocations.map((sub, sIdx) => (
-                    <button
-                      key={sIdx}
-                      onClick={() => focusLandingSite(sub.lat, sub.lon, true)}
-                      className="w-full text-left p-2 rounded-lg bg-black/40 hover:bg-[#67e8f9]/20 border border-white/5 transition-all text-xs font-sans flex items-center justify-between"
-                    >
-                      <span className="text-[#F0E8D9] font-medium">{sub.name}</span>
-                      <span className="text-[#67e8f9] text-[10px] font-mono">View Site →</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Shared Location Notice (e.g. Ingenuity with Perseverance) */}
-            {selectedSite.sharedWith && (
-              <div className="mb-4 p-3 rounded-xl bg-[#C6A36B]/10 border border-[#C6A36B]/30 text-xs font-sans">
-                <span className="text-[#C6A36B] font-bold block mb-0.5">🔗 SHARED EXPLORATION SITE</span>
-                <span className="text-[#B6C0CC]">
-                  Operated in conjunction with {selectedSite.sharedWith.toUpperCase()} across the Jezero Crater ancient river delta.
-                </span>
-              </div>
-            )}
-
-            {/* Accessible Narrative Story */}
-            <div className="mb-5">
-              <h3 className="text-xs font-mono tracking-wider text-[#C6A36B] uppercase mb-1.5">
-                THE STORY
-              </h3>
-              <p className="text-sm font-sans text-[#F0E8D9]/90 leading-relaxed font-light">
-                {selectedSite.description}
-              </p>
-            </div>
-
-            {/* Why It Matters / Fascinating Discovery */}
-            <div className="bg-[#C6A36B]/10 border-l-2 border-[#C6A36B] p-3.5 rounded-r-xl mb-6">
-              <span className="text-[10px] font-mono font-bold text-[#C6A36B] tracking-wider uppercase block mb-1">
-                💡 WHY IT MATTERS
-              </span>
-              <p className="text-xs font-serif italic text-[#F0E8D9] leading-relaxed">
-                "{selectedSite.fascinatingFact}"
-              </p>
+              <button
+                onClick={handleCloseDrawer}
+                className="w-full py-2 rounded-xl bg-transparent hover:bg-white/5 text-[#B6C0CC] hover:text-[#F0E8D9] transition-all text-[11px] font-mono tracking-wider uppercase text-center"
+              >
+                {['DEEP_SPACE', 'MARS', 'MOON', 'SATURN'].includes(viewMode)
+                  ? 'RETURN TO MISSION DIRECTORY'
+                  : 'RETURN TO PLANET'}
+              </button>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-2.5 pt-4 border-t border-white/10">
-            <button
-              onClick={() => {
-                playSignalPing(800);
-                navigate(`/ghost/${selectedSite.id}`);
-              }}
-              className="w-full py-2.5 rounded-xl bg-[#F0E8D9]/5 hover:bg-[#F0E8D9]/15 text-[#F0E8D9] border border-[#F0E8D9]/20 transition-all text-xs font-sans tracking-[0.18em] uppercase font-medium text-center block"
-            >
-              EXPLORE FULL MISSION STORY →
-            </button>
-
-            <button
-              onClick={handleCloseDrawer}
-              className="w-full py-2 rounded-xl bg-transparent hover:bg-white/5 text-[#B6C0CC] hover:text-[#F0E8D9] transition-all text-[11px] font-mono tracking-wider uppercase text-center"
-            >
-              {['DEEP_SPACE', 'MARS', 'MOON', 'SATURN'].includes(viewMode)
-                ? 'RETURN TO MISSION DIRECTORY'
-                : 'RETURN TO PLANET'}
-            </button>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Planetary Mission Directory (When in Mars, Moon, or Saturn and No Site/Landmark is Selected) */}
       {['MARS', 'MOON', 'SATURN'].includes(viewMode) && !selectedSite && !selectedLandmark && (
-        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
+        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[400px] sm:w-[400px] bg-[#080D16]/95 border border-[#C6A36B]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
           <div>
             {/* Header info */}
             <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
               <div className="flex items-start gap-3">
-                <span className="text-2xl mt-0.5">
+                <span className="text-3xl mt-0.5">
                   {viewMode === 'MARS' ? '🔴' : viewMode === 'MOON' ? '🌑' : '🪐'}
                 </span>
                 <div>
@@ -2033,10 +2059,10 @@ export const Universe3DPage: React.FC = () => {
                       ? 'LUNAR EXPLORATION SITES'
                       : 'SATURN SYSTEM EXPEDITION'}
                   </span>
-                  <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-0.5">
+                  <h2 className="font-display text-2xl sm:text-3xl text-[#F0E8D9] font-normal leading-tight mt-0.5">
                     Mission Directory
                   </h2>
-                  <div className="text-xs text-[#B6C0CC]/80 font-mono mt-0.5">
+                  <div className="text-xs text-[#B6C0CC] font-mono mt-0.5">
                     {viewMode === 'MARS'
                       ? `${LANDING_SITES_3D.filter((s) => s.body === 'mars').length} Historic & Active Surface Explorers`
                       : viewMode === 'MOON'
@@ -2047,7 +2073,7 @@ export const Universe3DPage: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-xs text-[#B6C0CC] mb-4 font-light leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#B6C0CC] mb-5 font-light leading-relaxed">
               {viewMode === 'MARS' &&
                 "Humanity has deployed an armada of robotic explorers across the Martian sands. Select an explorer below or tap any 3D monument on the globe to inspect its landing site, discoveries, and mission dossier."}
               {viewMode === 'MOON' &&
@@ -2057,52 +2083,57 @@ export const Universe3DPage: React.FC = () => {
             </p>
 
             {/* Selectable Spacecraft Cards */}
-            <div className="space-y-2.5 mb-5">
-              {LANDING_SITES_3D.filter((s) => s.body === (viewMode === 'MARS' ? 'mars' : viewMode === 'MOON' ? 'moon' : 'saturn')).map((craft) => (
-                <button
-                  key={craft.id}
-                  onClick={() => {
-                    playSignalPing(750);
-                    prevTargetRef.current = craft.id;
-                    setSelectedLandmark(null);
-                    setSelectedSite(craft);
-                    setSearchParams({ planet: craft.body, target: craft.id });
-                    if (craft.body === 'mars' || craft.body === 'moon') {
-                      focusLandingSite(craft.lat, craft.lon, true);
-                    } else if (craft.body === 'saturn') {
-                      glideCamera(new THREE.Vector3(12, 10, 32), new THREE.Vector3(5, 1, 2), 1200);
-                    }
-                  }}
-                  className="w-full p-3 rounded-2xl bg-[#101A29]/90 hover:bg-[#C6A36B]/15 border border-white/10 hover:border-[#C6A36B]/60 transition-all text-left flex items-center justify-between group shadow-md"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <MonumentIcon
-                      type={getMonumentType(craft)}
-                      className="w-8 h-8 shrink-0 group-hover:scale-110 transition-transform"
-                    />
-                    <div className="min-w-0">
-                      <div className="font-display text-sm text-[#F0E8D9] font-medium group-hover:text-[#C6A36B] truncate">
-                        {craft.name}
-                      </div>
-                      <div className="text-[10px] font-mono text-[#B6C0CC]/75 truncate">
-                        {craft.status}
+            <div className="space-y-3 mb-6">
+              {LANDING_SITES_3D.filter((s) => s.body === (viewMode === 'MARS' ? 'mars' : viewMode === 'MOON' ? 'moon' : 'saturn')).map((craft) => {
+                const hoverBorder = viewMode === 'MARS' ? 'hover:border-[#d97736]/70' : viewMode === 'MOON' ? 'hover:border-slate-400/70' : 'hover:border-[#c6a36b]/70';
+                return (
+                  <button
+                    key={craft.id}
+                    onClick={() => {
+                      playSignalPing(750);
+                      prevTargetRef.current = craft.id;
+                      setSelectedLandmark(null);
+                      setSelectedSite(craft);
+                      setSearchParams({ planet: craft.body, target: craft.id });
+                      if (craft.body === 'mars' || craft.body === 'moon') {
+                        focusLandingSite(craft.lat, craft.lon, true);
+                      } else if (craft.body === 'saturn') {
+                        glideCamera(new THREE.Vector3(12, 10, 32), new THREE.Vector3(5, 1, 2), 1200);
+                      }
+                    }}
+                    className={`w-full p-3.5 rounded-2xl bg-gradient-to-r from-[#101A29]/95 to-[#080D16]/95 border border-white/10 ${hoverBorder} hover:shadow-lg transition-all text-left flex items-center justify-between group cursor-pointer`}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <MonumentIcon
+                        type={getMonumentType(craft)}
+                        className="w-9 h-9 shrink-0 group-hover:scale-110 transition-transform"
+                      />
+                      <div className="min-w-0">
+                        <div className="font-display text-base text-[#F0E8D9] font-medium group-hover:text-[#C6A36B] transition-colors truncate">
+                          {craft.name}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#B6C0CC]">
+                            {craft.status}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right shrink-0 ml-2">
-                    <span className="font-mono text-xs font-semibold text-[#C6A36B] block">
-                      {craft.year ? (craft.body === 'saturn' ? `Launch: ${craft.year}` : craft.year) : ''}
-                    </span>
-                    <span className="text-[10px] font-mono text-[#B6C0CC]/60 group-hover:text-[#F0E8D9]">
-                      Dossier →
-                    </span>
-                  </div>
-                </button>
-              ))}
+                    <div className="text-right shrink-0 ml-3">
+                      <span className="font-mono text-xs font-semibold text-[#C6A36B] block">
+                        {craft.year ? (craft.body === 'saturn' ? `Launch ${craft.year}` : craft.year) : ''}
+                      </span>
+                      <span className="text-[10px] font-mono text-[#B6C0CC]/70 group-hover:text-[#F0E8D9] transition-colors">
+                        Dossier →
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Educational Planetary Exploration Summary */}
-            <div className="p-3.5 rounded-2xl bg-[#101A29]/70 border border-white/5 space-y-1.5 text-xs">
+            <div className="p-4 rounded-2xl bg-[#101A29]/80 border border-white/10 space-y-2 text-xs">
               <span className="text-[10px] font-mono uppercase tracking-wider text-[#C6A36B] font-semibold block mb-1">
                 {viewMode === 'MARS'
                   ? 'PLANETARY EXPLORATION SUMMARY'
@@ -2165,7 +2196,7 @@ export const Universe3DPage: React.FC = () => {
           <div className="pt-4 border-t border-white/10 mt-4">
             <button
               onClick={() => handleSelectViewMode('SOLAR_SYSTEM')}
-              className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/15 transition-all text-xs font-mono tracking-wider uppercase text-center"
+              className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/15 transition-all text-xs font-mono tracking-wider uppercase text-center cursor-pointer"
             >
               ← RETURN TO SOLAR SYSTEM
             </button>
@@ -2175,32 +2206,32 @@ export const Universe3DPage: React.FC = () => {
 
       {/* Deep Space Mission Directory (When in Deep Space and No Craft is Selected) */}
       {viewMode === 'DEEP_SPACE' && !selectedSite && (
-        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[420px] sm:w-[420px] bg-[#080D16]/95 border border-[#38bdf8]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
+        <div className="absolute top-16 right-3 sm:right-6 bottom-4 z-30 w-[calc(100vw-24px)] max-w-[400px] sm:w-[400px] bg-[#080D16]/95 border border-[#38bdf8]/60 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between overflow-y-auto animate-slideInRight">
           <div>
             {/* Header info */}
             <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
               <div className="flex items-start gap-3">
-                <span className="text-2xl mt-0.5">🌌</span>
+                <span className="text-3xl mt-0.5">🌌</span>
                 <div>
                   <span className="text-[10px] font-mono font-semibold tracking-widest text-[#38bdf8] uppercase block">
                     INTERSTELLAR FLEET
                   </span>
-                  <h2 className="font-display text-2xl text-[#F0E8D9] font-medium leading-tight mt-0.5">
+                  <h2 className="font-display text-2xl sm:text-3xl text-[#F0E8D9] font-normal leading-tight mt-0.5">
                     Mission Directory
                   </h2>
-                  <div className="text-xs text-[#B6C0CC]/80 font-mono mt-0.5">
+                  <div className="text-xs text-[#B6C0CC] font-mono mt-0.5">
                     Five Escaping Interstellar Artifacts
                   </div>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-[#B6C0CC] mb-4 font-light leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#B6C0CC] mb-5 font-light leading-relaxed">
               Humanity has launched five robotic messengers on hyperbolic escape trajectories that will never return. Select an explorer below or tap its 3D marker to inspect its distance, mission dossier, and light delay.
             </p>
 
             {/* 5 Selectable Spacecraft Cards */}
-            <div className="space-y-2.5 mb-5">
+            <div className="space-y-3 mb-6">
               {LANDING_SITES_3D.filter((s) => s.body === 'deep-space').map((craft) => (
                 <button
                   key={craft.id}
@@ -2216,24 +2247,26 @@ export const Universe3DPage: React.FC = () => {
                       1200
                     );
                   }}
-                  className="w-full p-3 rounded-2xl bg-[#101A29]/90 hover:bg-[#38bdf8]/15 border border-white/10 hover:border-[#38bdf8]/60 transition-all text-left flex items-center justify-between group shadow-md"
+                  className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-[#101A29]/95 to-[#080D16]/95 border border-white/10 hover:border-[#38bdf8]/70 hover:shadow-[0_0_20px_rgba(56,189,248,0.2)] transition-all text-left flex items-center justify-between group cursor-pointer"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <MonumentIcon type="probe" className="w-8 h-8 shrink-0 group-hover:scale-110 transition-transform" />
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <MonumentIcon type="probe" className="w-9 h-9 shrink-0 group-hover:scale-110 transition-transform" />
                     <div className="min-w-0">
-                      <div className="font-display text-sm text-[#F0E8D9] font-medium group-hover:text-[#38bdf8] truncate">
+                      <div className="font-display text-base text-[#F0E8D9] font-medium group-hover:text-[#38bdf8] transition-colors truncate">
                         {craft.name}
                       </div>
-                      <div className="text-[10px] font-mono text-[#B6C0CC]/75 truncate">
-                        {craft.status}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#B6C0CC]">
+                          {craft.status}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right shrink-0 ml-2">
+                  <div className="text-right shrink-0 ml-3">
                     <span className="font-mono text-xs font-semibold text-[#38bdf8] block">
                       ~{craft.approximateAu} AU
                     </span>
-                    <span className="text-[10px] font-mono text-[#B6C0CC]/60 group-hover:text-[#F0E8D9]">
+                    <span className="text-[10px] font-mono text-[#B6C0CC]/70 group-hover:text-[#F0E8D9] transition-colors">
                       Dossier →
                     </span>
                   </div>
@@ -2242,7 +2275,7 @@ export const Universe3DPage: React.FC = () => {
             </div>
 
             {/* Educational Spatial Boundary Legend */}
-            <div className="p-3.5 rounded-2xl bg-[#101A29]/70 border border-white/5 space-y-1.5 text-xs">
+            <div className="p-4 rounded-2xl bg-[#101A29]/80 border border-white/10 space-y-2 text-xs">
               <span className="text-[10px] font-mono uppercase tracking-wider text-[#C6A36B] font-semibold block mb-1">
                 ASTRONOMICAL BOUNDARIES (APPROXIMATE)
               </span>
@@ -2268,7 +2301,7 @@ export const Universe3DPage: React.FC = () => {
           <div className="pt-4 border-t border-white/10 mt-4">
             <button
               onClick={() => handleSelectViewMode('SOLAR_SYSTEM')}
-              className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/15 transition-all text-xs font-mono tracking-wider uppercase text-center"
+              className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/15 transition-all text-xs font-mono tracking-wider uppercase text-center cursor-pointer"
             >
               ← RETURN TO SOLAR SYSTEM
             </button>

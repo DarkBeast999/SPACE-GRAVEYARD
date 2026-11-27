@@ -7,6 +7,7 @@ import { formatSilenceDuration, getSignalDelay } from '../utils/timeUtils';
 import { formatCoordinates, getCoordinateSemanticLabel } from '../utils/coordinateUtils';
 import { resolveSource } from '../utils/sourceUtils';
 import { playSignalPing, playTypewriterClick, playWhooshSound } from '../utils/audio';
+import { getMissionStory } from '../data/missionStories';
 
 export const GhostProfilePage: React.FC = () => {
   const { artifactId } = useParams<{ artifactId: string }>();
@@ -75,8 +76,24 @@ export const GhostProfilePage: React.FC = () => {
   const formattedCoords = formatCoordinates(artifact.coordinates);
   const coordSemanticLabel = getCoordinateSemanticLabel(artifact.destination, Boolean(artifact.coordinates));
 
-  // Speed of light travel calculation
-  const travelDelay = getSignalDelay(artifact.distanceTraveledKm);
+  // Full curated historical story
+  const missionStory = getMissionStory(artifact.id);
+
+  // Speed of light travel calculation based on realistic distance from Earth
+  const getEarthDistanceKm = () => {
+    if (artifact.id === 'voyager-1') return 24_900_000_000;
+    if (artifact.id === 'voyager-2') return 20_900_000_000;
+    if (artifact.id === 'pioneer-10') return 20_200_000_000;
+    if (artifact.id === 'pioneer-11') return 16_500_000_000;
+    if (artifact.id === 'new-horizons') return 8_700_000_000;
+    if (artifact.id === 'cassini') return 1_430_000_000;
+    if (artifact.destination === 'moon') return 384_400;
+    if (artifact.destination === 'mars') return 225_000_000; // ~1.5 AU average distance
+    if (artifact.destination === 'deep-space') return Math.max(artifact.distanceTraveledKm, 1_000_000_000);
+    return 384_400;
+  };
+
+  const travelDelay = getSignalDelay(getEarthDistanceKm());
 
   // Natural language status helper
   const getNaturalStatus = () => {
@@ -333,53 +350,135 @@ export const GhostProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. WHAT HAPPENED TO IT? (ACCESSIBLE 1-MINUTE STORY) */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-4">
-          <div className="font-mono text-xs text-[#C6A36B] uppercase tracking-widest flex items-center gap-2">
-            <span>📖</span>
-            <span>WHAT HAPPENED TO THIS EXPLORER?</span>
-          </div>
+      {/* 2. COMPLETE HISTORICAL CHRONICLE (EDITORIAL MUSEUM EXPERIENCE) */}
+      <section className="mb-14">
+        {missionStory ? (
+          <div className="space-y-8">
+            {/* Chronicle Header & Title Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-white/10">
+              <div>
+                <div className="font-mono text-xs text-[#C6A36B] uppercase tracking-widest flex items-center gap-2 mb-2 font-semibold">
+                  <span>📜</span>
+                  <span>HISTORICAL MISSION CHRONICLE</span>
+                </div>
+                <h2 className="font-display text-3xl sm:text-5xl text-[#F0E8D9] font-normal leading-tight">
+                  {missionStory.title}
+                </h2>
+                <div className="font-mono text-xs text-[#C6A36B]/90 tracking-wider uppercase mt-1">
+                  {missionStory.subtitle}
+                </div>
+              </div>
 
-          <button
-            onClick={() => {
-              playTypewriterClick();
-              playSignalPing(750);
-            }}
-            className="font-mono text-[11px] text-[#B6C0CC] hover:text-white transition-colors flex items-center gap-1.5"
-            title="Simulate carrier frequency"
-          >
-            <span>🔊</span>
-            <span>RADIO CARRIER (TONE)</span>
-          </button>
-        </div>
-
-        {/* Narrative Box with Creative Reconstruction Disclosure */}
-        <div className="p-8 sm:p-12 rounded-3xl border border-white/10 relative overflow-hidden bg-[#101A29]/70 backdrop-blur-md shadow-xl">
-          <div className="mb-6 bg-[#080D16]/90 border border-[#C6A36B]/35 rounded-2xl p-4 text-xs text-[#B6C0CC] flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="flex items-center gap-2 text-[#C6A36B] font-mono font-semibold tracking-wider uppercase text-[11px] flex-shrink-0">
-              <span>✦</span>
-              <span>CREATIVE RECONSTRUCTION:</span>
+              <button
+                onClick={() => {
+                  playTypewriterClick();
+                  playSignalPing(750);
+                }}
+                className="font-mono text-[11px] text-[#B6C0CC] hover:text-white transition-colors flex items-center gap-1.5 self-start sm:self-end bg-white/5 px-3 py-1.5 rounded-lg border border-white/10"
+                title="Simulate carrier frequency"
+              >
+                <span>🔊</span>
+                <span>RADIO CARRIER (TONE)</span>
+              </button>
             </div>
-            <p className="font-sans font-light leading-relaxed">
-              This first-person account is an interpretive narrative based on historical mission logs. It is not an actual spacecraft transmission, recovered recording, or verbatim transcript.
+
+            {/* Opening Lead Passage */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-[#C6A36B]/15 via-[#101A29]/80 to-[#101A29]/60 border-l-4 border-[#C6A36B] border-y border-r border-white/10 shadow-xl">
+              <p className="font-serif italic text-lg sm:text-2xl text-[#F0E8D9] leading-relaxed">
+                "{missionStory.lead}"
+              </p>
+            </div>
+
+            {/* Narrative Chapters */}
+            <div className="space-y-6">
+              {[
+                missionStory.chapters.origin,
+                missionStory.chapters.journey,
+                missionStory.chapters.keyMoments,
+                missionStory.chapters.discoveries,
+                missionStory.chapters.legacy,
+              ].map((chapter, idx) => (
+                <div
+                  key={idx}
+                  className="p-6 sm:p-8 rounded-3xl bg-[#101A29]/75 border border-white/10 backdrop-blur-md shadow-lg transition-all hover:border-[#C6A36B]/30"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-3">
+                    <h3 className="font-display text-xl sm:text-2xl text-[#F0E8D9] font-medium tracking-tight">
+                      {chapter.title}
+                    </h3>
+                    {chapter.subtitle && (
+                      <span className="font-mono text-[11px] text-[#C6A36B] uppercase tracking-wider">
+                        {chapter.subtitle}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-12 h-0.5 bg-[#C6A36B]/40 mb-4" />
+                  <p className="text-sm sm:text-base text-[#F0E8D9]/90 leading-relaxed font-sans font-light">
+                    {chapter.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Highlight Quote Block */}
+            {missionStory.highlightQuote && (
+              <div className="p-6 sm:p-8 rounded-2xl bg-[#080D16]/90 border border-[#C6A36B]/40 relative overflow-hidden shadow-xl">
+                <div className="text-3xl text-[#C6A36B]/40 font-display select-none mb-1">“</div>
+                <blockquote className="font-serif italic text-lg sm:text-xl text-[#F0E8D9] leading-relaxed mb-3">
+                  {missionStory.highlightQuote}
+                </blockquote>
+                {missionStory.quoteAuthor && (
+                  <div className="font-mono text-xs text-[#C6A36B] uppercase tracking-wider text-right">
+                    — {missionStory.quoteAuthor}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Interpretive First-Person Reflection (Clearly Demarcated) */}
+            <div className="p-6 rounded-2xl border border-white/10 bg-[#080D16]/80 backdrop-blur-sm">
+              <div className="mb-3 bg-black/40 border border-[#C6A36B]/30 rounded-xl p-3 text-xs text-[#B6C0CC] flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+                <div className="flex items-center gap-1.5 text-[#C6A36B] font-mono font-semibold tracking-wider uppercase text-[11px] flex-shrink-0">
+                  <span>✦</span>
+                  <span>CREATIVE RECONSTRUCTION DISCLOSURE:</span>
+                </div>
+                <p className="font-sans font-light text-[11px] text-[#B6C0CC] leading-relaxed">
+                  The passage below is an artistic interpretive reflection based on historical flight logs. It is not an actual spacecraft transmission, recovered recording, or verbatim transcript.
+                </p>
+              </div>
+
+              <p className="font-serif italic text-base sm:text-lg text-[#F0E8D9]/80 leading-relaxed pl-3 border-l-2 border-[#C6A36B]/30">
+                "{artifact.lastTransmission || artifact.narrativeIntro}"
+              </p>
+
+              <div className="flex flex-wrap items-center justify-between pt-4 mt-4 border-t border-white/10 text-xs font-mono text-[#B6C0CC]">
+                <div>RESTING SITE: <span className="text-[#F0E8D9]">{artifact.location}</span></div>
+                <div>VERIFIED STATUS: <span className="text-[#C6A36B]">{missionStory.verifiedStatus}</span></div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Fallback for unindexed records */
+          <div className="p-8 sm:p-12 rounded-3xl border border-white/10 relative overflow-hidden bg-[#101A29]/70 backdrop-blur-md shadow-xl">
+            <div className="mb-6 bg-[#080D16]/90 border border-[#C6A36B]/35 rounded-2xl p-4 text-xs text-[#B6C0CC] flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2 text-[#C6A36B] font-mono font-semibold tracking-wider uppercase text-[11px] flex-shrink-0">
+                <span>✦</span>
+                <span>CREATIVE RECONSTRUCTION:</span>
+              </div>
+              <p className="font-sans font-light leading-relaxed">
+                This first-person account is an interpretive narrative based on historical mission logs.
+              </p>
+            </div>
+            <div className="text-4xl text-[#C6A36B]/40 font-display mb-2 select-none">“</div>
+            <p className="font-display italic text-xl sm:text-2xl text-[#F0E8D9] leading-relaxed font-light mb-8">
+              {artifact.lastTransmission || artifact.narrativeIntro}
             </p>
-          </div>
-
-          <div className="text-4xl text-[#C6A36B]/40 font-display mb-2 select-none">“</div>
-          <p className="font-display italic text-xl sm:text-2xl text-[#F0E8D9] leading-relaxed font-light mb-8">
-            {artifact.lastTransmission || artifact.narrativeIntro}
-          </p>
-
-          <div className="flex flex-wrap items-center justify-between pt-6 border-t border-white/10 text-xs font-mono text-[#B6C0CC]">
-            <div>RESTING SITE: <span className="text-[#F0E8D9]">{artifact.location}</span></div>
-            <div>
-              {artifact.status === 'active'
-                ? 'CURRENT STATUS: TRANSMITTING ACTIVE SCIENCE DATA'
-                : 'CURRENT STATUS: MISSION COMPLETE (RESTING SILENT)'}
+            <div className="flex flex-wrap items-center justify-between pt-6 border-t border-white/10 text-xs font-mono text-[#B6C0CC]">
+              <div>RESTING SITE: <span className="text-[#F0E8D9]">{artifact.location}</span></div>
+              <div>CURRENT STATUS: <span className="text-[#F0E8D9]">{getNaturalStatus()}</span></div>
             </div>
           </div>
-        </div>
+        )}
       </section>
 
       {/* 3. WHAT DID IT DISCOVER? (VISUAL DISCOVERY CARDS) */}
