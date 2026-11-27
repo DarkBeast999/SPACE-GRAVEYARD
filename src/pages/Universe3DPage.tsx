@@ -20,9 +20,6 @@ import {
   MarsLandmark,
   resolve3DArtifact,
 } from '../data/landingSites3D';
-import { PanoramaViewer } from '../components/PanoramaViewer';
-import heroOpportunity from '../assets/hero-opportunity.jpg';
-import heroSurveyor3 from '../assets/hero-surveyor3.jpg';
 
 import {
   createMonumentSymbol,
@@ -171,7 +168,6 @@ export const Universe3DPage: React.FC = () => {
   const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   const [hoveredObject, setHoveredObject] = useState<string | null>(null);
-  const [isPanoramaOpen, setIsPanoramaOpen] = useState(false);
 
   // Three.js internal refs
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -1467,7 +1463,7 @@ export const Universe3DPage: React.FC = () => {
           </div>
           <h2 className="font-display text-2xl text-[#F0E8D9] mb-2">3D Universe Unavailable</h2>
           <p className="text-xs text-[#B6C0CC] font-sans leading-relaxed mb-6 font-light">
-            {webglError} You can still explore the full archive of abandoned spacecraft, photographic panoramas, and scientific dossiers in 2D mode.
+            {webglError} You can still explore the full archive of abandoned spacecraft, mission records, and scientific dossiers in 2D mode.
           </p>
           <div className="flex flex-col gap-2.5">
             <button
@@ -1997,15 +1993,6 @@ export const Universe3DPage: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="space-y-2.5 pt-4 border-t border-white/10">
-            {selectedSite.hasPanorama && (
-              <button
-                onClick={() => setIsPanoramaOpen(true)}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C6A36B] to-[#e0be88] text-[#080D16] font-sans text-xs tracking-[0.2em] font-semibold uppercase shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2"
-              >
-                <span>🔭 LOOK AROUND (360° PANORAMA)</span>
-              </button>
-            )}
-
             <button
               onClick={() => {
                 playSignalPing(800);
@@ -2287,56 +2274,6 @@ export const Universe3DPage: React.FC = () => {
             </button>
           </div>
         </div>
-      )}
-
-
-
-      {/* 360° Panorama Viewer Modal */}
-      {selectedSite?.hasPanorama && (
-        <PanoramaViewer
-          isOpen={isPanoramaOpen}
-          onClose={() => setIsPanoramaOpen(false)}
-          title={selectedSite.panoramaTitle || `${selectedSite.name} Panoramic View`}
-          subtitle={selectedSite.locationName}
-          imageSrc={selectedSite.id === 'opportunity' ? heroOpportunity : heroSurveyor3}
-          hotspots={
-            selectedSite.id === 'opportunity'
-              ? [
-                  {
-                    xPercent: 24,
-                    yPercent: 62,
-                    title: 'Perseverance Valley Descent Slope',
-                    description: 'Opportunity traversed down this ancient water-carved valley rim into Endeavour Crater.',
-                  },
-                  {
-                    xPercent: 54,
-                    yPercent: 48,
-                    title: 'Endeavour Crater Floor (Sol 5000)',
-                    description: 'Looking across the vast 22-kilometer basin where clay minerals formed in neutral-pH liquid water.',
-                  },
-                  {
-                    xPercent: 78,
-                    yPercent: 70,
-                    title: 'Rover Solar Array Tracks',
-                    description: 'Wheel impressions etched into Martian dust during sol 5000 of the 90-day nominal mission.',
-                  },
-                ]
-              : [
-                  {
-                    xPercent: 32,
-                    yPercent: 55,
-                    title: 'Surveyor 3 Television Camera',
-                    description: 'Retrieved by Apollo 12 Commander Charles Conrad and returned to Earth for vacuum testing.',
-                  },
-                  {
-                    xPercent: 65,
-                    yPercent: 42,
-                    title: 'Lunar Module Intrepid on Crater Rim',
-                    description: 'Landed merely 180 meters away—the first pinpoint lunar landing in human history.',
-                  },
-                ]
-          }
-        />
       )}
     </div>
   );

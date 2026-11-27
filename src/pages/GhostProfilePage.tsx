@@ -7,9 +7,6 @@ import { formatSilenceDuration, getSignalDelay } from '../utils/timeUtils';
 import { formatCoordinates, getCoordinateSemanticLabel } from '../utils/coordinateUtils';
 import { resolveSource } from '../utils/sourceUtils';
 import { playSignalPing, playTypewriterClick, playWhooshSound } from '../utils/audio';
-import { PanoramaViewer } from '../components/PanoramaViewer';
-import heroOpportunity from '../assets/hero-opportunity.jpg';
-import heroSurveyor3 from '../assets/hero-surveyor3.jpg';
 
 export const GhostProfilePage: React.FC = () => {
   const { artifactId } = useParams<{ artifactId: string }>();
@@ -42,10 +39,8 @@ export const GhostProfilePage: React.FC = () => {
   const [userMessage, setUserMessage] = useState('');
   const [isTransmitting, setIsTransmitting] = useState(false);
   const [postcardReady, setPostcardReady] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const postcardCanvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  // Panorama modal state
-  const [isPanoramaOpen, setIsPanoramaOpen] = useState(false);
 
   // Technical drawer toggle
   const [showTechnicalSpecs, setShowTechnicalSpecs] = useState(false);
@@ -92,123 +87,180 @@ export const GhostProfilePage: React.FC = () => {
 
   // Postcard transmit handler
   const handleTransmitMail = () => {
-    if (!userMessage.trim()) return;
+    if (isTransmitting || !userMessage.trim()) return;
+    setGenerationError(null);
     playSignalPing(1100);
     setIsTransmitting(true);
 
     setTimeout(() => {
-      playSignalPing(1400);
-      setIsTransmitting(false);
-      setPostcardReady(true);
-      incrementGhostMails();
-      renderPostcard();
-    }, 1800);
+      try {
+        const success = renderPostcard();
+        if (success) {
+          playSignalPing(1400);
+          setPostcardReady(true);
+          incrementGhostMails();
+        } else {
+          setGenerationError('Failed to render commemorative postcard. Please try again.');
+        }
+      } catch (err) {
+        console.error('Postcard rendering error:', err);
+        setGenerationError('An unexpected error occurred while creating the postcard. Please try again.');
+      } finally {
+        setIsTransmitting(false);
+      }
+    }, 1200);
   };
 
   // High-Resolution Postcard Renderer (1600 × 1000 pixels)
-  const renderPostcard = () => {
-    const canvas = postcardCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  const renderPostcard = (): boolean => {
+    try {
+      const canvas = postcardCanvasRef.current;
+      if (!canvas) return false;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return false;
 
-    canvas.width = 1600;
-    canvas.height = 1000;
+      canvas.width = 1600;
+      canvas.height = 1000;
 
-    const bg = ctx.createLinearGradient(0, 0, 1600, 1000);
-    bg.addColorStop(0, '#0d1522');
-    bg.addColorStop(0.5, '#080d16');
-    bg.addColorStop(1, '#05080e');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, 1600, 1000);
+      const bg = ctx.createLinearGradient(0, 0, 1600, 1000);
+      bg.addColorStop(0, '#0d1522');
+      bg.addColorStop(0.5, '#080d16');
+      bg.addColorStop(1, '#05080e');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, 1600, 1000);
 
-    ctx.strokeStyle = '#C6A36B';
-    ctx.lineWidth = 3.5;
-    ctx.strokeRect(36, 36, 1528, 928);
+      ctx.strokeStyle = '#C6A36B';
+      ctx.lineWidth = 3.5;
+      ctx.strokeRect(36, 36, 1528, 928);
 
-    ctx.strokeStyle = 'rgba(198, 163, 107, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(50, 50, 1500, 900);
+      ctx.strokeStyle = 'rgba(198, 163, 107, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(50, 50, 1500, 900);
 
-    ctx.strokeStyle = 'rgba(198, 163, 107, 0.5)';
-    ctx.setLineDash([8, 8]);
-    ctx.strokeRect(1260, 75, 250, 280);
-    ctx.setLineDash([]);
+      ctx.strokeStyle = 'rgba(198, 163, 107, 0.5)';
+      ctx.setLineDash([8, 8]);
+      ctx.strokeRect(1260, 75, 250, 280);
+      ctx.setLineDash([]);
 
-    ctx.fillStyle = '#C6A36B';
-    ctx.font = 'bold 20px JetBrains Mono, monospace';
-    ctx.fillText('DEEP SPACE', 1315, 140);
-    ctx.fillText('HISTORICAL', 1315, 185);
-    ctx.fillText('POSTAGE', 1335, 230);
-    ctx.font = '28px serif';
-    ctx.fillText('✦ ✦ ✦', 1335, 290);
+      ctx.fillStyle = '#C6A36B';
+      ctx.font = 'bold 20px JetBrains Mono, monospace';
+      ctx.fillText('DEEP SPACE', 1315, 140);
+      ctx.fillText('HISTORICAL', 1315, 185);
+      ctx.fillText('POSTAGE', 1335, 230);
+      ctx.font = '28px serif';
+      ctx.fillText('✦ ✦ ✦', 1335, 290);
 
-    ctx.fillStyle = '#F0E8D9';
-    ctx.font = 'italic 50px Cormorant Garamond, Georgia, serif';
-    ctx.fillText(`Transmission to ${artifact.name}`, 90, 140);
+      ctx.fillStyle = '#F0E8D9';
+      ctx.font = 'italic 50px Cormorant Garamond, Georgia, serif';
+      ctx.fillText(`Transmission to ${artifact.name}`, 90, 140);
 
-    ctx.fillStyle = '#B6C0CC';
-    ctx.font = '22px JetBrains Mono, monospace';
-    ctx.fillText(`DESTINATION: ${artifact.location.toUpperCase()}`, 90, 195);
-    if (formattedCoords) {
-      ctx.fillText(`${coordSemanticLabel.toUpperCase()}: ${formattedCoords}`, 90, 235);
-    }
-    ctx.fillText(
-      `LIGHT-TRAVEL DELAY: ${travelDelay.hours}h ${travelDelay.minutes}m ${travelDelay.seconds}s (c ≈ 299,792 km/s)`,
-      90,
-      formattedCoords ? 275 : 240
-    );
-
-    ctx.strokeStyle = 'rgba(198, 163, 107, 0.3)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(90, 315);
-    ctx.lineTo(1220, 315);
-    ctx.stroke();
-
-    const fontSize = userMessage.length > 140 ? 30 : 36;
-    const lineHeight = userMessage.length > 140 ? 50 : 60;
-    ctx.fillStyle = '#F0E8D9';
-    ctx.font = `italic ${fontSize}px Inter, sans-serif`;
-
-    const maxWidth = 1420;
-    const words = userMessage.split(' ');
-    let line = '';
-    let y = 390;
-
-    for (let i = 0; i < words.length; i++) {
-      const testLine = line + words[i] + ' ';
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth && i > 0) {
-        ctx.fillText(line.trim(), 90, y);
-        line = words[i] + ' ';
-        y += lineHeight;
-      } else {
-        line = testLine;
+      ctx.fillStyle = '#B6C0CC';
+      ctx.font = '22px JetBrains Mono, monospace';
+      ctx.fillText(`DESTINATION: ${artifact.location.toUpperCase()}`, 90, 195);
+      if (formattedCoords) {
+        ctx.fillText(`${coordSemanticLabel.toUpperCase()}: ${formattedCoords}`, 90, 235);
       }
-    }
-    ctx.fillText(line.trim(), 90, y);
+      ctx.fillText(
+        `LIGHT-TRAVEL DELAY: ${travelDelay.hours}h ${travelDelay.minutes}m ${travelDelay.seconds}s (c ≈ 299,792 km/s)`,
+        90,
+        formattedCoords ? 275 : 240
+      );
 
-    ctx.fillStyle = 'rgba(182, 192, 204, 0.65)';
-    ctx.font = '20px JetBrains Mono, monospace';
-    ctx.fillText(
-      'SPACE GRAVEYARD // EDUCATIONAL ARCHIVE OF HUMAN EXPLORATION',
-      90,
-      920
-    );
+      ctx.strokeStyle = 'rgba(198, 163, 107, 0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(90, 315);
+      ctx.lineTo(1220, 315);
+      ctx.stroke();
+
+      const msgLen = userMessage.length;
+      let fontSize = 36;
+      let lineHeight = 56;
+      if (msgLen > 200) {
+        fontSize = 26;
+        lineHeight = 42;
+      } else if (msgLen > 120) {
+        fontSize = 30;
+        lineHeight = 48;
+      }
+      ctx.fillStyle = '#F0E8D9';
+      ctx.font = `italic ${fontSize}px Inter, sans-serif`;
+
+      const maxWidth = 1420;
+      const maxY = 880;
+      const paragraphs = userMessage.split('\n');
+      let y = 390;
+
+      for (let p = 0; p < paragraphs.length; p++) {
+        const paragraph = paragraphs[p].trim();
+        if (!paragraph) {
+          y += lineHeight * 0.7;
+          if (y > maxY) break;
+          continue;
+        }
+
+        const words = paragraph.split(/\s+/);
+        let line = '';
+
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line ? `${line} ${words[i]}` : words[i];
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && line) {
+            ctx.fillText(line, 90, y);
+            line = words[i];
+            y += lineHeight;
+            if (y > maxY) break;
+          } else {
+            line = testLine;
+          }
+        }
+
+        if (y > maxY) break;
+
+        if (line) {
+          ctx.fillText(line, 90, y);
+          y += lineHeight;
+        }
+      }
+
+      ctx.fillStyle = 'rgba(182, 192, 204, 0.65)';
+      ctx.font = '20px JetBrains Mono, monospace';
+      ctx.fillText(
+        'SPACE GRAVEYARD // EDUCATIONAL ARCHIVE OF HUMAN EXPLORATION',
+        90,
+        920
+      );
+
+      return true;
+    } catch (err) {
+      console.error('renderPostcard exception:', err);
+      return false;
+    }
   };
 
   const downloadPostcard = () => {
-    const canvas = postcardCanvasRef.current;
-    if (!canvas) return;
-    const url = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `space-graveyard-${artifact.id}-postcard.png`;
-    a.click();
+    try {
+      const canvas = postcardCanvasRef.current;
+      if (!canvas) {
+        setGenerationError('Postcard canvas was not found. Please regenerate.');
+        return;
+      }
+      const url = canvas.toDataURL('image/png');
+      if (!url || url === 'data:,') {
+        setGenerationError('Failed to export postcard image. Please try again.');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `space-graveyard-${artifact.id}-postcard.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Download postcard error:', err);
+      setGenerationError('Failed to download postcard image. Please try again.');
+    }
   };
-
-  const hasPanorama = artifact.id === 'opportunity' || artifact.id === 'surveyor-3';
 
   return (
     <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen">
@@ -383,15 +435,6 @@ export const GhostProfilePage: React.FC = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
-            {hasPanorama && (
-              <button
-                onClick={() => setIsPanoramaOpen(true)}
-                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-[#F0E8D9] font-mono text-xs font-semibold tracking-wider transition-all flex items-center justify-center gap-2"
-              >
-                <span>🔭 LOOK AROUND (360°)</span>
-              </button>
-            )}
-
             <button
               onClick={() => {
                 playWhooshSound();
@@ -478,69 +521,83 @@ export const GhostProfilePage: React.FC = () => {
             Your words will be rendered onto a high-resolution collector's stationery postcard that you can download and keep.
           </p>
 
-          {!postcardReady ? (
-            <div className="space-y-4">
-              <textarea
-                value={userMessage}
-                onChange={(e) => setUserMessage(e.target.value)}
-                placeholder={`To ${artifact.name}: Thank you for your tireless journey and extraordinary discoveries...`}
-                rows={4}
-                maxLength={280}
-                className="w-full p-4 rounded-xl bg-black/40 border border-white/15 focus:border-[#C6A36B] focus:outline-none text-[#F0E8D9] placeholder-white/30 text-sm font-sans"
-              />
-
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-[#B6C0CC]">
-                  {userMessage.length}/280 CHARACTERS
-                </span>
-
+          {/* Postcard Creation Form */}
+          <div className={!postcardReady ? "space-y-4" : "hidden"}>
+            {generationError && (
+              <div className="p-3.5 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 font-mono text-xs flex items-center justify-between">
+                <span>⚠️ {generationError}</span>
                 <button
-                  onClick={handleTransmitMail}
-                  disabled={!userMessage.trim() || isTransmitting}
-                  className="px-6 py-3 rounded-xl font-sans text-xs font-bold tracking-wider text-[#080D16] bg-[#C6A36B] hover:bg-[#d8b57d] disabled:opacity-40 transition-all flex items-center gap-2"
+                  onClick={() => setGenerationError(null)}
+                  className="text-red-400 hover:text-red-200 text-sm ml-2 font-bold cursor-pointer"
                 >
-                  {isTransmitting ? (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-[#080D16] animate-ping" />
-                      <span>GENERATING POSTCARD...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>CREATE POSTCARD ➔</span>
-                    </>
-                  )}
+                  ✕
                 </button>
               </div>
+            )}
+
+            <textarea
+              value={userMessage}
+              onChange={(e) => setUserMessage(e.target.value)}
+              disabled={isTransmitting}
+              placeholder={`To ${artifact.name}: Thank you for your tireless journey and extraordinary discoveries...`}
+              rows={4}
+              maxLength={280}
+              className="w-full p-4 rounded-xl bg-black/40 border border-white/15 focus:border-[#C6A36B] focus:outline-none text-[#F0E8D9] placeholder-white/30 text-sm font-sans disabled:opacity-50"
+            />
+
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs text-[#B6C0CC]">
+                {userMessage.length}/280 CHARACTERS
+              </span>
+
+              <button
+                onClick={handleTransmitMail}
+                disabled={!userMessage.trim() || isTransmitting}
+                className="px-6 py-3 rounded-xl font-sans text-xs font-bold tracking-wider text-[#080D16] bg-[#C6A36B] hover:bg-[#d8b57d] disabled:opacity-40 transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              >
+                {isTransmitting ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[#080D16] animate-ping" />
+                    <span>GENERATING POSTCARD...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>CREATE POSTCARD ➔</span>
+                  </>
+                )}
+              </button>
             </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="p-4 rounded-xl bg-[#C6A36B]/15 border border-[#C6A36B]/40 text-[#C6A36B] font-mono text-xs">
-                ✦ COMMEMORATIVE CARD READY: Your high-resolution 1600×1000 museum postcard is rendered below.
-              </div>
+          </div>
 
-              <div className="rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black">
-                <canvas ref={postcardCanvasRef} className="w-full h-auto block" />
-              </div>
-
-              <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={downloadPostcard}
-                  className="px-6 py-3 rounded-xl font-sans text-xs font-semibold bg-[#C6A36B] text-[#080D16] hover:bg-[#d8b57d] transition-all"
-                >
-                  DOWNLOAD HIGH-RES POSTCARD (PNG)
-                </button>
-                <button
-                  onClick={() => {
-                    setPostcardReady(false);
-                    setUserMessage('');
-                  }}
-                  className="px-6 py-3 rounded-xl font-sans text-xs font-medium bg-white/5 text-[#F0E8D9] border border-white/10 hover:border-white/20 transition-all"
-                >
-                  CREATE ANOTHER
-                </button>
-              </div>
+          {/* Postcard Preview & Actions (Always mounted in DOM so canvasRef is never null, toggled via CSS) */}
+          <div className={postcardReady ? "space-y-6" : "hidden"}>
+            <div className="p-4 rounded-xl bg-[#C6A36B]/15 border border-[#C6A36B]/40 text-[#C6A36B] font-mono text-xs">
+              ✦ COMMEMORATIVE CARD READY: Your high-resolution 1600×1000 museum postcard is rendered below.
             </div>
-          )}
+
+            <div className="rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-black">
+              <canvas ref={postcardCanvasRef} className="w-full h-auto block" />
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={downloadPostcard}
+                className="px-6 py-3 rounded-xl font-sans text-xs font-semibold bg-[#C6A36B] text-[#080D16] hover:bg-[#d8b57d] transition-all cursor-pointer"
+              >
+                DOWNLOAD HIGH-RES POSTCARD (PNG)
+              </button>
+              <button
+                onClick={() => {
+                  setPostcardReady(false);
+                  setUserMessage('');
+                  setGenerationError(null);
+                }}
+                className="px-6 py-3 rounded-xl font-sans text-xs font-medium bg-white/5 text-[#F0E8D9] border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+              >
+                CREATE ANOTHER
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -645,52 +702,6 @@ export const GhostProfilePage: React.FC = () => {
           PLAY SPACE QUIZ →
         </Link>
       </section>
-
-      {/* 360° Panorama Viewer Modal */}
-      {hasPanorama && (
-        <PanoramaViewer
-          isOpen={isPanoramaOpen}
-          onClose={() => setIsPanoramaOpen(false)}
-          title={
-            artifact.id === 'opportunity'
-              ? 'Perseverance Valley Sol 5000 Panorama (NASA PIA22222)'
-              : 'Surveyor Crater Lunar Panorama (Apollo 12 AS12-48-7133)'
-          }
-          subtitle={artifact.location}
-          imageSrc={artifact.id === 'opportunity' ? heroOpportunity : heroSurveyor3}
-          hotspots={
-            artifact.id === 'opportunity'
-              ? [
-                  {
-                    xPercent: 24,
-                    yPercent: 62,
-                    title: 'Perseverance Valley Descent Slope',
-                    description: 'Opportunity traversed down this ancient water-carved valley rim into Endeavour Crater.',
-                  },
-                  {
-                    xPercent: 54,
-                    yPercent: 48,
-                    title: 'Endeavour Crater Floor (Sol 5000)',
-                    description: 'Looking across the vast 22-kilometer basin where clay minerals formed in neutral-pH liquid water.',
-                  },
-                ]
-              : [
-                  {
-                    xPercent: 32,
-                    yPercent: 55,
-                    title: 'Surveyor 3 Television Camera',
-                    description: 'Retrieved by Apollo 12 Commander Charles Conrad and returned to Earth for vacuum testing.',
-                  },
-                  {
-                    xPercent: 65,
-                    yPercent: 42,
-                    title: 'Lunar Module Intrepid on Crater Rim',
-                    description: 'Landed merely 180 meters away—the first pinpoint lunar landing in human history.',
-                  },
-                ]
-          }
-        />
-      )}
     </div>
   );
 };

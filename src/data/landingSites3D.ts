@@ -17,8 +17,6 @@ export interface LandingSite3D {
   status: string;
   description: string;
   fascinatingFact: string;
-  hasPanorama?: boolean;
-  panoramaTitle?: string;
   distanceFromEarth?: string;
   approximateAu?: number; // Numeric AU distance for programmatic 3D scene placement
   lightDelaySeconds?: number; // for deep space
@@ -144,9 +142,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 2004,
     status: 'Mission Completed (Resting on Surface)',
     description: 'Designed to operate for 90 Martian days, Opportunity explored the red planet for nearly 15 years, confirming that liquid water once bathed the Martian surface.',
-    fascinatingFact: 'Drove a marathon distance of 45.16 km (28.06 miles)—the longest off-world drive by any human-made machine in history.',
-    hasPanorama: true,
-    panoramaTitle: 'Perseverance Valley Sol 5000 Panorama (NASA PIA22222)'
+    fascinatingFact: 'Drove a marathon distance of 45.16 km (28.06 miles)—the longest off-world drive by any human-made machine in history.'
   },
   {
     id: 'spirit',
@@ -160,8 +156,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 2004,
     status: 'Mission Completed (Silent on Surface)',
     description: 'Twin sister of Opportunity, Spirit overcame a broken right-front wheel by driving backward, inadvertently churning up soil that revealed pure silica formed by ancient hot springs.',
-    fascinatingFact: 'Its stuck wheel acted as a scientific trench tool, leading to one of the most significant discoveries of hydrothermal environments on Mars.',
-    hasPanorama: false
+    fascinatingFact: 'Its stuck wheel acted as a scientific trench tool, leading to one of the most significant discoveries of hydrothermal environments on Mars.'
   },
   {
     id: 'curiosity',
@@ -175,8 +170,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 2012,
     status: 'Still Operating (Active Explorer)',
     description: 'A nuclear-powered rolling laboratory exploring the sedimentary layers of Mount Sharp to uncover how the Martian climate shifted from warm and wet to cold and desolate.',
-    fascinatingFact: 'Has discovered ancient organic carbon molecules and sulfur compounds preserved inside 3.5-billion-year-old lakebed mudstones.',
-    hasPanorama: false
+    fascinatingFact: 'Has discovered ancient organic carbon molecules and sulfur compounds preserved inside 3.5-billion-year-old lakebed mudstones.'
   },
   {
     id: 'perseverance',
@@ -190,8 +184,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 2021,
     status: 'Still Operating (Sample Collection)',
     description: 'Searching for biosignatures of ancient microscopic life in the dried delta of Jezero Crater, accompanied by Ingenuity, collecting core samples for future return to Earth.',
-    fascinatingFact: 'Carries MOXIE, which successfully produced breathable oxygen directly from Mars’s carbon-dioxide atmosphere, and 43 titanium sample tubes.',
-    hasPanorama: false
+    fascinatingFact: 'Carries MOXIE, which successfully produced breathable oxygen directly from Mars’s carbon-dioxide atmosphere, and 43 titanium sample tubes.'
   },
   {
     id: 'ingenuity',
@@ -206,8 +199,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     status: 'Mission Concluded (Resting in Jezero)',
     sharedWith: 'perseverance',
     description: 'The first aircraft to achieve powered aerodynamic flight on another world. Deployed from the belly of Perseverance in Jezero Crater, proving flight is viable in 1% atmosphere.',
-    fascinatingFact: 'Planned for 5 technology-demonstration flights over 30 days, it completed 72 flights across 17 km over 3 years before rotor tip damage ended operations.',
-    hasPanorama: false
+    fascinatingFact: 'Planned for 5 technology-demonstration flights over 30 days, it completed 72 flights across 17 km over 3 years before rotor tip damage ended operations.'
   },
   {
     id: 'viking-1',
@@ -221,8 +213,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1976,
     status: 'Mission Completed (Historical Landmark)',
     description: 'The first American spacecraft to safely land on Mars and operate successfully, beaming back the very first colour photographs ever taken on the Martian surface.',
-    fascinatingFact: 'Operated uninterrupted for over 6 years (2,245 sols) until an inadvertent ground software update severed radio communication in November 1982.',
-    hasPanorama: false
+    fascinatingFact: 'Operated uninterrupted for over 6 years (2,245 sols) until an inadvertent ground software update severed radio communication in November 1982.'
   },
   {
     id: 'viking-2',
@@ -236,8 +227,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1976,
     status: 'Mission Completed',
     description: 'Landed thousands of kilometers north of Viking 1 in a rock-strewn plain, measuring Martian quakes and atmosphere with its robotic arm sampler.',
-    fascinatingFact: 'Recorded a winter temperature of -120°C as dry-ice frost formed directly on the red rocks around the lander.',
-    hasPanorama: false
+    fascinatingFact: 'Recorded a winter temperature of -120°C as dry-ice frost formed directly on the red rocks around the lander.'
   },
   {
     id: 'pathfinder',
@@ -251,8 +241,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1997,
     status: 'Mission Completed',
     description: 'Delivered Sojourner, humanity’s very first micro-rover on Mars, using an innovative airbag landing system that bounced safely across the catastrophic ancient outflow channel.',
-    fascinatingFact: 'Sojourner was only the size of a microwave oven (11.5 kg) and communicated via radio relays directly through the Pathfinder base station.',
-    hasPanorama: false
+    fascinatingFact: 'Sojourner was only the size of a microwave oven (11.5 kg) and communicated via radio relays directly through the Pathfinder base station.'
   },
   {
     id: 'phoenix',
@@ -266,8 +255,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 2008,
     status: 'Mission Completed (Frozen in Polar Ice)',
     description: 'Dug into the icy arctic plains of northern Mars, directly scraping and tasting subsurface water ice that sublimated into vapor before its cameras.',
-    fascinatingFact: 'Confirmed the presence of perchlorate salts in Martian soil and observed snow falling from high clouds into the lower atmosphere.',
-    hasPanorama: false
+    fascinatingFact: 'Confirmed the presence of perchlorate salts in Martian soil and observed snow falling from high clouds into the lower atmosphere.'
   },
   {
     id: 'insight',
@@ -281,8 +269,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 2018,
     status: 'Mission Completed (Resting Silent)',
     description: 'Placed an ultra-sensitive dome seismometer on Mars to record interior tremors, detecting more than 1,300 Marsquakes and meteorite impacts.',
-    fascinatingFact: 'Revealed that Mars has a molten metallic core and mapped the thickness of the Martian crust for the first time.',
-    hasPanorama: false
+    fascinatingFact: 'Revealed that Mars has a molten metallic core and mapped the thickness of the Martian crust for the first time.'
   },
 
   // =========================================================================
@@ -299,8 +286,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1969,
     status: 'Permanent Historical Monument',
     description: 'The golden lower stage of the lunar module that carried Neil Armstrong and Buzz Aldrin to the lunar surface during humanity’s first crewed landing.',
-    fascinatingFact: 'Bears a stainless steel plaque signed by the three astronauts and President Nixon: "Here men from the planet Earth first set foot upon the Moon, July 1969 A.D. We came in peace for all mankind."',
-    hasPanorama: false
+    fascinatingFact: 'Bears a stainless steel plaque signed by the three astronauts and President Nixon: "Here men from the planet Earth first set foot upon the Moon, July 1969 A.D. We came in peace for all mankind."'
   },
   {
     id: 'surveyor-3',
@@ -313,9 +299,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1967,
     status: 'Examined by Human Astronauts',
     description: 'The only robotic spacecraft on another celestial body visited by human beings. In November 1969, Apollo 12 astronauts landed 180 meters away and retrieved its television camera for return to Earth.',
-    fascinatingFact: 'Analysis of its retrieved camera back on Earth tested how long human bacterial spores can survive the vacuum and solar radiation of the lunar surface.',
-    hasPanorama: true,
-    panoramaTitle: 'Surveyor Crater Lunar Panorama (Apollo 12 AS12-48-7133)'
+    fascinatingFact: 'Analysis of its retrieved camera back on Earth tested how long human bacterial spores can survive the vacuum and solar radiation of the lunar surface.'
   },
   {
     id: 'apollo-12-descent',
@@ -328,8 +312,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1969,
     status: 'Permanent Historical Monument',
     description: 'Landed within walking distance (183 meters) of the robotic Surveyor 3 lander, demonstrating precision pinpoint landing capability on another celestial body.',
-    fascinatingFact: 'Astronauts Pete Conrad and Alan Bean dismantled Surveyor 3’s television camera and returned it to Earth to analyze how materials withstand the lunar environment.',
-    hasPanorama: false
+    fascinatingFact: 'Astronauts Pete Conrad and Alan Bean dismantled Surveyor 3’s television camera and returned it to Earth to analyze how materials withstand the lunar environment.'
   },
   {
     id: 'lunokhod-1',
@@ -342,8 +325,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1970,
     status: 'Silent Rover (Laser Target Active)',
     description: 'The world’s first successful planetary rover. Controlled remotely from Earth using a joystick by a crew in Crimea, it drove over 10.5 km across the lunar regolith.',
-    fascinatingFact: 'Equipped with a corner-cube retroreflector that still reflects laser pulses from Earth observatories today to measure the exact distance to the Moon!',
-    hasPanorama: false
+    fascinatingFact: 'Equipped with a corner-cube retroreflector that still reflects laser pulses from Earth observatories today to measure the exact distance to the Moon!'
   },
   {
     id: 'apollo-14-descent',
@@ -356,8 +338,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1971,
     status: 'Permanent Historical Monument',
     description: 'Carried Alan Shepard and Edgar Mitchell to the ancient highlands of Fra Mauro. Shepard famously struck two golf balls near the lander using an improvised six-iron.',
-    fascinatingFact: 'Collected 42 kg of ancient impact breccias formed by the gigantic cataclysm that excavated the Mare Imbrium basin 3.85 billion years ago.',
-    hasPanorama: false
+    fascinatingFact: 'Collected 42 kg of ancient impact breccias formed by the gigantic cataclysm that excavated the Mare Imbrium basin 3.85 billion years ago.'
   },
   {
     id: 'apollo-15-descent',
@@ -370,8 +351,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1971,
     status: 'Permanent Historical Monument',
     description: 'First extended stay mission utilizing the Lunar Roving Vehicle. Commander Dave Scott dropped a geological hammer and a falcon feather simultaneously to verify Galileo’s gravity law in vacuum.',
-    fascinatingFact: 'Astronauts discovered the famous "Genesis Rock" (anorthosite crystal), a 4.5-billion-year-old remnant of the Moon’s primordial magma ocean.',
-    hasPanorama: false
+    fascinatingFact: 'Astronauts discovered the famous "Genesis Rock" (anorthosite crystal), a 4.5-billion-year-old remnant of the Moon’s primordial magma ocean.'
   },
   {
     id: 'apollo-16-descent',
@@ -384,8 +364,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1972,
     status: 'Permanent Historical Monument',
     description: 'The only crewed landing in the central lunar highlands. Astronauts John Young and Charlie Duke drove 26.7 km exploring North Ray and South Ray craters.',
-    fascinatingFact: 'Disproved the reigning theory that the lunar highlands were volcanic; rock analysis revealed they were formed by intense meteorite impact bombardment.',
-    hasPanorama: false
+    fascinatingFact: 'Disproved the reigning theory that the lunar highlands were volcanic; rock analysis revealed they were formed by intense meteorite impact bombardment.'
   },
   {
     id: 'apollo-17-descent',
@@ -398,8 +377,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1972,
     status: 'Permanent Historical Monument',
     description: 'The final crewed lunar module to touch down on the Moon. Astronauts Gene Cernan and geologist Harrison Schmitt spent 75 hours exploring the deep lunar valley.',
-    fascinatingFact: 'Schmitt discovered famous "orange soil" consisting of volcanic glass beads erupted during explosive fire-fountain volcanoes on the ancient Moon 3.6 billion years ago.',
-    hasPanorama: false
+    fascinatingFact: 'Schmitt discovered famous "orange soil" consisting of volcanic glass beads erupted during explosive fire-fountain volcanoes on the ancient Moon 3.6 billion years ago.'
   },
   {
     id: 'lunokhod-2',
@@ -412,8 +390,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 1973,
     status: 'Silent Rover (Distance Record Holder for 40 Years)',
     description: 'Traversed 39.15 km across Le Monnier Crater and its deep rilles, surveying magnetic fields and mare-highland boundary rocks. Held the off-world driving record until 2014.',
-    fascinatingFact: 'Carried a French corner-cube laser retroreflector array that still reflects ruby laser beams from Earth observatories with millimeter precision.',
-    hasPanorama: false
+    fascinatingFact: 'Carried a French corner-cube laser retroreflector array that still reflects ruby laser beams from Earth observatories with millimeter precision.'
   },
   {
     id: 'change-3-lander',
@@ -426,8 +403,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 2013,
     status: 'Mission Completed',
     description: 'China’s first lunar lander and rover, marking the first soft landing on the Moon since Luna 24 in 1976. Operated an ultraviolet telescope directly from the lunar surface.',
-    fascinatingFact: 'Its ground-penetrating radar probed the subsurface basalt layers of Mare Imbrium down to a depth of nearly 400 meters.',
-    hasPanorama: false
+    fascinatingFact: 'Its ground-penetrating radar probed the subsurface basalt layers of Mare Imbrium down to a depth of nearly 400 meters.'
   },
   {
     id: 'change-4-lander',
@@ -440,8 +416,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
     year: 2019,
     status: 'Still Operating (Lunar Far Side)',
     description: 'The historic first mission ever to land on the far side of the Moon, which never faces Earth. Communicates through the Queqiao relay satellite parked beyond the Moon.',
-    fascinatingFact: 'Carried a miniature lunar biosphere experiment that successfully sprouted cotton seeds inside a sealed canister on the lunar surface.',
-    hasPanorama: false
+    fascinatingFact: 'Carried a miniature lunar biosphere experiment that successfully sprouted cotton seeds inside a sealed canister on the lunar surface.'
   },
   {
     id: 'lunar-retroreflectors',
@@ -462,8 +437,7 @@ export const LANDING_SITES_3D: LandingSite3D[] = [
       { name: 'Lunokhod 2 Reflector', locationName: 'Le Monnier Crater', lat: 25.85, lon: 30.45 },
     ],
     description: 'A distributed network of corner-cube prism reflectors deployed across the lunar near side. Because they require zero electrical power, they are the only Apollo experiments that operate to this day.',
-    fascinatingFact: 'Laser pulses fired from Earth observatories bounce back in ~2.5 seconds, proving the Moon recedes from Earth at 3.8 cm per year due to tidal deceleration.',
-    hasPanorama: false
+    fascinatingFact: 'Laser pulses fired from Earth observatories bounce back in ~2.5 seconds, proving the Moon recedes from Earth at 3.8 cm per year due to tidal deceleration.'
   },
 
   // =========================================================================
