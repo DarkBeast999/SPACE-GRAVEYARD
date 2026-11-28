@@ -192,7 +192,7 @@ export const SignalRoomPage: React.FC = () => {
               <h2 className="font-display text-2xl font-normal text-[var(--warm-ivory)]">Voyager 1</h2>
             </div>
             <span className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-[10px] font-mono font-medium">
-              ● INTERSTELLAR SPACE
+              INTERSTELLAR SPACE
             </span>
           </div>
 
@@ -248,7 +248,7 @@ export const SignalRoomPage: React.FC = () => {
               <h2 className="font-display text-2xl font-normal text-[var(--warm-ivory)]">Voyager 2</h2>
             </div>
             <span className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-[10px] font-mono font-medium">
-              ● INTERSTELLAR SPACE
+              INTERSTELLAR SPACE
             </span>
           </div>
 

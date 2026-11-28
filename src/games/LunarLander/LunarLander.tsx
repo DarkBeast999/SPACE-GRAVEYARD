@@ -449,7 +449,7 @@ export const LunarLander: React.FC<LunarLanderProps> = ({ onBackToHub, onStageCl
           {/* Fuel */}
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-[#C8D8EA] uppercase hidden sm:inline">FUEL</span>
-            <div className="w-18 sm:w-22 h-2 bg-black/60 rounded-full overflow-hidden border border-white/15">
+            <div className="w-[72px] sm:w-[88px] h-2 bg-black/60 rounded-full overflow-hidden border border-white/15">
               <div
                 className={`h-full transition-all duration-150 ${
                   fuel > 40 ? 'bg-[#64E5C0]' : fuel > 20 ? 'bg-[#FFC66D]' : 'bg-[#FF8D7B]'

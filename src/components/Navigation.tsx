@@ -5,7 +5,7 @@ import { playSignalPing, startAmbientDrone, muteAllAudio } from '../utils/audio'
 
 export const Navigation: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { soundEnabled, toggleSound, visitedArtifacts } = useAppStore();
+  const { soundEnabled, toggleSound } = useAppStore();
 
   const handleAudioToggle = () => {
     const nextState = !soundEnabled;
@@ -57,10 +57,10 @@ export const Navigation: React.FC = () => {
               onClick={() => playSignalPing(750)}
               className={({ isActive }) => {
                 if (link.isPrimary) {
-                  return `relative px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.22em] transition-all duration-300 flex items-center gap-2 ${
+                  return `relative px-3.5 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.2em] transition-all duration-200 flex items-center gap-1.5 ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#58D9FF] to-[#64E5C0] text-[#080B1D] font-bold shadow-[0_0_20px_rgba(88,217,255,0.4)]'
-                      : 'bg-[#58D9FF]/15 text-[#F5F0E8] border border-[#58D9FF]/40 hover:bg-[#58D9FF]/25 hover:border-[#58D9FF] shadow-[0_0_12px_rgba(88,217,255,0.2)]'
+                      ? 'bg-[#58D9FF] text-[#080B1D] font-bold shadow-[0_0_12px_rgba(88,217,255,0.3)]'
+                      : 'bg-[#58D9FF]/10 text-[#58D9FF] border border-[#58D9FF]/30 hover:bg-[#58D9FF]/20 hover:border-[#58D9FF]/60'
                   }`;
                 }
                 return `text-[11px] font-medium tracking-[0.2em] transition-all duration-200 py-1.5 border-b-2 ${
@@ -70,12 +70,6 @@ export const Navigation: React.FC = () => {
                 }`;
               }}
             >
-              {link.isPrimary && (
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#58D9FF] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#64E5C0]"></span>
-                </span>
-              )}
               <span>{link.label}</span>
             </NavLink>
           ))}
@@ -83,33 +77,19 @@ export const Navigation: React.FC = () => {
 
         {/* Right side controls */}
         <div className="flex items-center gap-3.5">
-          {/* Master Sound Toggle */}
+          {/* Master Sound Toggle - Icon Only */}
           <button
             onClick={handleAudioToggle}
-            className={`px-3 py-1.5 rounded-full text-[10px] mono tracking-wider flex items-center gap-1.5 border transition-all ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border transition-all ${
               soundEnabled
-                ? 'border-[#64E5C0] text-[#080B1D] bg-[#64E5C0] font-semibold shadow-[0_0_12px_rgba(100,229,192,0.35)]'
-                : 'border-white/10 text-[#C8D8EA]/80 hover:border-white/30 hover:text-white bg-black/30'
+                ? 'border-[#64E5C0] text-[#080B1D] bg-[#64E5C0] shadow-[0_0_12px_rgba(100,229,192,0.35)]'
+                : 'border-white/15 text-[#C8D8EA]/75 hover:border-[#58D9FF]/40 hover:text-white bg-[#111A35]/60'
             }`}
-            title={soundEnabled ? 'Click to MUTE all sound' : 'Click to UNMUTE soundscape'}
+            title={soundEnabled ? 'Mute sound' : 'Unmute sound'}
             aria-label="Toggle Global Sound"
           >
             <span>{soundEnabled ? '🔊' : '🔇'}</span>
-            <span className="hidden sm:inline font-mono">
-              {soundEnabled ? 'SOUND: ON' : 'SOUND: OFF'}
-            </span>
           </button>
-
-          {/* Permanent Collection Counter */}
-          <Link
-            to="/explore"
-            onClick={() => playSignalPing(600)}
-            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111A35]/90 border border-white/15 hover:border-[#58D9FF]/50 transition-all text-[11px] mono text-[#C8D8EA]"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FFC66D] shadow-[0_0_6px_#FFC66D]" />
-            <span>COLLECTION:</span>
-            <span className="text-[#F5F0E8] font-semibold">{visitedArtifacts.length} / 28</span>
-          </Link>
 
           {/* Mobile hamburger */}
           <button
@@ -124,7 +104,7 @@ export const Navigation: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden mt-3 pt-3 border-t border-white/10 flex flex-col gap-2 bg-[#080D16]/98 p-4 rounded-xl border border-white/10 shadow-2xl">
+        <div className="lg:hidden mt-3 pt-3 border-t border-white/10 flex flex-col gap-2 bg-[#080B1D]/98 p-4 rounded-2xl border border-[#58D9FF]/20 shadow-2xl backdrop-blur-xl">
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
@@ -134,32 +114,29 @@ export const Navigation: React.FC = () => {
                 playSignalPing(750);
               }}
               className={({ isActive }) =>
-                `text-xs tracking-[0.2em] px-3 py-2.5 rounded-lg transition-colors flex items-center justify-between ${
+                `text-xs tracking-[0.2em] px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between ${
                   isActive
-                    ? 'text-[#F0E8D9] bg-[#C6A36B]/20 border-l-2 border-[#C6A36B] font-semibold'
-                    : 'text-[#B6C0CC] hover:text-[#F0E8D9]'
+                    ? 'text-[#F5F0E8] bg-[#58D9FF]/15 border-l-2 border-[#58D9FF] font-semibold'
+                    : 'text-[#C8D8EA] hover:text-[#F5F0E8]'
                 }`
               }
             >
               <span>{link.label}</span>
               {link.isPrimary && (
-                <span className="text-[10px] px-2 py-0.5 rounded bg-[#C6A36B] text-[#080D16] font-bold">
-                  FLAGSHIP 3D
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#58D9FF] text-[#080B1D] font-bold">
+                  3D UNIVERSE
                 </span>
               )}
             </NavLink>
           ))}
-          <div className="px-3 py-2 flex items-center justify-between text-xs mono text-[#B6C0CC] border-t border-white/10 mt-2 pt-3">
-            <span>PERMANENT COLLECTION</span>
-            <span className="text-[#C6A36B] font-bold">{visitedArtifacts.length} / 28 EXPLORED</span>
-          </div>
-          <div className="pt-2 flex justify-between items-center px-1">
+          <div className="pt-3 border-t border-white/10 flex justify-between items-center px-1">
             <Link
               to="/knowledge"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-[11px] text-[#C6A36B] hover:underline"
+              className="text-xs text-[#58D9FF] hover:underline flex items-center gap-1"
             >
-              Space Knowledge Centre →
+              <span>Space Knowledge Centre</span>
+              <span>→</span>
             </Link>
           </div>
         </div>

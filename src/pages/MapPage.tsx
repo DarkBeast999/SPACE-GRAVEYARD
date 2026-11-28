@@ -554,7 +554,7 @@ export const MapPage: React.FC = () => {
                             : 'bg-[var(--deep-slate)] text-[var(--mist-grey)] border border-white/10'
                         }`}
                       >
-                        ● {item.status.toUpperCase()}
+                        {item.status.toUpperCase()}
                       </span>
                     </td>
                     <td className="py-4 px-5 text-[var(--mist-grey)]">

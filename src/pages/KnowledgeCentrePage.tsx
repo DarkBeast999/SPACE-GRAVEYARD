@@ -73,7 +73,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
                 Rovers like Spirit, Opportunity, Curiosity, and Perseverance do not have traditional springs or shock absorbers, which would freeze or snap in extreme Martian cold. Instead, they use a mechanical linkage called the <strong>rocker-bogie system</strong>.
               </p>
-              <div className="p-3 bg-black/40 rounded-xl border border-white/5 text-[11px] font-mono text-[#C6A36B]">
+              <div className="p-3 bg-black/40 rounded-xl border border-white/5 text-[11px] font-mono text-[#FFC66D]">
                 KEY ADVANTAGE: Distributes the rover's weight equally across all six wheels, allowing it to climb over obstacles larger than the wheel diameter without tipping over.
               </div>
             </div>
@@ -112,7 +112,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/universe?planet=mars"
                 onClick={() => playWhooshSound()}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-1"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-1"
               >
                 Inspect Martian Rovers in 3D Universe →
               </Link>
@@ -138,7 +138,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-6 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-2xl">🌕</span>
-                <span className="text-[10px] font-mono text-[#C6A36B] bg-white/5 px-2 py-0.5 rounded">0.166 G (1/6 Earth)</span>
+                <span className="text-[10px] font-mono text-[#FFC66D] bg-white/5 px-2 py-0.5 rounded">0.166 G (1/6 Earth)</span>
               </div>
               <h3 className="font-display text-xl text-[#F0E8D9]">The Moon</h3>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
@@ -147,7 +147,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/universe?planet=moon"
                 onClick={() => playWhooshSound()}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-2"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-2"
               >
                 Explore 3D Moon Globe →
               </Link>
@@ -157,7 +157,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-6 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-2xl">🔴</span>
-                <span className="text-[10px] font-mono text-[#C6A36B] bg-white/5 px-2 py-0.5 rounded">0.38 G (38% Earth)</span>
+                <span className="text-[10px] font-mono text-[#FFC66D] bg-white/5 px-2 py-0.5 rounded">0.38 G (38% Earth)</span>
               </div>
               <h3 className="font-display text-xl text-[#F0E8D9]">Mars</h3>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
@@ -166,7 +166,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/universe?planet=mars"
                 onClick={() => playWhooshSound()}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-2"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-2"
               >
                 Explore 3D Mars Globe →
               </Link>
@@ -176,7 +176,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-6 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-2xl">🟡</span>
-                <span className="text-[10px] font-mono text-[#C6A36B] bg-white/5 px-2 py-0.5 rounded">0.90 G (90% Earth)</span>
+                <span className="text-[10px] font-mono text-[#FFC66D] bg-white/5 px-2 py-0.5 rounded">0.90 G (90% Earth)</span>
               </div>
               <h3 className="font-display text-xl text-[#F0E8D9]">Venus</h3>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
@@ -185,7 +185,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/universe?planet=venus"
                 onClick={() => playWhooshSound()}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-2"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-2"
               >
                 Explore 3D Venus Globe →
               </Link>
@@ -195,7 +195,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-6 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-2xl">🪐</span>
-                <span className="text-[10px] font-mono text-[#C6A36B] bg-white/5 px-2 py-0.5 rounded">Gas &amp; Ice Giants</span>
+                <span className="text-[10px] font-mono text-[#FFC66D] bg-white/5 px-2 py-0.5 rounded">Gas &amp; Ice Giants</span>
               </div>
               <h3 className="font-display text-xl text-[#F0E8D9]">Jupiter &amp; Saturn</h3>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
@@ -207,7 +207,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-6 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-2xl">🌌</span>
-                <span className="text-[10px] font-mono text-[#C6A36B] bg-white/5 px-2 py-0.5 rounded">&gt; 120 AU</span>
+                <span className="text-[10px] font-mono text-[#FFC66D] bg-white/5 px-2 py-0.5 rounded">&gt; 120 AU</span>
               </div>
               <h3 className="font-display text-xl text-[#F0E8D9]">Interstellar Space</h3>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
@@ -216,7 +216,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/universe?planet=deep-space"
                 onClick={() => playWhooshSound()}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-2"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-2"
               >
                 Explore Deep Space in 3D →
               </Link>
@@ -257,7 +257,7 @@ export const KnowledgeCentrePage: React.FC = () => {
 
             {/* Discovery 2: The Moon's Cataclysmic Origin */}
             <div className="p-7 rounded-2xl bg-[#080D16]/90 border border-white/10 space-y-3">
-              <span className="text-xs font-mono text-[#C6A36B] uppercase tracking-wider font-semibold">
+              <span className="text-xs font-mono text-[#FFC66D] uppercase tracking-wider font-semibold">
                 DISCOVERY 02 // LUNAR FORMATION
               </span>
               <h3 className="font-display text-2xl text-[#F0E8D9]">The Giant Impact Hypothesis</h3>
@@ -303,7 +303,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-7 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-3">
               <div className="flex justify-between items-baseline">
                 <h3 className="font-display text-2xl text-[#F0E8D9]">Voyager 1 &amp; 2</h3>
-                <span className="font-mono text-xs text-[#C6A36B]">1977 — PRESENT</span>
+                <span className="font-mono text-xs text-[#FFC66D]">1977 — PRESENT</span>
               </div>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
                 Took advantage of a rare planetary alignment occurring once every 175 years to execute a four-planet "Grand Tour" using gravitational slingshots without consuming massive rocket fuel.
@@ -311,7 +311,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/ghost/voyager-1"
                 onClick={() => playSignalPing(800)}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-1"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-1"
               >
                 Read Voyager 1 Full Dossier →
               </Link>
@@ -321,7 +321,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-7 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-3">
               <div className="flex justify-between items-baseline">
                 <h3 className="font-display text-2xl text-[#F0E8D9]">Spirit &amp; Opportunity</h3>
-                <span className="font-mono text-xs text-[#C6A36B]">2004 — 2018</span>
+                <span className="font-mono text-xs text-[#FFC66D]">2004 — 2018</span>
               </div>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
                 Bounced onto Mars inside cocoon airbags, deploying solar arrays to embark on a 90-day mission that expanded into nearly 15 years of continuous off-world exploration.
@@ -329,7 +329,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/ghost/opportunity"
                 onClick={() => playSignalPing(800)}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-1"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-1"
               >
                 Read Opportunity Full Dossier →
               </Link>
@@ -339,7 +339,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-7 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-3">
               <div className="flex justify-between items-baseline">
                 <h3 className="font-display text-2xl text-[#F0E8D9]">Apollo Lunar Modules</h3>
-                <span className="font-mono text-xs text-[#C6A36B]">1969 — 1972</span>
+                <span className="font-mono text-xs text-[#FFC66D]">1969 — 1972</span>
               </div>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
                 Six golden descent stages remain on the Moon. Serving as launch pads for the upper crew ascent stage, they carried the earliest robotic experiments, rover buggies, and retroreflectors left on the lunar surface.
@@ -347,7 +347,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/ghost/eagle-descent-stage"
                 onClick={() => playSignalPing(800)}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-1"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-1"
               >
                 Read Apollo 11 Eagle Dossier →
               </Link>
@@ -357,7 +357,7 @@ export const KnowledgeCentrePage: React.FC = () => {
             <div className="p-7 rounded-2xl bg-[#080D16]/90 border border-white/10 shadow-lg space-y-3">
               <div className="flex justify-between items-baseline">
                 <h3 className="font-display text-2xl text-[#F0E8D9]">Cassini-Huygens</h3>
-                <span className="font-mono text-xs text-[#C6A36B]">1997 — 2017</span>
+                <span className="font-mono text-xs text-[#FFC66D]">1997 — 2017</span>
               </div>
               <p className="text-xs text-[#B6C0CC] leading-relaxed font-light">
                 Delivered ESA's Huygens probe to parachute onto the frozen shores of Titan's methane lakes, completing 22 suicidal dives between Saturn and its rings before plunging into the planet.
@@ -365,7 +365,7 @@ export const KnowledgeCentrePage: React.FC = () => {
               <Link
                 to="/ghost/cassini"
                 onClick={() => playSignalPing(800)}
-                className="text-xs font-mono text-[#C6A36B] hover:underline inline-block pt-1"
+                className="text-xs font-mono text-[#FFC66D] hover:underline inline-block pt-1"
               >
                 Read Cassini Full Dossier →
               </Link>

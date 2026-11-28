@@ -51,7 +51,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.9 }}
-              className="text-[#C6A36B] text-2xl mb-6 tracking-widest"
+              className="text-[#FFC66D] text-2xl mb-6 tracking-widest"
             >
               ✦
             </motion.div>
@@ -61,7 +61,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: stage >= 1 ? 1 : 0, y: stage >= 1 ? 0 : 14 }}
               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="font-display text-4xl sm:text-6xl text-[#F0E8D9] tracking-[0.22em] font-normal mb-3"
+              className="font-display text-4xl sm:text-6xl text-[#F5F0E8] tracking-[0.22em] font-normal mb-3"
             >
               SPACE GRAVEYARD
             </motion.h1>
@@ -71,7 +71,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: stage >= 2 ? 1 : 0 }}
               transition={{ duration: 0.9 }}
-              className="font-serif italic text-lg sm:text-xl text-[#C6A36B] tracking-wide mb-8 font-light"
+              className="font-serif italic text-lg sm:text-xl text-[#FFC66D] tracking-wide mb-8 font-light"
             >
               They Never Came Home.
             </motion.p>
@@ -81,7 +81,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: stage >= 3 ? 1 : 0 }}
               transition={{ duration: 1.1 }}
-              className="text-xs sm:text-sm text-[#B6C0CC]/90 leading-relaxed font-light max-w-md mx-auto mb-10"
+              className="text-xs sm:text-sm text-[#C8D8EA]/90 leading-relaxed font-light max-w-md mx-auto mb-10"
             >
               Across six decades of exploration, humanity has left 28 landmark robotic pioneers resting across the Moon, Mars, and interstellar deep space. 
               This is their museum.
@@ -93,14 +93,14 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
                 initial={{ x: '-100%' }}
                 animate={{ x: '100%' }}
                 transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
-                className="w-full h-full bg-gradient-to-r from-transparent via-[#C6A36B] to-transparent"
+                className="w-full h-full bg-gradient-to-r from-transparent via-[#FFC66D] to-transparent"
               />
             </div>
 
             {/* Skip button */}
             <button
               onClick={handleSkip}
-              className="text-[11px] font-sans tracking-[0.25em] uppercase text-[#B6C0CC]/60 hover:text-[#F0E8D9] transition-colors"
+              className="text-[11px] font-sans tracking-[0.25em] uppercase text-[#C8D8EA]/60 hover:text-[#F5F0E8] transition-colors"
             >
               Enter Exhibition ➔
             </button>

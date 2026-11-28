@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ActiveGameId, GameMetadata } from '../games/types';
 import { SpaceQuiz } from '../games/SpaceQuiz/SpaceQuiz';
 import { AsteroidDefender } from '../games/AsteroidDefender/AsteroidDefender';
@@ -24,7 +25,7 @@ const GAMES: GameMetadata[] = [
       { key: 'Mouse / Touch', action: 'Select from four answers' },
       { key: 'Keypad A–D', action: 'Keyboard answer selection' },
     ],
-    accentColor: '#C6A36B',
+    accentColor: '#FFC66D',
     icon: '🏆',
   },
   {
@@ -45,7 +46,7 @@ const GAMES: GameMetadata[] = [
       { key: 'Spacebar / W / Up', action: 'Fire laser cannons' },
       { key: 'Touch / Pointer Drag', action: 'Direct touch steering on mobile' },
     ],
-    accentColor: '#38bdf8',
+    accentColor: '#58D9FF',
     icon: '🛸',
   },
   {
@@ -65,7 +66,7 @@ const GAMES: GameMetadata[] = [
       { key: 'Click / Tap', action: 'Rotate circuit tiles & adjust sliders' },
       { key: 'Pointer Drag', action: 'Wipe away Martian surface dust' },
     ],
-    accentColor: '#10b981',
+    accentColor: '#64E5C0',
     icon: '🛠️',
   },
   {
@@ -79,20 +80,24 @@ const GAMES: GameMetadata[] = [
     instructions: [
       'Fire main thrusters to counteract constant 1/6th lunar gravity.',
       'Use RCS steering thrusters to eliminate horizontal drift and maintain vertical alignment.',
-      'Touch down on the marked pad with vertical speed &le; 2.2 m/s and tilt angle &le; &plusmn;12°.',
+      'Touch down on the marked pad with vertical speed ≤ 2.2 m/s and tilt angle ≤ ±12°.',
     ],
     controls: [
       { key: 'W / Up / Spacebar', action: 'Fire main rocket thruster' },
       { key: 'A / D or Left / Right', action: 'RCS attitude rotation' },
       { key: 'On-Screen Buttons', action: 'Mobile touch thrusters' },
     ],
-    accentColor: '#f59e0b',
+    accentColor: '#FF8D7B',
     icon: '🌕',
   },
 ];
 
 export const PlayPage: React.FC = () => {
-  const [activeGame, setActiveGame] = useState<ActiveGameId>('hub');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const gameParam = searchParams.get('game') as ActiveGameId | null;
+  const activeGame: ActiveGameId = (gameParam && ['quiz', 'defender', 'repair', 'lander'].includes(gameParam))
+    ? gameParam
+    : 'hub';
   const [inspectingGame, setInspectingGame] = useState<GameMetadata | null>(null);
 
   // Persistent user scores in localStorage
@@ -137,13 +142,13 @@ export const PlayPage: React.FC = () => {
 
   const handleSelectGame = (id: ActiveGameId) => {
     playWhooshSound();
-    setActiveGame(id);
+    setSearchParams({ game: id });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToHub = () => {
     playSignalPing(700);
-    setActiveGame('hub');
+    setSearchParams({});
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -226,7 +231,10 @@ export const PlayPage: React.FC = () => {
           return (
             <article
               key={game.id}
-              className="p-8 sm:p-9 rounded-3xl bg-gradient-to-br from-[#101A29]/95 via-[#0e1624]/90 to-[#080D16]/95 border border-white/10 hover:border-[#C6A36B]/60 transition-all shadow-xl backdrop-blur-md flex flex-col justify-between group hover:shadow-2xl"
+              className="p-8 sm:p-9 rounded-3xl bg-gradient-to-br from-[#111A35]/95 via-[#0e1628]/90 to-[#080B1D]/95 border transition-all shadow-xl backdrop-blur-md flex flex-col justify-between group hover:shadow-2xl"
+              style={{
+                borderColor: `${game.accentColor}40`,
+              }}
             >
               <div>
                 {/* Top Badges & Genre */}
@@ -236,10 +244,10 @@ export const PlayPage: React.FC = () => {
                       {game.icon}
                     </span>
                     <div>
-                      <span className="font-mono text-[10px] text-[#C6A36B] uppercase tracking-widest font-bold block">
+                      <span className="font-mono text-[10px] uppercase tracking-widest font-bold block" style={{ color: game.accentColor }}>
                         GAME 0{idx + 1} // {game.genre.toUpperCase()}
                       </span>
-                      <span className="text-xs text-[#B6C0CC] font-mono">
+                      <span className="text-xs text-[#C8D8EA] font-mono">
                         Difficulty: {game.difficulty} • ~{game.estimatedTime}
                       </span>
                     </div>
@@ -247,7 +255,7 @@ export const PlayPage: React.FC = () => {
 
                   <button
                     onClick={() => setInspectingGame(game)}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-[#B6C0CC] hover:text-white transition-colors cursor-pointer"
+                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-mono text-[#C8D8EA] hover:text-white transition-colors cursor-pointer"
                     title="View Instructions & Controls"
                   >
                     ℹ️ Help
@@ -255,23 +263,23 @@ export const PlayPage: React.FC = () => {
                 </div>
 
                 {/* Title */}
-                <h2 className="font-display text-2xl sm:text-3xl text-[#F0E8D9] font-normal leading-tight group-hover:text-white transition-colors mb-2">
+                <h2 className="font-display text-2xl sm:text-3xl text-[#F5F0E8] font-normal leading-tight group-hover:text-white transition-colors mb-2">
                   {game.title}
                 </h2>
-                <div className="font-mono text-xs text-[#C6A36B]/90 tracking-wider uppercase mb-4">
+                <div className="font-mono text-xs tracking-wider uppercase mb-4" style={{ color: game.accentColor }}>
                   {game.subtitle}
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-[#F0E8D9]/90 font-sans font-light leading-relaxed mb-6">
+                <p className="text-sm text-[#F5F0E8]/90 font-sans font-light leading-relaxed mb-6">
                   {game.description}
                 </p>
 
                 {/* Bullet Highlights */}
-                <div className="space-y-1.5 p-3.5 rounded-2xl bg-black/40 border border-white/5 text-xs font-mono text-[#B6C0CC] mb-6">
+                <div className="space-y-1.5 p-3.5 rounded-2xl bg-black/40 border border-white/5 text-xs font-mono text-[#C8D8EA] mb-6">
                   {game.instructions.slice(0, 2).map((inst, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <span className="text-[#C6A36B]">▸</span>
+                      <span style={{ color: game.accentColor }}>▸</span>
                       <span>{inst}</span>
                     </div>
                   ))}
@@ -282,13 +290,14 @@ export const PlayPage: React.FC = () => {
               <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
                 <button
                   onClick={() => handleSelectGame(game.id)}
-                  className="flex-1 py-3.5 px-6 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold tracking-widest uppercase transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  style={{ backgroundColor: game.accentColor }}
+                  className="flex-1 py-3.5 px-6 rounded-xl hover:brightness-110 text-[#080B1D] font-sans text-xs font-bold tracking-widest uppercase transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>LAUNCH GAME ➔</span>
                 </button>
                 <button
                   onClick={() => setInspectingGame(game)}
-                  className="py-3.5 px-4 rounded-xl bg-white/5 hover:bg-white/15 text-[#F0E8D9] border border-white/10 text-xs font-mono uppercase tracking-wider transition-all cursor-pointer"
+                  className="py-3.5 px-4 rounded-xl bg-white/5 hover:bg-white/15 text-[#F5F0E8] border border-white/10 text-xs font-mono uppercase tracking-wider transition-all cursor-pointer"
                 >
                   HOW TO PLAY
                 </button>
@@ -301,22 +310,22 @@ export const PlayPage: React.FC = () => {
       {/* Instructions & Controls Modal Drawer */}
       {inspectingGame && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="max-w-md w-full p-8 rounded-3xl bg-[#101A29] border border-[#C6A36B]/60 shadow-2xl space-y-6 animate-fadeIn">
+          <div className="max-w-md w-full p-8 rounded-3xl bg-[#111A35] border border-[#FFC66D]/40 shadow-2xl space-y-6 animate-fadeIn">
             <div className="flex items-start justify-between pb-4 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <span className="text-3xl">{inspectingGame.icon}</span>
                 <div>
-                  <h3 className="font-display text-2xl text-[#F0E8D9]">
+                  <h3 className="font-display text-2xl text-[#F5F0E8]">
                     {inspectingGame.title}
                   </h3>
-                  <span className="font-mono text-xs text-[#C6A36B] uppercase tracking-wider">
+                  <span className="font-mono text-xs text-[#FFC66D] uppercase tracking-wider">
                     {inspectingGame.genre} • {inspectingGame.difficulty}
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => setInspectingGame(null)}
-                className="text-xs p-1.5 rounded-full border border-white/15 text-[#B6C0CC] hover:text-white"
+                className="text-xs p-1.5 rounded-full border border-white/15 text-[#C8D8EA] hover:text-white"
               >
                 ✕
               </button>
@@ -324,13 +333,13 @@ export const PlayPage: React.FC = () => {
 
             {/* Detailed Instructions */}
             <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-[#C6A36B] font-bold block mb-2">
+              <span className="text-xs font-mono uppercase tracking-widest text-[#FFC66D] font-bold block mb-2">
                 MISSION OBJECTIVES
               </span>
-              <ul className="space-y-2 text-xs sm:text-sm text-[#F0E8D9]/90 font-light leading-relaxed">
+              <ul className="space-y-2 text-xs sm:text-sm text-[#F5F0E8]/90 font-light leading-relaxed">
                 {inspectingGame.instructions.map((step, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="font-mono text-[#C6A36B] font-bold">{idx + 1}.</span>
+                    <span className="font-mono text-[#FFC66D] font-bold">{idx + 1}.</span>
                     <span>{step}</span>
                   </li>
                 ))}
@@ -339,13 +348,13 @@ export const PlayPage: React.FC = () => {
 
             {/* Controls Mapping */}
             <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-2">
-              <span className="text-xs font-mono uppercase tracking-widest text-[#38bdf8] font-bold block mb-1">
+              <span className="text-xs font-mono uppercase tracking-widest text-[#58D9FF] font-bold block mb-1">
                 PILOT CONTROLS
               </span>
               {inspectingGame.controls.map((ctrl, i) => (
-                <div key={i} className="flex justify-between text-xs font-mono text-[#B6C0CC]">
-                  <span className="text-[#F0E8D9] font-medium">{ctrl.key}:</span>
-                  <span className="text-[#38bdf8]">{ctrl.action}</span>
+                <div key={i} className="flex justify-between text-xs font-mono text-[#C8D8EA]">
+                  <span className="text-[#F5F0E8] font-medium">{ctrl.key}:</span>
+                  <span className="text-[#58D9FF]">{ctrl.action}</span>
                 </div>
               ))}
             </div>
@@ -357,13 +366,13 @@ export const PlayPage: React.FC = () => {
                   setInspectingGame(null);
                   handleSelectGame(target);
                 }}
-                className="flex-1 py-3 rounded-xl bg-[#C6A36B] hover:bg-[#d8b57d] text-[#080D16] font-sans text-xs font-bold uppercase tracking-wider shadow-lg"
+                className="flex-1 py-3 rounded-xl bg-[#FFC66D] hover:bg-[#ffe09e] text-[#080B1D] font-sans text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#FFC66D]/20 cursor-pointer"
               >
                 PLAY NOW ➔
               </button>
               <button
                 onClick={() => setInspectingGame(null)}
-                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-[#F0E8D9] text-xs font-mono uppercase tracking-wider"
+                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-[#F5F0E8] text-xs font-mono uppercase tracking-wider cursor-pointer"
               >
                 CLOSE
               </button>

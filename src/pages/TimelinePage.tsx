@@ -260,7 +260,7 @@ export const TimelinePage: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search 50 milestones by mission, world, discovery, Earth event..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-black/40 border border-white/10 focus:border-[#C6A36B] focus:outline-none text-[#F0E8D9] placeholder-[#B6C0CC]/50 text-xs font-sans"
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-black/40 border border-white/10 focus:border-[#FFC66D] focus:outline-none text-[#F5F0E8] placeholder-[#C8D8EA]/50 text-xs font-sans"
             />
             {searchQuery && (
               <button
@@ -302,8 +302,8 @@ export const TimelinePage: React.FC = () => {
         </div>
 
         {/* Active Era Description */}
-        <div className="px-3 py-2 text-xs font-sans text-[#B6C0CC]/80 flex items-center gap-2">
-          <span className="font-mono text-[#C6A36B]">{currentEra.range}:</span>
+        <div className="px-3 py-2 text-xs font-sans text-[#C8D8EA]/80 flex items-center gap-2">
+          <span className="font-mono text-[#FFC66D]">{currentEra.range}:</span>
           <span>{currentEra.description}</span>
         </div>
       </div>
@@ -311,10 +311,10 @@ export const TimelinePage: React.FC = () => {
       {/* 3. VERTICAL CHRONOLOGY ARCHITECTURE */}
       <main className="relative flex-1">
         {filteredEvents.length === 0 ? (
-          <div className="p-16 rounded-3xl bg-[#101A29]/60 border border-white/10 text-center">
+          <div className="p-16 rounded-3xl bg-[#111A35]/60 border border-white/10 text-center">
             <span className="text-3xl block mb-2">🔭</span>
-            <h3 className="font-display text-xl text-[#F0E8D9] mb-1">No Milestones Found</h3>
-            <p className="text-xs text-[#B6C0CC] max-w-sm mx-auto mb-4 font-light">
+            <h3 className="font-display text-xl text-[#F5F0E8] mb-1">No Milestones Found</h3>
+            <p className="text-xs text-[#C8D8EA] max-w-sm mx-auto mb-4 font-light">
               No historical records matched your search query or filter combination.
             </p>
             <button
@@ -323,7 +323,7 @@ export const TimelinePage: React.FC = () => {
                 setFilterDest('all');
                 setSearchQuery('');
               }}
-              className="px-4 py-2 rounded-xl bg-[#C6A36B] text-[#080D16] text-xs font-semibold uppercase tracking-wider"
+              className="px-4 py-2 rounded-xl bg-[#FFC66D] text-[#080B1D] text-xs font-semibold uppercase tracking-wider shadow-lg shadow-[#FFC66D]/20 cursor-pointer"
             >
               Reset All Filters
             </button>
@@ -332,7 +332,7 @@ export const TimelinePage: React.FC = () => {
           <div className="relative py-6">
             {/* Illuminated Central Timeline Spine */}
             {/* Desktop: Centered down middle. Mobile: Aligned left at 20px */}
-            <div className="absolute left-5 md:left-1/2 top-4 bottom-4 w-0.5 bg-gradient-to-b from-[#C6A36B]/20 via-[#C6A36B]/70 to-[#C6A36B]/20 -translate-x-1/2 pointer-events-none" />
+            <div className="absolute left-5 md:left-1/2 top-4 bottom-4 w-0.5 bg-gradient-to-b from-[#FFC66D]/20 via-[#FFC66D]/70 to-[#FFC66D]/20 -translate-x-1/2 pointer-events-none" />
 
             <div className="space-y-10 md:space-y-16">
               <AnimatePresence>
@@ -357,8 +357,8 @@ export const TimelinePage: React.FC = () => {
                       <div className="absolute left-5 md:left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm shadow-xl transition-all ${
                           isMajor
-                            ? 'bg-[#C6A36B] text-[#080D16] border-2 border-white ring-4 ring-[#C6A36B]/30'
-                            : 'bg-[#101A29] text-[#F0E8D9] border border-[#C6A36B]/60'
+                            ? 'bg-[#FFC66D] text-[#080B1D] border-2 border-white ring-4 ring-[#FFC66D]/30'
+                            : 'bg-[#111A35] text-[#F5F0E8] border border-[#FFC66D]/60'
                         }`}>
                           {getTypeIcon(ev.type)}
                         </div>
@@ -370,49 +370,49 @@ export const TimelinePage: React.FC = () => {
                       }`}>
                         <div className={`p-6 sm:p-7 rounded-3xl transition-all shadow-xl backdrop-blur-md relative overflow-hidden group ${
                           isMajor
-                            ? 'bg-gradient-to-br from-[#101A29]/95 via-[#131E30]/90 to-[#1A140A]/90 border border-[#C6A36B]/60 hover:border-[#C6A36B] shadow-[0_0_25px_rgba(198,163,107,0.1)]'
-                            : 'bg-[#101A29]/80 border border-white/10 hover:border-[#C6A36B]/40'
+                            ? 'bg-gradient-to-br from-[#111A35]/95 via-[#162244]/90 to-[#1F170A]/90 border border-[#FFC66D]/60 hover:border-[#FFC66D] shadow-[0_0_25px_rgba(255,198,109,0.15)]'
+                            : 'bg-[#111A35]/80 border border-white/10 hover:border-[#FFC66D]/40'
                         }`}>
                           {/* Highlight Glow for Major Milestones */}
                           {isMajor && (
-                            <div className="absolute -top-12 -right-12 w-28 h-28 bg-[#C6A36B]/10 rounded-full blur-2xl pointer-events-none" />
+                            <div className="absolute -top-12 -right-12 w-28 h-28 bg-[#FFC66D]/10 rounded-full blur-2xl pointer-events-none" />
                           )}
 
                           {/* Top Badges & Date */}
                           <div className={`flex flex-wrap items-center gap-2 mb-2 ${
                             isEven ? 'md:justify-end' : 'md:justify-start'
                           }`}>
-                            <span className="font-mono text-xs font-bold text-[#C6A36B] tracking-widest uppercase">
+                            <span className="font-mono text-xs font-bold text-[#FFC66D] tracking-widest uppercase">
                               {monthName ? `${monthName.toUpperCase()} ` : ''}{ev.year}
                             </span>
-                            <span className="text-[#B6C0CC]/40">•</span>
+                            <span className="text-[#C8D8EA]/40">•</span>
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider border font-medium ${destBadge.color}`}>
                               {destBadge.label} // {ev.type.toUpperCase()}
                             </span>
                             {isMajor && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-[#C6A36B]/20 text-[#C6A36B] border border-[#C6A36B]/50 font-bold">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-[#FFC66D]/20 text-[#FFC66D] border border-[#FFC66D]/50 font-bold">
                                 ✦ MAJOR MILESTONE
                               </span>
                             )}
                           </div>
 
                           {/* Title */}
-                          <h2 className="font-display text-xl sm:text-2xl text-[#F0E8D9] font-normal leading-snug mb-3 group-hover:text-white transition-colors">
+                          <h2 className="font-display text-xl sm:text-2xl text-[#F5F0E8] font-normal leading-snug mb-3 group-hover:text-white transition-colors">
                             {ev.title}
                           </h2>
 
                           {/* Description */}
-                          <p className="text-sm text-[#F0E8D9]/90 leading-relaxed font-sans font-light mb-4">
+                          <p className="text-sm text-[#F5F0E8]/90 leading-relaxed font-sans font-light mb-4">
                             {ev.description}
                           </p>
 
                           {/* Terrestrial Earth Context */}
                           {ev.earthEvent && (
-                            <div className="mt-4 p-3.5 rounded-2xl bg-black/40 border border-white/5 text-xs text-[#B6C0CC] flex items-start gap-2.5 text-left">
-                              <span className="text-[#C6A36B] font-mono text-[11px] uppercase tracking-wider shrink-0 font-semibold mt-0.5">
+                            <div className="mt-4 p-3.5 rounded-2xl bg-black/40 border border-white/5 text-xs text-[#C8D8EA] flex items-start gap-2.5 text-left">
+                              <span className="text-[#FFC66D] font-mono text-[11px] uppercase tracking-wider shrink-0 font-semibold mt-0.5">
                                 🌍 ON EARTH:
                               </span>
-                              <span className="font-sans italic leading-relaxed text-[#B6C0CC]/95 font-light">
+                              <span className="font-sans italic leading-relaxed text-[#C8D8EA]/95 font-light">
                                 {ev.earthEvent}
                               </span>
                             </div>
@@ -426,7 +426,7 @@ export const TimelinePage: React.FC = () => {
                               <Link
                                 to={`/ghost/${ev.artifactId}`}
                                 onClick={() => playSignalPing(700)}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C6A36B]/15 hover:bg-[#C6A36B] text-[#C6A36B] hover:text-[#080D16] border border-[#C6A36B]/40 transition-all font-sans text-xs font-semibold tracking-wider uppercase group/link"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFC66D]/15 hover:bg-[#FFC66D] text-[#FFC66D] hover:text-[#080B1D] border border-[#FFC66D]/40 transition-all font-sans text-xs font-semibold tracking-wider uppercase group/link"
                               >
                                 <span>EXPLORE MISSION DOSSIER</span>
                                 <span className="group-hover/link:translate-x-1 transition-transform">→</span>

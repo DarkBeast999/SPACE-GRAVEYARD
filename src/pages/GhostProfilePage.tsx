@@ -396,7 +396,7 @@ export const GhostProfilePage: React.FC = () => {
           {/* Status Badge & Silence Duration */}
           <div className="flex flex-col items-start lg:items-end gap-3 flex-shrink-0">
             <span className={`px-4 py-1.5 rounded-full text-xs font-mono font-semibold tracking-wider border ${theme.badgeBorder} ${theme.accentBg} text-[#F5F0E8]`}>
-              ● {getNaturalStatus()}
+              {getNaturalStatus()}
             </span>
 
             {silenceDuration && (

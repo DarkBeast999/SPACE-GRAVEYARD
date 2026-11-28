@@ -68,16 +68,66 @@ export function getMonumentTypeLabel(type: MonumentType): string {
 }
 
 /**
- * High-precision React SVG Vector Icon Component.
- * Shared across Search, Visual Legend, Dossier Headers, and UI Badges.
+ * Destination-specific astronomical cartography accent colors.
+ */
+export function getDestinationAccentColor(body?: string): {
+  primary: string;
+  glow: string;
+  border: string;
+  core: string;
+} {
+  switch (body) {
+    case 'mars':
+      return {
+        primary: '#FF8D7B', // Coral rust
+        glow: 'rgba(255, 141, 123, 0.45)',
+        border: 'rgba(255, 141, 123, 0.85)',
+        core: '#FFF2F0',
+      };
+    case 'moon':
+      return {
+        primary: '#C8D8EA', // Lunar silver
+        glow: 'rgba(200, 216, 234, 0.45)',
+        border: 'rgba(200, 216, 234, 0.85)',
+        core: '#FFFFFF',
+      };
+    case 'saturn':
+      return {
+        primary: '#FFC66D', // Solar gold
+        glow: 'rgba(255, 198, 109, 0.45)',
+        border: 'rgba(255, 198, 109, 0.85)',
+        core: '#FFFBF2',
+      };
+    case 'deep-space':
+      return {
+        primary: '#58D9FF', // Electric cyan
+        glow: 'rgba(88, 217, 255, 0.5)',
+        border: 'rgba(88, 217, 255, 0.9)',
+        core: '#EDFCFF',
+      };
+    default:
+      return {
+        primary: '#38BDF8', // Azure cyan for landmarks & general celestial markers
+        glow: 'rgba(56, 189, 248, 0.45)',
+        border: 'rgba(56, 189, 248, 0.85)',
+        core: '#F0F9FF',
+      };
+  }
+}
+
+/**
+ * Premium Astronomical Cartography SVG Vector Icon Component.
+ * Used across Search, Legend, Directory Cards, and Dossier Headers.
  */
 export const MonumentIcon: React.FC<{
   type: MonumentType;
+  body?: string;
   className?: string;
   size?: number;
-}> = ({ type, className = 'w-6 h-6', size = 28 }) => {
+}> = ({ type, body, className = 'w-6 h-6', size = 28 }) => {
   const isLandmark = type === 'landmark';
-  const rimColor = isLandmark ? '#38BDF8' : '#C6A36B';
+  const colors = getDestinationAccentColor(isLandmark ? 'landmark' : body);
+  const accent = colors.primary;
 
   return (
     <svg
@@ -88,196 +138,160 @@ export const MonumentIcon: React.FC<{
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Outer circular badge background */}
-      <circle cx="64" cy="64" r="60" fill="#080D16" fillOpacity="0.92" />
-      <circle cx="64" cy="64" r="59" stroke={rimColor} strokeWidth="2" strokeOpacity="0.8" />
-      <circle cx="64" cy="64" r="54" stroke={rimColor} strokeWidth="0.8" strokeDasharray="3 4" strokeOpacity="0.35" />
+      {/* 1. Deep cosmic observatory badge shield */}
+      <circle cx="64" cy="64" r="60" fill="#080B1D" fillOpacity="0.94" />
+      <circle cx="64" cy="64" r="59" stroke={accent} strokeWidth="1.6" strokeOpacity="0.8" />
 
-      {/* Cardinal tick marks */}
-      <line x1="64" y1="4" x2="64" y2="10" stroke={rimColor} strokeWidth="1.5" strokeOpacity="0.6" />
-      <line x1="64" y1="118" x2="64" y2="124" stroke={rimColor} strokeWidth="1.5" strokeOpacity="0.6" />
-      <line x1="4" y1="64" x2="10" y2="64" stroke={rimColor} strokeWidth="1.5" strokeOpacity="0.6" />
-      <line x1="118" y1="64" x2="124" y2="64" stroke={rimColor} strokeWidth="1.5" strokeOpacity="0.6" />
+      {/* 2. Concentric Astronomical Reticle Rings */}
+      <circle cx="64" cy="64" r="51" stroke={accent} strokeWidth="0.8" strokeDasharray="3 4" strokeOpacity="0.4" />
+      <circle cx="64" cy="64" r="41" stroke={accent} strokeWidth="0.6" strokeOpacity="0.25" />
 
-      {/* Icon Specific Artwork */}
+      {/* 3. Cardinal Coordinate Ticks (Astronomical reticle) */}
+      <line x1="64" y1="4" x2="64" y2="12" stroke={accent} strokeWidth="1.8" strokeOpacity="0.85" />
+      <line x1="64" y1="116" x2="64" y2="124" stroke={accent} strokeWidth="1.8" strokeOpacity="0.85" />
+      <line x1="4" y1="64" x2="12" y2="64" stroke={accent} strokeWidth="1.8" strokeOpacity="0.85" />
+      <line x1="116" y1="64" x2="124" y2="64" stroke={accent} strokeWidth="1.8" strokeOpacity="0.85" />
+
+      {/* Diagonal micro-ticks */}
+      <circle cx="28" cy="28" r="1.5" fill={accent} fillOpacity="0.5" />
+      <circle cx="100" cy="28" r="1.5" fill={accent} fillOpacity="0.5" />
+      <circle cx="28" cy="100" r="1.5" fill={accent} fillOpacity="0.5" />
+      <circle cx="100" cy="100" r="1.5" fill={accent} fillOpacity="0.5" />
+
+      {/* Central Celestial Glow */}
+      <circle cx="64" cy="64" r="22" fill={accent} fillOpacity="0.12" />
+
+      {/* Category Specific Astronomical Reticle Glyphs */}
       {type === 'rover' && (
-        <g id="rover-symbol">
-          {/* Suspension Rocker-Bogie Linkages */}
-          <path d="M42 74L30 92H44L56 74" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M56 74L68 94H82L86 74" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M86 74L98 90H108" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-
-          {/* 6 Clearly Distinguishable Wheels */}
-          {[
-            { cx: 28, cy: 92 },
-            { cx: 44, cy: 94 },
-            { cx: 66, cy: 94 },
-            { cx: 82, cy: 94 },
-            { cx: 98, cy: 90 },
-            { cx: 108, cy: 88 },
-          ].map((w, idx) => (
-            <g key={idx}>
-              <circle cx={w.cx} cy={w.cy} r="6.5" fill="#1E293B" stroke="#E2E8F0" strokeWidth="1.8" />
-              <circle cx={w.cx} cy={w.cy} r="2.5" fill="#C6A36B" />
-            </g>
-          ))}
-
-          {/* Central Scientific Chassis Body */}
-          <path d="M38 60H92L88 74H36L38 60Z" fill="#C6A36B" stroke="#F0E8D9" strokeWidth="2" strokeLinejoin="round" />
-          {/* Chassis top equipment details */}
-          <rect x="42" y="55" width="22" height="5" rx="1.5" fill="#F0E8D9" />
-          <rect x="68" y="56" width="16" height="4" rx="1" fill="#94A3B8" />
-
-          {/* Rear RTG Generator / High-gain UHF Antenna */}
-          <path d="M42 55L34 44" stroke="#F0E8D9" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="34" cy="44" r="3.5" fill="#C6A36B" stroke="#F0E8D9" strokeWidth="1.2" />
-
-          {/* Front Camera Mast & Dual Stereo Sensor Head */}
-          <line x1="84" y1="55" x2="84" y2="34" stroke="#F0E8D9" strokeWidth="2.8" strokeLinecap="round" />
-          <rect x="76" y="28" width="16" height="8" rx="2" fill="#1E293B" stroke="#C6A36B" strokeWidth="1.8" />
-          <circle cx="80" cy="32" r="2" fill="#38BDF8" />
-          <circle cx="88" cy="32" r="2" fill="#38BDF8" />
-
-          {/* Robotic Instrument Arm extending forward */}
-          <path d="M88 68L100 76L108 80" stroke="#E2E8F0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <g id="carto-rover">
+          {/* Planetary Surface Navigation Diamond with Axis Crosshair */}
+          <line x1="36" y1="64" x2="92" y2="64" stroke={accent} strokeWidth="1.2" strokeOpacity="0.6" />
+          <line x1="64" y1="36" x2="64" y2="92" stroke={accent} strokeWidth="1.2" strokeOpacity="0.6" />
+          {/* Navigation Diamond */}
+          <polygon
+            points="64,38 90,64 64,90 38,64"
+            stroke={accent}
+            strokeWidth="2.2"
+            fill="#111A35"
+            fillOpacity="0.85"
+            strokeLinejoin="round"
+          />
+          {/* Precision inner corner brackets */}
+          <path d="M50 56H46V60" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M78 56H82V60" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M50 72H46V68" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M78 72H82V68" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round" />
+          {/* Core Illuminated Beacon */}
+          <circle cx="64" cy="64" r="5" fill={accent} />
+          <circle cx="64" cy="64" r="2.2" fill="#FFFFFF" />
         </g>
       )}
 
       {type === 'lander' && (
-        <g id="lander-symbol">
-          {/* 3 Splayed Landing Legs with Footpads */}
-          {/* Left leg */}
-          <path d="M44 74L26 98" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="20" y1="98" x2="32" y2="98" stroke="#F0E8D9" strokeWidth="2.8" strokeLinecap="round" />
-          {/* Center leg */}
-          <path d="M64 78L64 104" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="58" y1="104" x2="70" y2="104" stroke="#F0E8D9" strokeWidth="2.8" strokeLinecap="round" />
-          {/* Right leg */}
-          <path d="M84 74L102 98" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="96" y1="98" x2="108" y2="98" stroke="#F0E8D9" strokeWidth="2.8" strokeLinecap="round" />
-
-          {/* Core Octagonal Scientific Deck (Gold Thermal Foil) */}
-          <path d="M42 58L52 50H76L86 58L84 76L76 80H52L44 76L42 58Z" fill="#C6A36B" stroke="#F0E8D9" strokeWidth="2" strokeLinejoin="round" />
-          {/* Equipment bay panels */}
-          <rect x="52" y="56" width="24" height="18" rx="1.5" fill="#1E293B" stroke="#C6A36B" strokeWidth="1.2" />
-          <line x1="64" y1="56" x2="64" y2="74" stroke="#C6A36B" strokeWidth="1" />
-
-          {/* Parabolic High-Gain Dish Antenna */}
-          <path d="M48 44Q64 36 80 44" stroke="#F0E8D9" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-          <line x1="64" y1="40" x2="64" y2="50" stroke="#F0E8D9" strokeWidth="2" />
-          <circle cx="64" cy="34" r="2.5" fill="#C6A36B" />
-
-          {/* Meteorology Mast & Sample Arm */}
-          <line x1="46" y1="54" x2="38" y2="38" stroke="#94A3B8" strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="38" cy="38" r="1.8" fill="#F0E8D9" />
-          <path d="M82 72L96 78L104 86" stroke="#94A3B8" strokeWidth="1.8" strokeLinecap="round" />
+        <g id="carto-lander">
+          {/* Surface Landing Target Reticle & 3-Axis Station Legs */}
+          <line x1="64" y1="64" x2="38" y2="88" stroke={accent} strokeWidth="2.0" strokeLinecap="round" />
+          <line x1="64" y1="64" x2="90" y2="88" stroke={accent} strokeWidth="2.0" strokeLinecap="round" />
+          <line x1="64" y1="64" x2="64" y2="34" stroke={accent} strokeWidth="2.0" strokeLinecap="round" />
+          {/* Landing Target Hexagonal Station Ring */}
+          <polygon
+            points="64,48 78,56 78,72 64,80 50,72 50,56"
+            stroke={accent}
+            strokeWidth="2.0"
+            fill="#111A35"
+            fillOpacity="0.85"
+            strokeLinejoin="round"
+          />
+          {/* Station Footpads */}
+          <circle cx="38" cy="88" r="3.5" fill="#111A35" stroke={accent} strokeWidth="1.5" />
+          <circle cx="90" cy="88" r="3.5" fill="#111A35" stroke={accent} strokeWidth="1.5" />
+          <circle cx="64" cy="34" r="3.5" fill="#111A35" stroke={accent} strokeWidth="1.5" />
+          {/* Core Beacon */}
+          <circle cx="64" cy="64" r="4.5" fill={accent} />
+          <circle cx="64" cy="64" r="2" fill="#FFFFFF" />
         </g>
       )}
 
       {type === 'probe' && (
-        <g id="probe-symbol">
-          {/* Two Distinct Extended Solar Panel Wings */}
-          {/* Left Solar Array */}
-          <g>
-            <rect x="12" y="52" width="36" height="24" rx="2" fill="#1E293B" stroke="#38BDF8" strokeWidth="1.8" />
-            <line x1="24" y1="52" x2="24" y2="76" stroke="#38BDF8" strokeWidth="1" strokeOpacity="0.7" />
-            <line x1="36" y1="52" x2="36" y2="76" stroke="#38BDF8" strokeWidth="1" strokeOpacity="0.7" />
-            <line x1="12" y1="64" x2="48" y2="64" stroke="#C6A36B" strokeWidth="1" />
-          </g>
-          {/* Right Solar Array */}
-          <g>
-            <rect x="80" y="52" width="36" height="24" rx="2" fill="#1E293B" stroke="#38BDF8" strokeWidth="1.8" />
-            <line x1="92" y1="52" x2="92" y2="76" stroke="#38BDF8" strokeWidth="1" strokeOpacity="0.7" />
-            <line x1="104" y1="52" x2="104" y2="76" stroke="#38BDF8" strokeWidth="1" strokeOpacity="0.7" />
-            <line x1="80" y1="64" x2="116" y2="64" stroke="#C6A36B" strokeWidth="1" />
-          </g>
-
-          {/* Symmetrical Solar Booms connecting to bus */}
-          <line x1="48" y1="64" x2="52" y2="64" stroke="#F0E8D9" strokeWidth="2.5" />
-          <line x1="76" y1="64" x2="80" y2="64" stroke="#F0E8D9" strokeWidth="2.5" />
-
-          {/* Central Spacecraft Bus */}
-          <rect x="52" y="48" width="24" height="32" rx="3" fill="#C6A36B" stroke="#F0E8D9" strokeWidth="2" />
-          <circle cx="64" cy="64" r="5" fill="#1E293B" stroke="#F0E8D9" strokeWidth="1.2" />
-
-          {/* High-Gain Parabolic Dish Antenna (Top) */}
-          <path d="M42 42Q64 24 86 42" stroke="#F0E8D9" strokeWidth="3" strokeLinecap="round" fill="none" />
-          <line x1="64" y1="33" x2="64" y2="48" stroke="#F0E8D9" strokeWidth="2" />
-          <circle cx="64" cy="24" r="3" fill="#C6A36B" stroke="#F0E8D9" strokeWidth="1.5" />
-
-          {/* Magnetometer Boom / Sensor Tip (Bottom) */}
-          <line x1="64" y1="80" x2="64" y2="104" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="64" cy="104" r="2.5" fill="#38BDF8" />
+        <g id="carto-probe">
+          {/* Interstellar Trajectory Star Reticle */}
+          {/* Radiant 8-point celestial beacon */}
+          <line x1="64" y1="30" x2="64" y2="98" stroke={accent} strokeWidth="1.5" strokeOpacity="0.7" />
+          <line x1="30" y1="64" x2="98" y2="64" stroke={accent} strokeWidth="1.5" strokeOpacity="0.7" />
+          <line x1="40" y1="40" x2="88" y2="88" stroke={accent} strokeWidth="1" strokeOpacity="0.4" />
+          <line x1="88" y1="40" x2="40" y2="88" stroke={accent} strokeWidth="1" strokeOpacity="0.4" />
+          {/* Celestial Orbit Arcs */}
+          <circle cx="64" cy="64" r="20" stroke={accent} strokeWidth="1.8" strokeDasharray="6 3" fill="none" />
+          {/* Spacecraft Core Star */}
+          <path
+            d="M64 42L68 58L84 64L68 70L64 86L60 70L44 64L60 58Z"
+            fill="#111A35"
+            stroke={accent}
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+          <circle cx="64" cy="64" r="4" fill={accent} />
+          <circle cx="64" cy="64" r="1.8" fill="#FFFFFF" />
         </g>
       )}
 
       {type === 'helicopter' && (
-        <g id="helicopter-symbol">
-          {/* 4 Carbon-Composite Splayed Landing Legs */}
-          <path d="M54 74L34 102" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" />
-          <circle cx="34" cy="102" r="2.2" fill="#F0E8D9" />
-          <path d="M58 76L46 104" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" />
-          <circle cx="46" cy="104" r="2.2" fill="#F0E8D9" />
-          <path d="M70 76L82 104" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" />
-          <circle cx="82" cy="104" r="2.2" fill="#F0E8D9" />
-          <path d="M74 74L94 102" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" />
-          <circle cx="94" cy="102" r="2.2" fill="#F0E8D9" />
-
-          {/* Compact Avionics Fuselage Cube */}
-          <rect x="52" y="58" width="24" height="20" rx="3" fill="#C6A36B" stroke="#F0E8D9" strokeWidth="2" />
-          <rect x="56" y="62" width="16" height="12" rx="1.5" fill="#1E293B" />
-          <circle cx="64" cy="68" r="2.5" fill="#38BDF8" />
-
-          {/* Central Vertical Rotor Mast */}
-          <line x1="64" y1="58" x2="64" y2="28" stroke="#F0E8D9" strokeWidth="2.5" strokeLinecap="round" />
-
-          {/* Lower Rotor Blade Pair */}
-          <rect x="20" y="46" width="88" height="4.5" rx="2" fill="#E2E8F0" stroke="#1E293B" strokeWidth="1" />
-          {/* Upper Counter-Rotating Rotor Blade Pair */}
-          <rect x="24" y="35" width="80" height="4.5" rx="2" fill="#F0E8D9" stroke="#1E293B" strokeWidth="1" />
-
-          {/* Solar Panel Top Plate */}
-          <rect x="54" y="24" width="20" height="4" rx="1" fill="#C6A36B" stroke="#F0E8D9" strokeWidth="1" />
+        <g id="carto-helicopter">
+          {/* Aerial Scout Beacon Reticle */}
+          {/* Dual Altitude Winglets / Rotor Axis */}
+          <line x1="28" y1="52" x2="100" y2="52" stroke={accent} strokeWidth="2.2" strokeLinecap="round" />
+          <line x1="34" y1="44" x2="94" y2="44" stroke={accent} strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.7" />
+          <line x1="64" y1="38" x2="64" y2="82" stroke={accent} strokeWidth="2.0" strokeLinecap="round" />
+          {/* Aerial Quad Footprint */}
+          <circle cx="44" cy="84" r="2.5" fill={accent} />
+          <circle cx="84" cy="84" r="2.5" fill={accent} />
+          <path d="M44 84L54 70H74L84 84" stroke={accent} strokeWidth="1.5" fill="none" />
+          {/* Fuselage core box */}
+          <rect x="54" y="60" width="20" height="14" rx="2" fill="#111A35" stroke={accent} strokeWidth="1.6" />
+          <circle cx="64" cy="67" r="3.5" fill={accent} />
+          <circle cx="64" cy="67" r="1.5" fill="#FFFFFF" />
         </g>
       )}
 
       {type === 'landmark' && (
-        <g id="landmark-symbol">
-          {/* Twin Geological Planetary Mountain Peaks / Caldera Ridges */}
-          <path
-            d="M24 96L58 32L74 62L88 44L104 96H24Z"
-            fill="#0F1F38"
-            stroke="#38BDF8"
-            strokeWidth="2.5"
+        <g id="carto-landmark">
+          {/* Geological Elevation Reticle */}
+          {/* Contour elevation arcs */}
+          <path d="M34 86C44 76 84 76 94 86" stroke={accent} strokeWidth="1.2" strokeOpacity="0.5" fill="none" />
+          <path d="M40 74C48 66 80 66 88 74" stroke={accent} strokeWidth="1.4" strokeOpacity="0.7" fill="none" />
+          {/* Summit Elevation Trigon */}
+          <polygon
+            points="64,32 94,88 34,88"
+            stroke={accent}
+            strokeWidth="2.2"
+            fill="#111A35"
+            fillOpacity="0.85"
             strokeLinejoin="round"
           />
-
-          {/* Topographical Contour Ridges */}
-          <path d="M38 78Q58 72 78 78" stroke="#38BDF8" strokeWidth="1.5" strokeOpacity="0.8" fill="none" />
-          <path d="M48 62Q58 58 68 62" stroke="#38BDF8" strokeWidth="1.5" strokeOpacity="0.8" fill="none" />
-          <path d="M78 68Q88 64 96 70" stroke="#38BDF8" strokeWidth="1.5" strokeOpacity="0.8" fill="none" />
-
-          {/* Caldera / Summit Rim Highlight */}
-          <path d="M50 46L58 32L66 46Z" fill="#38BDF8" fillOpacity="0.35" stroke="#F0E8D9" strokeWidth="1.2" />
-
-          {/* Summit Beacon Diamond */}
-          <polygon points="58,16 63,23 58,30 53,23" fill="#38BDF8" stroke="#F0E8D9" strokeWidth="1.5" />
-          <circle cx="58" cy="23" r="1.5" fill="#FFFFFF" />
+          {/* Summit Crater / Apex Star */}
+          <circle cx="64" cy="54" r="6" stroke={accent} strokeWidth="1.4" fill="none" />
+          <circle cx="64" cy="32" r="3.5" fill={accent} />
+          <circle cx="64" cy="32" r="1.5" fill="#FFFFFF" />
         </g>
       )}
     </svg>
   );
 };
 
-// Cached textures for 3D Sprites
-const spriteTextureCache = new Map<MonumentType, THREE.CanvasTexture>();
+// Texture cache for 3D astronomical cartography sprites
+const spriteTextureCache = new Map<string, THREE.CanvasTexture>();
 
 /**
- * Renders the crisp vector icon onto an HTML5 Canvas and returns a cached THREE.CanvasTexture.
+ * Renders an illuminated astronomical cartography reticle onto an HTML5 Canvas.
+ * Generates an elegant, geospatially anchored surface reticle texture.
  */
-export function getMonumentSpriteTexture(type: MonumentType): THREE.CanvasTexture {
-  if (spriteTextureCache.has(type)) {
-    return spriteTextureCache.get(type)!;
+export function getMonumentSpriteTexture(type: MonumentType, body?: string): THREE.CanvasTexture {
+  const isLandmark = type === 'landmark';
+  const resolvedBody = isLandmark ? 'landmark' : body || 'generic';
+  const cacheKey = `${type}_${resolvedBody}`;
+
+  if (spriteTextureCache.has(cacheKey)) {
+    return spriteTextureCache.get(cacheKey)!;
   }
 
   const canvas = document.createElement('canvas');
@@ -285,332 +299,228 @@ export function getMonumentSpriteTexture(type: MonumentType): THREE.CanvasTextur
   canvas.height = 128;
   const ctx = canvas.getContext('2d')!;
 
-  const isLandmark = type === 'landmark';
-  const rimColor = isLandmark ? '#38BDF8' : '#C6A36B';
+  const colors = getDestinationAccentColor(resolvedBody);
+  const accent = colors.primary;
 
   ctx.clearRect(0, 0, 128, 128);
 
-  // 1. Dark circular backing shield
+  // 1. Subtle radial bloom halo for central illumination
+  const haloGrad = ctx.createRadialGradient(64, 64, 6, 64, 64, 56);
+  haloGrad.addColorStop(0, colors.glow);
+  haloGrad.addColorStop(0.45, 'rgba(17, 26, 53, 0.4)');
+  haloGrad.addColorStop(1, 'rgba(8, 11, 29, 0)');
+  ctx.fillStyle = haloGrad;
   ctx.beginPath();
-  ctx.arc(64, 64, 60, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(8, 13, 22, 0.92)';
+  ctx.arc(64, 64, 58, 0, Math.PI * 2);
   ctx.fill();
 
-  // 2. Outer hairline border
-  ctx.lineWidth = 2.2;
-  ctx.strokeStyle = rimColor;
+  // 2. Translucent dark cosmic observatory backing disc
+  ctx.beginPath();
+  ctx.arc(64, 64, 52, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(8, 11, 29, 0.90)';
+  ctx.fill();
+
+  // 3. Precision hairline outer ring
+  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = accent;
   ctx.stroke();
 
-  // Inner dashed rim
+  // 4. Inner dashed coordinate ring
   ctx.beginPath();
-  ctx.arc(64, 64, 54, 0, Math.PI * 2);
+  ctx.arc(64, 64, 44, 0, Math.PI * 2);
   ctx.lineWidth = 0.8;
   ctx.setLineDash([3, 4]);
-  ctx.strokeStyle = isLandmark ? 'rgba(56, 189, 248, 0.4)' : 'rgba(198, 163, 107, 0.4)';
+  ctx.strokeStyle = colors.glow;
   ctx.stroke();
   ctx.setLineDash([]); // Reset dash
 
-  // Cardinal tick marks
-  ctx.strokeStyle = rimColor;
-  ctx.lineWidth = 1.8;
+  // 5. Cardinal coordinate ticks (Astronomical reticle)
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.moveTo(64, 4); ctx.lineTo(64, 10);
-  ctx.moveTo(64, 118); ctx.lineTo(64, 124);
-  ctx.moveTo(4, 64); ctx.lineTo(10, 64);
-  ctx.moveTo(118, 64); ctx.lineTo(124, 64);
+  ctx.moveTo(64, 8); ctx.lineTo(64, 16);
+  ctx.moveTo(64, 112); ctx.lineTo(64, 120);
+  ctx.moveTo(8, 64); ctx.lineTo(16, 64);
+  ctx.moveTo(112, 64); ctx.lineTo(120, 64);
   ctx.stroke();
 
-  // 3. Draw Category-Specific Vector Silhouette
+  // Corner orientation micro-dots
+  ctx.fillStyle = colors.glow;
+  const corners = [
+    { x: 34, y: 34 },
+    { x: 94, y: 34 },
+    { x: 34, y: 94 },
+    { x: 94, y: 94 },
+  ];
+  corners.forEach((c) => {
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 6. Draw Category-Specific Precision Astronomical Cartography Glyph
+  ctx.save();
+  ctx.fillStyle = '#111A35';
+  ctx.strokeStyle = accent;
+
   if (type === 'rover') {
-    // Suspension struts
-    ctx.strokeStyle = '#94A3B8';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    // Navigation Diamond with axis crosshairs
+    ctx.lineWidth = 1.0;
+    ctx.strokeStyle = colors.glow;
     ctx.beginPath();
-    ctx.moveTo(42, 74); ctx.lineTo(30, 92); ctx.lineTo(44, 92); ctx.lineTo(56, 74);
-    ctx.moveTo(56, 74); ctx.lineTo(68, 94); ctx.lineTo(82, 94); ctx.lineTo(86, 74);
-    ctx.moveTo(86, 74); ctx.lineTo(98, 90); ctx.lineTo(108, 90);
+    ctx.moveTo(42, 64); ctx.lineTo(86, 64);
+    ctx.moveTo(64, 42); ctx.lineTo(64, 86);
     ctx.stroke();
 
-    // 6 Wheels
-    const wheels = [
-      { cx: 28, cy: 92 },
-      { cx: 44, cy: 94 },
-      { cx: 66, cy: 94 },
-      { cx: 82, cy: 94 },
-      { cx: 98, cy: 90 },
-      { cx: 108, cy: 88 },
-    ];
-    wheels.forEach((w) => {
-      ctx.beginPath();
-      ctx.arc(w.cx, w.cy, 6.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#1E293B';
-      ctx.fill();
-      ctx.strokeStyle = '#E2E8F0';
-      ctx.lineWidth = 1.8;
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(w.cx, w.cy, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#C6A36B';
-      ctx.fill();
-    });
-
-    // Scientific Chassis Deck
+    // Diamond reticle
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = accent;
     ctx.beginPath();
-    ctx.moveTo(38, 60); ctx.lineTo(92, 60); ctx.lineTo(88, 74); ctx.lineTo(36, 74); ctx.closePath();
-    ctx.fillStyle = '#C6A36B';
-    ctx.fill();
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Rear Antenna / RTG
-    ctx.beginPath();
-    ctx.moveTo(42, 55); ctx.lineTo(34, 44);
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(34, 44, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#C6A36B';
+    ctx.moveTo(64, 42); ctx.lineTo(86, 64); ctx.lineTo(64, 86); ctx.lineTo(42, 64);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Camera Mast & Stereo Head
+    // Cardinal corner ticks
+    ctx.strokeStyle = '#F5F0E8';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(84, 55); ctx.lineTo(84, 34);
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2.8;
+    ctx.moveTo(52, 58); ctx.lineTo(50, 58); ctx.lineTo(50, 60);
+    ctx.moveTo(76, 58); ctx.lineTo(78, 58); ctx.lineTo(78, 60);
     ctx.stroke();
 
+    // Central beacon core
     ctx.beginPath();
-    ctx.roundRect(76, 28, 16, 8, 2);
-    ctx.fillStyle = '#1E293B';
+    ctx.arc(64, 64, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle = accent;
     ctx.fill();
-    ctx.strokeStyle = '#C6A36B';
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-
     ctx.beginPath();
-    ctx.arc(80, 32, 2, 0, Math.PI * 2);
-    ctx.arc(88, 32, 2, 0, Math.PI * 2);
-    ctx.fillStyle = '#38BDF8';
+    ctx.arc(64, 64, 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
     ctx.fill();
   } else if (type === 'lander') {
-    // 3 Splayed Legs with Footpads
-    ctx.strokeStyle = '#94A3B8';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
+    // 3-axis landing station tripod
+    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = accent;
     ctx.beginPath();
-    ctx.moveTo(44, 74); ctx.lineTo(26, 98);
-    ctx.moveTo(64, 78); ctx.lineTo(64, 104);
-    ctx.moveTo(84, 74); ctx.lineTo(102, 98);
+    ctx.moveTo(64, 64); ctx.lineTo(42, 84);
+    ctx.moveTo(64, 64); ctx.lineTo(86, 84);
+    ctx.moveTo(64, 64); ctx.lineTo(64, 40);
     ctx.stroke();
 
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2.8;
+    // Station central polygon
     ctx.beginPath();
-    ctx.moveTo(20, 98); ctx.lineTo(32, 98);
-    ctx.moveTo(58, 104); ctx.lineTo(70, 104);
-    ctx.moveTo(96, 98); ctx.lineTo(108, 98);
-    ctx.stroke();
-
-    // Core Octagonal Body
-    ctx.beginPath();
-    ctx.moveTo(42, 58); ctx.lineTo(52, 50); ctx.lineTo(76, 50); ctx.lineTo(86, 58);
-    ctx.lineTo(84, 76); ctx.lineTo(76, 80); ctx.lineTo(52, 80); ctx.lineTo(44, 76); ctx.closePath();
-    ctx.fillStyle = '#C6A36B';
+    ctx.moveTo(64, 50); ctx.lineTo(76, 57); ctx.lineTo(76, 71);
+    ctx.lineTo(64, 78); ctx.lineTo(52, 71); ctx.lineTo(52, 57);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Central Instrument Bay
+    // Footpads
     ctx.beginPath();
-    ctx.roundRect(52, 56, 24, 18, 2);
-    ctx.fillStyle = '#1E293B';
+    ctx.arc(42, 84, 3, 0, Math.PI * 2);
+    ctx.arc(86, 84, 3, 0, Math.PI * 2);
+    ctx.arc(64, 40, 3, 0, Math.PI * 2);
+    ctx.fillStyle = accent;
     ctx.fill();
-    ctx.strokeStyle = '#C6A36B';
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
 
-    // Parabolic High-Gain Dish (Top)
+    // Core beacon
     ctx.beginPath();
-    ctx.arc(64, 34, 16, 0.4, Math.PI - 0.4);
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(64, 40); ctx.lineTo(64, 50);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(64, 34, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#C6A36B';
+    ctx.arc(64, 64, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
     ctx.fill();
   } else if (type === 'probe') {
-    // Solar Array Wings
-    // Left
+    // Interstellar 8-point celestial star & orbit arcs
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = colors.glow;
     ctx.beginPath();
-    ctx.roundRect(12, 52, 36, 24, 2);
-    ctx.fillStyle = '#1E293B';
-    ctx.fill();
-    ctx.strokeStyle = '#38BDF8';
+    ctx.arc(64, 64, 18, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(64, 34); ctx.lineTo(64, 94);
+    ctx.moveTo(34, 64); ctx.lineTo(94, 64);
+    ctx.stroke();
+
+    // Celestial Star polygon
     ctx.lineWidth = 1.8;
-    ctx.stroke();
+    ctx.strokeStyle = accent;
     ctx.beginPath();
-    ctx.moveTo(24, 52); ctx.lineTo(24, 76);
-    ctx.moveTo(36, 52); ctx.lineTo(36, 76);
-    ctx.moveTo(12, 64); ctx.lineTo(48, 64);
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Right
-    ctx.beginPath();
-    ctx.roundRect(80, 52, 36, 24, 2);
-    ctx.fillStyle = '#1E293B';
+    ctx.moveTo(64, 44); ctx.lineTo(67, 59); ctx.lineTo(82, 64);
+    ctx.lineTo(67, 69); ctx.lineTo(64, 84); ctx.lineTo(61, 69);
+    ctx.lineTo(46, 64); ctx.lineTo(61, 59);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#38BDF8';
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(92, 52); ctx.lineTo(92, 76);
-    ctx.moveTo(104, 52); ctx.lineTo(104, 76);
-    ctx.moveTo(80, 64); ctx.lineTo(116, 64);
     ctx.stroke();
 
-    // Symmetrical Booms
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2.5;
+    // Core beacon
     ctx.beginPath();
-    ctx.moveTo(48, 64); ctx.lineTo(52, 64);
-    ctx.moveTo(76, 64); ctx.lineTo(80, 64);
-    ctx.stroke();
-
-    // Central Spacecraft Bus
-    ctx.beginPath();
-    ctx.roundRect(52, 48, 24, 32, 3);
-    ctx.fillStyle = '#C6A36B';
+    ctx.arc(64, 64, 4, 0, Math.PI * 2);
+    ctx.fillStyle = accent;
     ctx.fill();
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
     ctx.beginPath();
-    ctx.arc(64, 64, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#1E293B';
-    ctx.fill();
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.stroke();
-
-    // Parabolic High-Gain Dish (Top)
-    ctx.beginPath();
-    ctx.arc(64, 24, 22, 0.5, Math.PI - 0.5);
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(64, 33); ctx.lineTo(64, 48);
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(64, 24, 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#C6A36B';
+    ctx.arc(64, 64, 1.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
     ctx.fill();
   } else if (type === 'helicopter') {
-    // 4 Splayed Legs
-    ctx.strokeStyle = '#94A3B8';
-    ctx.lineWidth = 2.2;
-    ctx.lineCap = 'round';
+    // Aerial Scout Winglets & Mast
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = accent;
     ctx.beginPath();
-    ctx.moveTo(54, 74); ctx.lineTo(34, 102);
-    ctx.moveTo(58, 76); ctx.lineTo(46, 104);
-    ctx.moveTo(70, 76); ctx.lineTo(82, 104);
-    ctx.moveTo(74, 74); ctx.lineTo(94, 102);
+    ctx.moveTo(32, 52); ctx.lineTo(96, 52);
+    ctx.moveTo(38, 44); ctx.lineTo(90, 44);
+    ctx.moveTo(64, 40); ctx.lineTo(64, 80);
     ctx.stroke();
 
-    // Fuselage Box
+    // Aerial Fuselage
     ctx.beginPath();
-    ctx.roundRect(52, 58, 24, 20, 3);
-    ctx.fillStyle = '#C6A36B';
-    ctx.fill();
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.roundRect(56, 62, 16, 12, 1.5);
-    ctx.fillStyle = '#1E293B';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(64, 68, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#38BDF8';
-    ctx.fill();
-
-    // Rotor Mast
-    ctx.beginPath();
-    ctx.moveTo(64, 58); ctx.lineTo(64, 28);
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // Twin Rotor Blades
-    ctx.beginPath();
-    ctx.roundRect(20, 46, 88, 4.5, 2);
-    ctx.fillStyle = '#E2E8F0';
-    ctx.fill();
-    ctx.strokeStyle = '#1E293B';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.roundRect(24, 35, 80, 4.5, 2);
-    ctx.fillStyle = '#F0E8D9';
+    ctx.roundRect(54, 58, 20, 14, 2);
     ctx.fill();
     ctx.stroke();
 
-    // Solar Panel Cap
+    // Skids
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.roundRect(54, 24, 20, 4, 1);
-    ctx.fillStyle = '#C6A36B';
-    ctx.fill();
-    ctx.strokeStyle = '#F0E8D9';
+    ctx.moveTo(46, 82); ctx.lineTo(54, 72); ctx.lineTo(74, 72); ctx.lineTo(82, 82);
     ctx.stroke();
+
+    // Core beacon
+    ctx.beginPath();
+    ctx.arc(64, 65, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = accent;
+    ctx.fill();
   } else if (type === 'landmark') {
-    // Mountain Peaks / Caldera
+    // Geological Elevation Trigon
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = colors.glow;
     ctx.beginPath();
-    ctx.moveTo(24, 96); ctx.lineTo(58, 32); ctx.lineTo(74, 62); ctx.lineTo(88, 44); ctx.lineTo(104, 96);
-    ctx.closePath();
-    ctx.fillStyle = '#0F1F38';
-    ctx.fill();
-    ctx.strokeStyle = '#38BDF8';
-    ctx.lineWidth = 2.5;
+    ctx.arc(64, 70, 20, Math.PI * 0.9, Math.PI * 0.1, true);
     ctx.stroke();
 
-    // Contour Lines
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = accent;
     ctx.beginPath();
-    ctx.moveTo(38, 78); ctx.quadraticCurveTo(58, 72, 78, 78);
-    ctx.moveTo(48, 62); ctx.quadraticCurveTo(58, 58, 68, 62);
-    ctx.moveTo(78, 68); ctx.quadraticCurveTo(88, 64, 96, 70);
+    ctx.moveTo(64, 34); ctx.lineTo(92, 86); ctx.lineTo(36, 86);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
 
     // Summit Beacon
     ctx.beginPath();
-    ctx.moveTo(58, 16); ctx.lineTo(63, 23); ctx.lineTo(58, 30); ctx.lineTo(53, 23); ctx.closePath();
-    ctx.fillStyle = '#38BDF8';
+    ctx.arc(64, 34, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = accent;
     ctx.fill();
-    ctx.strokeStyle = '#F0E8D9';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(64, 34, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
   }
+  ctx.restore();
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.generateMipmaps = true;
   texture.minFilter = THREE.LinearMipmapLinearFilter;
-  spriteTextureCache.set(type, texture);
+  spriteTextureCache.set(cacheKey, texture);
   return texture;
 }
 
@@ -626,19 +536,39 @@ function getSelectionHaloTexture(): THREE.CanvasTexture {
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, 128, 128);
 
-  // Outer glowing ring
+  // Concentric astronomical selection targeting reticle
+  const grad = ctx.createRadialGradient(64, 64, 30, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(255, 198, 109, 0.25)');
+  grad.addColorStop(0.8, 'rgba(88, 217, 255, 0.45)');
+  grad.addColorStop(1, 'rgba(88, 217, 255, 0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(64, 64, 62, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer glowing pulse ring
   ctx.beginPath();
   ctx.arc(64, 64, 58, 0, Math.PI * 2);
-  ctx.strokeStyle = '#FFD700';
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#58D9FF';
+  ctx.lineWidth = 2.4;
   ctx.stroke();
 
-  // Subtle inner accent dashed ring
+  // Concentric dashed inner reticle ring
   ctx.beginPath();
   ctx.arc(64, 64, 50, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(255, 215, 0, 0.6)';
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255, 198, 109, 0.85)';
+  ctx.lineWidth = 1.4;
   ctx.setLineDash([4, 4]);
+  ctx.stroke();
+
+  // Cardinal target ticks
+  ctx.strokeStyle = '#58D9FF';
+  ctx.lineWidth = 2.0;
+  ctx.beginPath();
+  ctx.moveTo(64, 2); ctx.lineTo(64, 10);
+  ctx.moveTo(64, 118); ctx.lineTo(64, 126);
+  ctx.moveTo(2, 64); ctx.lineTo(10, 64);
+  ctx.moveTo(118, 64); ctx.lineTo(126, 64);
   ctx.stroke();
 
   const tex = new THREE.CanvasTexture(canvas);
@@ -660,31 +590,38 @@ export function getLabelSpriteTexture(text: string, subtitle?: string): THREE.Ca
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, 512, 128);
 
-  // Pill background for high contrast against starfield and bright planets
+  // Elegant astronomical cartography pill with dark cosmic backdrop
   ctx.beginPath();
   ctx.roundRect(16, 20, 480, 88, 24);
-  ctx.fillStyle = 'rgba(8, 13, 22, 0.88)';
+  ctx.fillStyle = 'rgba(8, 11, 29, 0.92)';
   ctx.fill();
-  ctx.strokeStyle = 'rgba(198, 163, 107, 0.65)';
-  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = 'rgba(88, 217, 255, 0.65)';
+  ctx.lineWidth = 2.0;
+  ctx.stroke();
+
+  // Subtle interior accent line
+  ctx.beginPath();
+  ctx.roundRect(20, 24, 472, 80, 20);
+  ctx.strokeStyle = 'rgba(245, 240, 232, 0.12)';
+  ctx.lineWidth = 1.0;
   ctx.stroke();
 
   if (subtitle) {
     // Two-line label (Name + Subtitle/Distance)
-    ctx.font = 'bold 30px "Space Grotesk", sans-serif';
+    ctx.font = 'bold 28px "Inter", "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#F0E8D9';
+    ctx.fillStyle = '#F5F0E8';
     ctx.fillText(text, 256, 56);
 
-    ctx.font = '500 22px monospace';
-    ctx.fillStyle = '#38BDF8';
+    ctx.font = '500 20px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#58D9FF';
     ctx.fillText(subtitle, 256, 90);
   } else {
     // Single line title
-    ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+    ctx.font = 'bold 32px "Inter", "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#F0E8D9';
+    ctx.fillStyle = '#F5F0E8';
     ctx.fillText(text, 256, 64);
   }
 
@@ -697,7 +634,7 @@ export function getLabelSpriteTexture(text: string, subtitle?: string): THREE.Ca
 
 // Materials for Selection Ring and Hit Target
 const selectionRingMat = new THREE.MeshBasicMaterial({
-  color: 0xffd700,
+  color: 0x58d9ff,
   side: THREE.DoubleSide,
   transparent: true,
   opacity: 0.95,
@@ -708,7 +645,7 @@ const invisibleHitMat = new THREE.MeshBasicMaterial({
 });
 
 /**
- * Builds a clean, recognizable vector sprite monument billboard group.
+ * Builds an illuminated, geospatially anchored astronomical cartography monument group.
  */
 export function createMonumentSymbol(
   item: LandingSite3D | MarsLandmark,
@@ -716,6 +653,7 @@ export function createMonumentSymbol(
 ): THREE.Group {
   const isLandmark = 'type' in item;
   const type = getMonumentType(item);
+  const body = !isLandmark ? (item as LandingSite3D).body : 'mars';
   const group = new THREE.Group();
 
   // Root data preserved for interactions
@@ -723,6 +661,7 @@ export function createMonumentSymbol(
     isMarkerRoot: true,
     id: item.id,
     name: item.name,
+    body: body,
     monumentType: type,
     isLandingSite: !isLandmark,
     isLandmark: isLandmark,
@@ -731,8 +670,8 @@ export function createMonumentSymbol(
     ...extraData,
   };
 
-  // 1. Crisp Vector Sprite Billboard
-  const texture = getMonumentSpriteTexture(type);
+  // 1. Crisp Astronomical Cartography Billboard Sprite
+  const texture = getMonumentSpriteTexture(type, body);
   const spriteMat = new THREE.SpriteMaterial({
     map: texture,
     transparent: true,
@@ -773,26 +712,30 @@ export function createMonumentSymbol(
   selHalo.userData = { markerRole: 'selectionHalo' };
   group.add(selHalo);
 
-  // 4. Optional Text Label Sprite (Near marker, no connecting lines)
-  const showLabel = extraData?.showLabel;
-  if (showLabel) {
-    const labelText = (extraData?.labelText as string) || item.name;
-    const labelSubtitle = extraData?.labelSubtitle as string | undefined;
-    const labelMat = new THREE.SpriteMaterial({
-      map: getLabelSpriteTexture(labelText, labelSubtitle),
-      transparent: true,
-      depthTest: false,
-      depthWrite: false,
-    });
-    const labelScale = (extraData?.labelScale as [number, number, number]) || [4.2, 1.05, 1.0];
-    const labelOffsetY = (extraData?.labelOffsetY as number) ?? -1.2;
-    const labelSprite = new THREE.Sprite(labelMat);
-    labelSprite.name = 'labelSprite';
-    labelSprite.position.set(0, labelOffsetY, 0);
-    labelSprite.scale.set(labelScale[0], labelScale[1], labelScale[2]);
-    labelSprite.userData = { markerRole: 'labelSprite', originalScale: labelScale };
-    group.add(labelSprite);
-  }
+  // 4. Text Label Sprite (Always attached; visible dynamically on hover/selection for surface sites, permanently for deep space)
+  const isDeepSpace = body === 'deep-space' || extraData?.showLabel === true;
+  const labelText = (extraData?.labelText as string) || item.name;
+  const labelSubtitle = extraData?.labelSubtitle as string | undefined;
+  const labelMat = new THREE.SpriteMaterial({
+    map: getLabelSpriteTexture(labelText, labelSubtitle),
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const labelScale = (extraData?.labelScale as [number, number, number]) || [3.8, 0.95, 1.0];
+  const labelOffsetY = (extraData?.labelOffsetY as number) ?? (isDeepSpace ? -2.2 : 1.7);
+  const labelSprite = new THREE.Sprite(labelMat);
+  labelSprite.name = 'labelSprite';
+  labelSprite.position.set(0, labelOffsetY, 0);
+  labelSprite.scale.set(labelScale[0], labelScale[1], labelScale[2]);
+  // Surface labels start hidden so planetary surface is uncluttered; revealed on hover/selection
+  labelSprite.visible = isDeepSpace;
+  labelSprite.userData = {
+    markerRole: 'labelSprite',
+    originalScale: labelScale,
+    alwaysVisible: isDeepSpace,
+  };
+  group.add(labelSprite);
 
   // 5. Generous Invisible Hit-Sphere for effortless touch / mouse raycasting
   const hitRadius = (extraData?.hitRadius as number) || 0.95;
@@ -808,7 +751,7 @@ export function createMonumentSymbol(
 }
 
 /**
- * Synchronizes the visible golden selection highlight on the active monument across all groups.
+ * Synchronizes the visible selection highlight and label scaling on the active monument across all groups.
  */
 export function updateMonumentSelection(
   groups: (THREE.Group | null)[],
@@ -841,12 +784,16 @@ export function updateMonumentSelection(
       if (obj.name === 'labelSprite') {
         const sprite = obj as THREE.Sprite;
         const orig = sprite.userData?.originalScale as [number, number, number] | undefined;
-        const baseW = orig ? orig[0] : 4.2;
-        const baseH = orig ? orig[1] : 1.05;
+        const alwaysVisible = !!sprite.userData?.alwaysVisible;
+        const baseW = orig ? orig[0] : 3.8;
+        const baseH = orig ? orig[1] : 0.95;
         const baseD = orig ? orig[2] : 1.0;
+
         if (isSelected) {
+          sprite.visible = true;
           sprite.scale.set(baseW * 1.15, baseH * 1.15, baseD);
         } else {
+          sprite.visible = alwaysVisible;
           sprite.scale.set(baseW, baseH, baseD);
         }
       }
